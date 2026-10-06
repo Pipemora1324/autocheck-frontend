@@ -1,0 +1,27 @@
+<section class="scanner-card" aria-labelledby="scanner-title">
+  <div class="scanner-heading">
+    <span class="eyebrow">Consulta de vehículo</span>
+    <h2 id="scanner-title">Identifica el vehículo</h2>
+    <p>Escanea una placa o ingresa la placa para consultar su historial técnico.</p>
+  </div>
+
+  <label class="upload-zone" for="vehicle-image">
+    <span class="upload-icon" aria-hidden="true">↑</span>
+    <span><strong>{{ selectedFileName || 'Subir tarjeta o foto de placa' }}</strong><small>PNG, JPG o WEBP · Procesado en local</small></span>
+    <input id="vehicle-image" type="file" accept="image/png,image/jpeg,image/webp" (change)="chooseFile($event)" />
+  </label>
+  @if (selectedFileName) {
+    <button class="text-button" type="button" (click)="clearImage()">Quitar imagen</button>
+  }
+
+  <div class="scanner-divider"><span>o consultar por placa</span></div>
+  <label class="field-label" for="plate">Placa del vehículo</label>
+  <div class="plate-input-row">
+    <input id="plate" name="plate" [(ngModel)]="plate" maxlength="8" placeholder="ABC-1234" autocomplete="off" (keydown.enter)="scan()" />
+    <button type="button" (click)="scan()" [disabled]="isLoading || !plate.trim()">
+      {{ isLoading ? 'Consultando…' : 'Consultar vehículo' }}
+    </button>
+  </div>
+  @if (error) { <p class="error-message" role="alert">{{ error }}</p> }
+  <p class="privacy-note">La imagen se usa únicamente para identificar la placa en este dispositivo.</p>
+</section>

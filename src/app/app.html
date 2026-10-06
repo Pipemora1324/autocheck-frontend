@@ -1,0 +1,17 @@
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="AutoCheck-CO inicio"><span class="brand-mark">A</span><span><strong>AutoCheck</strong><small>CO</small></span></a>
+    <div class="topbar-meta"><span class="system-status"><i></i> API conectada</span><span class="user-avatar">AP</span></div>
+  </header>
+  <main id="top">
+    <section class="hero">
+      <div><span class="eyebrow">Peritaje vehicular · Colombia</span><h1>Una visión clara del estado de tu vehículo.</h1><p>Consulta documentos, revisiones técnicas y observaciones en un solo informe.</p></div>
+      <div class="hero-stat"><strong>3</strong><span>categorías de<br />inspección</span></div>
+    </section>
+    <div class="workspace-grid">
+      <app-vehicle-scanner (result)="onVehicleScanned($event)" />
+      <app-inspection-dashboard [vehicle]="selectedVehicle()" />
+    </div>
+  </main>
+  <footer><span>AutoCheck-CO</span><span>Informes de inspección · Datos de prueba</span></footer>
+</div>
