@@ -1,12 +1,12 @@
 {
-  "name": "frontend",
+  "name": "autocheck-frontend",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test --watch=false"
   },
   "private": true,
   "packageManager": "npm@11.20.0",
@@ -28,5 +28,9 @@
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
+  },
+  "description": "Cliente Angular de AutoCheck-CO",
+  "engines": {
+    "node": ">=24"
   }
 }
