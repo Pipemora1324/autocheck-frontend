@@ -1,0 +1,19 @@
+<form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <label for="status-{{ item().id }}">Estado</label>
+  <select id="status-{{ item().id }}" formControlName="status">
+    @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+  </select>
+
+  <label for="result-{{ item().id }}">Resultado</label>
+  <input id="result-{{ item().id }}" formControlName="result" maxlength="500" [attr.aria-invalid]="form.controls.result.invalid && form.controls.result.touched" />
+
+  <label for="notes-{{ item().id }}">Notas</label>
+  <textarea id="notes-{{ item().id }}" formControlName="notes" rows="2" maxlength="2000" [attr.aria-invalid]="form.controls.notes.invalid && form.controls.notes.touched"></textarea>
+
+  @if (error()) { <p class="editor-error" role="alert">{{ error() }}</p> }
+
+  <div class="editor-actions">
+    <button type="button" class="ghost" (click)="cancelled.emit()" [disabled]="saving()">Cancelar</button>
+    <button type="submit" class="save" [disabled]="saving()">{{ saving() ? 'Guardando…' : 'Guardar' }}</button>
+  </div>
+</form>

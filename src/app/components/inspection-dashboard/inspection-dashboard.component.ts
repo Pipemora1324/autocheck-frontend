@@ -1,15 +1,20 @@
 import { Component, inject, Input, OnChanges, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../core/auth/auth.service';
+import { apiErrorMessage } from '../../core/http/api-error';
 import { VehicleService } from '../../services/vehicle.service';
+import { InspectionEditorComponent } from '../inspection-editor/inspection-editor.component';
 import type { InspectionItem, VehicleData } from '../../models/vehicle';
 
-@Component({selector:'app-inspection-dashboard',imports:[CommonModule],templateUrl:'./inspection-dashboard.component.html',styleUrl:'./inspection-dashboard.component.scss'})
+@Component({selector:'app-inspection-dashboard',imports:[CommonModule, InspectionEditorComponent],templateUrl:'./inspection-dashboard.component.html',styleUrl:'./inspection-dashboard.component.scss'})
 export class InspectionDashboardComponent implements OnChanges {
   @Input() vehicle?: VehicleData;
   private readonly vehicleService = inject(VehicleService);
+  protected readonly auth = inject(AuthService);
   readonly selectedCategory = signal('Todas');
   readonly categories = signal<string[]>(['Todas']);
   readonly inspections = signal<InspectionItem[]>([]);
+  readonly editingId = signal<string | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
 
@@ -18,16 +23,19 @@ export class InspectionDashboardComponent implements OnChanges {
   }
 
   loadVehicle(plate: string): void {
-    this.loading.set(true); this.error.set('');
+    this.loading.set(true); this.error.set(''); this.editingId.set(null);
     this.vehicleService.getVehicle(plate).subscribe({
       next: (vehicle) => {
-        this.vehicle = vehicle;
-        this.inspections.set(vehicle.inspections);
-        this.categories.set(['Todas', ...new Set(vehicle.inspections.map((item) => item.category))]);
+        this.applyVehicle(vehicle);
         this.selectedCategory.set('Todas'); this.loading.set(false);
       },
-      error: () => { this.error.set('No se pudo cargar el informe. Inténtalo nuevamente.'); this.loading.set(false); }
+      error: (error: unknown) => { this.error.set(apiErrorMessage(error, 'No se pudo cargar el informe. Inténtalo nuevamente.')); this.loading.set(false); }
     });
+  }
+
+  onInspectionSaved(vehicle: VehicleData): void {
+    this.applyVehicle(vehicle);
+    this.editingId.set(null);
   }
 
   visibleInspections(): InspectionItem[] {
@@ -35,4 +43,10 @@ export class InspectionDashboardComponent implements OnChanges {
   }
 
   printReport(): void { window.print(); }
+
+  private applyVehicle(vehicle: VehicleData): void {
+    this.vehicle = vehicle;
+    this.inspections.set(vehicle.inspections);
+    this.categories.set(['Todas', ...new Set(vehicle.inspections.map((item) => item.category))]);
+  }
 }
