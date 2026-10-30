@@ -1,12 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { environment } from '../../environments/environment';
 import type { InspectionUpdate, ScanResult, VehicleData } from '../models/vehicle';
 
 @Injectable({ providedIn: 'root' })
 export class VehicleService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000';
+  private readonly apiUrl = environment.apiUrl;
 
   getVehicles(): Observable<VehicleData[]> {
     return this.http.get<{ vehicles: VehicleData[] }>(`${this.apiUrl}/vehicles`).pipe(
