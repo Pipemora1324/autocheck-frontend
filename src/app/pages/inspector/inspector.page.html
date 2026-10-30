@@ -1,0 +1,8 @@
+<section class="hero">
+  <div><span class="eyebrow">Peritaje vehicular · Colombia</span><h1>Una visión clara del estado de tu vehículo.</h1><p>Consulta documentos, revisiones técnicas y observaciones en un solo informe.</p></div>
+  <div class="hero-stat"><strong>3</strong><span>categorías de<br />inspección</span></div>
+</section>
+<div class="workspace-grid">
+  <app-vehicle-scanner (result)="onVehicleScanned($event)" />
+  <app-inspection-dashboard [vehicle]="selectedVehicle()" />
+</div>
