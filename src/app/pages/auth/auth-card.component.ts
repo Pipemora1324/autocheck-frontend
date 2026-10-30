@@ -2,6 +2,7 @@ import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-auth-card',
+  host: { class: 'auth-page' },
   template: `
     <section class="auth-card" [attr.aria-labelledby]="headingId">
       <span class="eyebrow">{{ eyebrow() }}</span>
