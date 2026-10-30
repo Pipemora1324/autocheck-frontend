@@ -1,5 +1,7 @@
-/* Estilos globales: formularios de autenticación compartidos por las páginas de /login, /registro, etc. */
+/* Estilos globales: base, etiqueta .eyebrow y formularios de autenticación (/login, /registro, etc.). */
+*, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; }
+.eyebrow { color: #0876c7; font-size: .7rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
 
 .auth-page { min-height: calc(100vh - 74px - 4rem); display: grid; place-items: center; padding: 2rem 0; }
 .auth-card { width: min(100%, 420px); padding: 1.8rem; border: 1px solid #dce5ec; border-radius: 20px; background: #fff; box-shadow: 0 18px 45px rgba(24, 54, 78, .08); }
