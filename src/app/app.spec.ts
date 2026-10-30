@@ -1,23 +1,73 @@
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { environment } from '../environments/environment';
+import { sessionFor } from '../testing/auth-fixtures';
 import { App } from './app';
+import { authInterceptor } from './core/auth/auth.interceptor';
+import { AuthService } from './core/auth/auth.service';
+
+const API = environment.apiUrl;
+const nextTick = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('App', () => {
+  let http: HttpTestingController;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [provideRouter([]), provideHttpClient(withInterceptors([authInterceptor])), provideHttpClientTesting()]
     }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
   });
 
-  it('should create the app', () => {
+  const render = async () => {
     const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+    fixture.detectChanges();
+    await nextTick();
+    return fixture;
+  };
 
-  it('should render the inspection hero', async () => {
-    const fixture = TestBed.createComponent(App);
+  it('muestra "API conectada" solo si /health responde', async () => {
+    const fixture = await render();
+    const status = () => (fixture.nativeElement as HTMLElement).querySelector('.system-status')!.textContent!.trim();
+    expect(status()).toBe('Comprobando API…');
+
+    http.expectOne(`${API}/health`).flush({ status: 'ok', service: 'AutoCheck-CO' });
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Una visión clara del estado de tu vehículo.');
+    expect(status()).toBe('API conectada');
+  });
+
+  it('muestra "API sin conexión" si /health falla', async () => {
+    const fixture = await render();
+    http.expectOne(`${API}/health`).error(new ProgressEvent('error'));
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.system-status')!.textContent).toContain('API sin conexión');
+  });
+
+  it('muestra el usuario y el botón de cerrar sesión, sin insignia de admin para un usuario normal', async () => {
+    const auth = TestBed.inject(AuthService);
+    auth.login('ana@example.com', 'x').subscribe();
+    http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1', 'user'));
+
+    const fixture = await render();
+    http.expectOne(`${API}/health`).flush({ status: 'ok' });
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.user-text strong')?.textContent).toBe('ana@example.com');
+    expect(element.querySelector('.logout-button')).toBeTruthy();
+    expect(element.querySelector('.role-badge')).toBeNull();
+  });
+
+  it('marca al administrador', async () => {
+    const auth = TestBed.inject(AuthService);
+    auth.login('ana@example.com', 'x').subscribe();
+    http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1', 'admin'));
+
+    const fixture = await render();
+    http.expectOne(`${API}/health`).flush({ status: 'ok' });
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.role-badge')?.textContent).toBe('Admin');
   });
 });
