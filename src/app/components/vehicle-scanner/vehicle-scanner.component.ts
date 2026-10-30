@@ -1,4 +1,4 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { apiErrorMessage } from '../../core/http/api-error';
@@ -16,29 +16,30 @@ export class VehicleScannerComponent {
   readonly result = output<ScanResult>();
   plate = '';
   source: 'image' | 'manual' = 'manual';
-  isLoading = false;
-  error = '';
-  selectedFileName = '';
+  // Signals: la app es zoneless, así que cambios hechos dentro de un subscribe no se pintarían.
+  readonly isLoading = signal(false);
+  readonly error = signal('');
+  readonly selectedFileName = signal('');
 
   scan(): void {
     const normalizedPlate = this.plate.trim().toUpperCase();
     if (!/^[A-Z]{3}-\d{4}$/.test(normalizedPlate)) {
-      this.error = 'Ingresa una placa válida, por ejemplo ABC-1234.';
+      this.error.set('Ingresa una placa válida, por ejemplo ABC-1234.');
       return;
     }
 
-    this.error = '';
-    this.isLoading = true;
+    this.error.set('');
+    this.isLoading.set(true);
     this.vehicleService.scanVehicle(normalizedPlate, this.source).subscribe({
       next: (scanResult) => {
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.result.emit(scanResult);
       },
       error: (error: unknown) => {
-        this.isLoading = false;
-        this.error = error instanceof HttpErrorResponse && error.status === 404
+        this.isLoading.set(false);
+        this.error.set(error instanceof HttpErrorResponse && error.status === 404
           ? `No encontramos un vehículo con la placa ${normalizedPlate}.`
-          : apiErrorMessage(error, 'No se pudo consultar la placa. Inténtalo de nuevo.');
+          : apiErrorMessage(error, 'No se pudo consultar la placa. Inténtalo de nuevo.'));
       }
     });
   }
@@ -47,14 +48,14 @@ export class VehicleScannerComponent {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    this.selectedFileName = file.name;
+    this.selectedFileName.set(file.name);
     this.source = 'image';
     this.plate = '';
-    this.error = '';
+    this.error.set('');
   }
 
   clearImage(): void {
-    this.selectedFileName = '';
+    this.selectedFileName.set('');
     this.source = 'manual';
     this.plate = '';
   }
