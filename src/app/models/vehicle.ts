@@ -1,21 +1,34 @@
 export type VehicleStatus = 'Vigente' | 'Por Vencer' | 'Vencido';
 export type AlertLevel = 'verde' | 'amarillo' | 'rojo';
+export type InspectionStatus = 'Aprobado' | 'Atención' | 'No aprobado';
+
+export const INSPECTION_STATUSES: readonly InspectionStatus[] = ['Aprobado', 'Atención', 'No aprobado'];
 
 export interface InspectionItem {
   id: string;
   category: string;
   name: string;
-  status: 'Aprobado' | 'Atención' | 'No aprobado';
+  status: InspectionStatus;
+  result: string;
+  notes: string;
+  updatedBy: string | null;
+  updatedAt: string;
+}
+
+// updatedBy lo asigna el backend a partir del usuario autenticado.
+export interface InspectionUpdate {
+  inspectionId: string;
+  status: InspectionStatus;
   result: string;
   notes: string;
 }
 
-export interface InspectionUpdate {
-  inspectionId: string;
-  status: InspectionItem['status'];
-  result: string;
-  notes: string;
-  updatedBy: string;
+export interface DocumentStatus {
+  number: string;
+  status: VehicleStatus;
+  expirationDate: string;
+  daysToExpire: number;
+  alert: AlertLevel;
 }
 
 export interface VehicleData {
@@ -32,9 +45,9 @@ export interface VehicleData {
   transmission: string;
   mileage: number;
   registrationDate: string;
-  runt: { number: string; status: VehicleStatus; expirationDate: string; alert: AlertLevel };
-  soat: { number: string; status: VehicleStatus; expirationDate: string; alert: AlertLevel };
-  rtm: { number: string; status: VehicleStatus; expirationDate: string; alert: AlertLevel };
+  runt: DocumentStatus;
+  soat: DocumentStatus;
+  rtm: DocumentStatus;
   inspections: InspectionItem[];
   overallStatus: VehicleStatus;
   lastUpdated: string;

@@ -1,5 +1,7 @@
 import { Component, inject, output } from '@angular/core';
-import { FormsModule, NgModel } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+import { apiErrorMessage } from '../../core/http/api-error';
 import { VehicleService } from '../../services/vehicle.service';
 import type { ScanResult } from '../../models/vehicle';
 
@@ -32,9 +34,11 @@ export class VehicleScannerComponent {
         this.isLoading = false;
         this.result.emit(scanResult);
       },
-      error: () => {
+      error: (error: unknown) => {
         this.isLoading = false;
-        this.error = 'No se pudo consultar la placa. Verifica la conexión con la API.';
+        this.error = error instanceof HttpErrorResponse && error.status === 404
+          ? `No encontramos un vehículo con la placa ${normalizedPlate}.`
+          : apiErrorMessage(error, 'No se pudo consultar la placa. Inténtalo de nuevo.');
       }
     });
   }
