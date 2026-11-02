@@ -21,8 +21,9 @@ export function apiErrorCode(error: unknown): string | undefined {
 export function apiErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof HttpErrorResponse)) return fallback;
   if (error.status === 0) return 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.';
-  if (error.status >= 500) return 'El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.';
-  const { message, errors } = body(error);
+  const { message, errors, code } = body(error);
+  // Los 5xx con código (servicio opcional apagado u ocupado) traen un mensaje pensado para el usuario.
+  if (error.status >= 500) return code && message ? message : 'El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.';
   if (error.status === 400 && errors?.length) return errors[0]!.message;
   return message ?? fallback;
 }
