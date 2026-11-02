@@ -6,7 +6,8 @@ import { ExpirationBadgeComponent, formatDate } from '../../components/expiratio
 import { ModalComponent } from '../../components/modal/modal.component';
 import { VehicleFormComponent, type VehicleFormValue } from '../../components/vehicle-form/vehicle-form.component';
 import { apiErrorCode, apiErrorMessage, apiFieldErrors, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
-import type { Assessment, GarageVehicle } from '../../models/garage';
+import { RuntRefreshDialogComponent } from '../../components/runt-refresh-dialog/runt-refresh-dialog.component';
+import type { Assessment, GarageVehicle, RuntRefreshResult } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
 
 type LoadState = 'loading' | 'ready' | 'not-found' | 'unverified' | 'error';
@@ -21,7 +22,7 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
 
 @Component({
   selector: 'app-vehicle-detail-page',
-  imports: [RouterLink, ExpirationBadgeComponent, VehicleFormComponent, ModalComponent],
+  imports: [RouterLink, ExpirationBadgeComponent, VehicleFormComponent, ModalComponent, RuntRefreshDialogComponent],
   template: `
     <a class="back-link" routerLink="/">← Volver a mi garaje</a>
 
@@ -55,6 +56,7 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
             </div>
             @if (!editing()) {
               <div class="form-actions">
+                <button class="secondary-button" type="button" (click)="runtOpen.set(true)">Actualizar desde RUNT</button>
                 <button class="secondary-button" type="button" (click)="startEditing()">Editar</button>
                 <button class="danger-button" type="button" (click)="confirmingDelete.set(true)">Eliminar</button>
               </div>
@@ -131,6 +133,15 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
             </div>
           }
 
+          @if (runtOpen()) {
+            <app-runt-refresh-dialog
+              [plate]="v.plate"
+              (close)="runtOpen.set(false)"
+              (editManually)="runtOpen.set(false); startEditing()"
+              (updated)="onRuntUpdated($event)"
+            />
+          }
+
           @if (confirmingDelete()) {
             <app-modal heading="¿Eliminar este vehículo?" (close)="confirmingDelete.set(false)">
               <p>Se borrará {{ v.plate }} ({{ v.brand }} {{ v.model }}) de tu garaje. Esta acción no se puede deshacer.</p>
@@ -165,6 +176,7 @@ export class VehicleDetailPage {
   readonly saveError = signal('');
   readonly fieldErrors = signal<Record<string, string>>({});
 
+  readonly runtOpen = signal(false);
   readonly confirmingDelete = signal(false);
   readonly deleting = signal(false);
   readonly deleteError = signal('');
@@ -213,6 +225,12 @@ export class VehicleDetailPage {
     this.vehicle.set(vehicle);
     this.notice.set(notice);
     this.loadAssessment();
+  }
+
+  onRuntUpdated({ vehicle, lookup }: RuntRefreshResult): void {
+    this.runtOpen.set(false);
+    const count = lookup.fieldsUpdated.length;
+    this.replaceVehicle(vehicle, count ? `Datos actualizados desde el proveedor RUNT (${count} campo${count === 1 ? '' : 's'}).` : 'El proveedor RUNT no trajo cambios.');
   }
 
   startEditing(): void {
