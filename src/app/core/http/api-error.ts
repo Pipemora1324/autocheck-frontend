@@ -2,11 +2,20 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 interface ApiErrorBody {
   message?: string;
+  code?: string;
   errors?: Array<{ field: string; message: string }>;
 }
 
+/** Códigos de error que el frontend trata de forma especial (ver docs/API.md del backend). */
+export const EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED';
+
 const body = (error: HttpErrorResponse): ApiErrorBody =>
   error.error && typeof error.error === 'object' ? (error.error as ApiErrorBody) : {};
+
+/** Campo `code` del cuerpo de error, si lo hay. */
+export function apiErrorCode(error: unknown): string | undefined {
+  return error instanceof HttpErrorResponse ? body(error).code : undefined;
+}
 
 /** Mensaje en español para mostrar al usuario a partir de un error de la API. */
 export function apiErrorMessage(error: unknown, fallback: string): string {

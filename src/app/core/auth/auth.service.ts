@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, finalize, map, Observable, of, shareReplay, throwError } from 'rxjs';
+import { catchError, finalize, map, Observable, of, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { skipAuthRefresh } from './auth.context';
 import type { AuthStatus, AuthUser, MessageResponse, SessionResponse } from './auth.models';
@@ -33,10 +33,38 @@ export class AuthService {
       .pipe(map((session) => this.setSession(session)));
   }
 
-  register(email: string, password: string): Observable<AuthUser> {
+  /** El backend exige acceptedTerms === true y guarda él mismo la fecha y la versión de la política. */
+  register(email: string, password: string, acceptedTerms: boolean): Observable<AuthUser> {
     return this.http
-      .post<SessionResponse>(`${this.apiUrl}/auth/register`, { email, password }, { context: skipAuthRefresh(), withCredentials: true })
+      .post<SessionResponse>(
+        `${this.apiUrl}/auth/register`,
+        { email, password, acceptedTerms },
+        { context: skipAuthRefresh(), withCredentials: true }
+      )
       .pipe(map((session) => this.setSession(session)));
+  }
+
+  verifyEmail(token: string): Observable<MessageResponse> {
+    return this.http
+      .post<MessageResponse>(`${this.apiUrl}/auth/verify-email`, { token }, { context: skipAuthRefresh() })
+      .pipe(tap(() => this.setEmailVerified(true)));
+  }
+
+  /** Responde siempre 202 con el mismo mensaje, exista o no el correo. */
+  resendVerification(email: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/auth/resend-verification`, { email }, { context: skipAuthRefresh() });
+  }
+
+  /** DELETE /auth/me. Una contraseña errada responde 403 INVALID_PASSWORD (no 401), así que la sesión sigue viva. */
+  deleteAccount(password: string): Observable<void> {
+    return this.http
+      .delete<void>(`${this.apiUrl}/auth/me`, { body: { password } })
+      .pipe(tap(() => this.clearSession()));
+  }
+
+  /** Lo usa el interceptor cuando el backend responde 403 EMAIL_NOT_VERIFIED, y la pantalla /verify-email al confirmar. */
+  setEmailVerified(verified: boolean): void {
+    this.userState.update((user) => (user && user.emailVerified !== verified ? { ...user, emailVerified: verified } : user));
   }
 
   /**

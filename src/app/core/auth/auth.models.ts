@@ -4,6 +4,7 @@ export interface AuthUser {
   id: string;
   email: string;
   role: UserRole;
+  emailVerified: boolean;
 }
 
 /** Respuesta de POST /auth/login, /auth/register y /auth/refresh. */

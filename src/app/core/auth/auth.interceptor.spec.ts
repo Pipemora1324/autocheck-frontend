@@ -126,6 +126,20 @@ describe('authInterceptor', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('ante 403 EMAIL_NOT_VERIFIED marca el correo como no verificado sin cerrar la sesión', async () => {
+    signIn('access-1');
+    expect(auth.user()?.emailVerified).toBe(true);
+    const result = firstValueFrom(client.get(`${API}/garage`));
+    http
+      .expectOne(`${API}/garage`)
+      .flush({ message: 'Confirma tu correo para usar esta función.', code: 'EMAIL_NOT_VERIFIED' }, { status: 403, statusText: 'Forbidden' });
+    http.expectNone(`${API}/auth/refresh`);
+    await expect(result).rejects.toMatchObject({ status: 403 });
+    expect(auth.user()?.emailVerified).toBe(false);
+    expect(auth.isAuthenticated()).toBe(true);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('no refresca ante un 403 (sin permisos)', async () => {
     signIn('access-1');
     const result = firstValueFrom(client.patch(`${API}/vehicles/ABC-1234/inspections`, {}));
@@ -133,5 +147,6 @@ describe('authInterceptor', () => {
     http.expectNone(`${API}/auth/refresh`);
     await expect(result).rejects.toMatchObject({ status: 403 });
     expect(auth.isAuthenticated()).toBe(true);
+    expect(auth.user()?.emailVerified).toBe(true);
   });
 });

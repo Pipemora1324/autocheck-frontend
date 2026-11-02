@@ -50,14 +50,71 @@ describe('AuthService', () => {
     expect(auth.isAdmin()).toBe(true);
   });
 
-  it('register inicia sesión y propaga el 409 si el correo existe', async () => {
-    const failed = firstValueFrom(auth.register('ana@example.com', 'clave-larga'));
+  it('register envía acceptedTerms, inicia sesión y propaga el 409 si el correo existe', async () => {
+    const failed = firstValueFrom(auth.register('ana@example.com', 'clave-larga', true));
     http.expectOne(`${API}/auth/register`).flush({ message: 'Ya existe una cuenta con este correo.' }, { status: 409, statusText: 'Conflict' });
     await expect(failed).rejects.toMatchObject({ status: 409 });
     expect(auth.isAuthenticated()).toBe(false);
 
-    auth.register('nuevo@example.com', 'clave-larga').subscribe();
-    http.expectOne(`${API}/auth/register`).flush(sessionFor('access-2'));
+    const clave = 'clave-larga';
+    auth.register('nuevo@example.com', clave, true).subscribe();
+    const request = http.expectOne(`${API}/auth/register`);
+    expect(request.request.body).toEqual({ email: 'nuevo@example.com', password: clave, acceptedTerms: true });
+    expect(request.request.withCredentials).toBe(true);
+    request.flush(sessionFor('access-2', 'user', false));
+    expect(auth.isAuthenticated()).toBe(true);
+    expect(auth.user()?.emailVerified).toBe(false);
+  });
+
+  it('verifyEmail confirma el correo y actualiza al usuario en sesión', async () => {
+    auth.login('ana@example.com', 'x').subscribe();
+    http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1', 'user', false));
+
+    const enlace = 'token-123';
+    const result = firstValueFrom(auth.verifyEmail(enlace));
+    const request = http.expectOne(`${API}/auth/verify-email`);
+    expect(request.request.body).toEqual({ token: enlace });
+    request.flush({ message: 'Tu correo fue confirmado.', emailVerified: true });
+    await result;
+    expect(auth.user()?.emailVerified).toBe(true);
+  });
+
+  it('verifyEmail sin sesión no falla y propaga el 400 de un token vencido', async () => {
+    const result = firstValueFrom(auth.verifyEmail('vencido'));
+    http.expectOne(`${API}/auth/verify-email`).flush({ message: 'El enlace no es válido o expiró.' }, { status: 400, statusText: 'Bad Request' });
+    await expect(result).rejects.toMatchObject({ status: 400 });
+    expect(auth.user()).toBeNull();
+  });
+
+  it('resendVerification envía el correo', async () => {
+    const result = firstValueFrom(auth.resendVerification('ana@example.com'));
+    const request = http.expectOne(`${API}/auth/resend-verification`);
+    expect(request.request.body).toEqual({ email: 'ana@example.com' });
+    request.flush({ message: 'Si el correo está registrado…' }, { status: 202, statusText: 'Accepted' });
+    expect((await result).message).toContain('Si el correo');
+  });
+
+  it('deleteAccount envía la contraseña y cierra la sesión local', async () => {
+    auth.login('ana@example.com', 'x').subscribe();
+    http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1'));
+
+    const clave = 'mi-clave';
+    const done = firstValueFrom(auth.deleteAccount(clave), { defaultValue: undefined });
+    const request = http.expectOne(`${API}/auth/me`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.body).toEqual({ password: clave });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await done;
+    expect(auth.status()).toBe('anonymous');
+  });
+
+  it('deleteAccount con contraseña errada (403) conserva la sesión', async () => {
+    auth.login('ana@example.com', 'x').subscribe();
+    http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1'));
+
+    const done = firstValueFrom(auth.deleteAccount('mala'));
+    http.expectOne(`${API}/auth/me`).flush({ message: 'La contraseña no es correcta.', code: 'INVALID_PASSWORD' }, { status: 403, statusText: 'Forbidden' });
+    await expect(done).rejects.toMatchObject({ status: 403 });
     expect(auth.isAuthenticated()).toBe(true);
   });
 
