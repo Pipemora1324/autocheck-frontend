@@ -4,8 +4,27 @@ import { authGuard, guestGuard } from './core/auth/auth.guard';
 export const routes: Routes = [
   {
     path: '',
+    pathMatch: 'full',
     canActivate: [authGuard],
-    title: 'AutoCheck-CO · Consulta de vehículos',
+    title: 'Mi garaje · AutoCheck-CO',
+    loadComponent: () => import('./pages/garage/garage.page').then((m) => m.GaragePage)
+  },
+  {
+    path: 'garaje/nuevo',
+    canActivate: [authGuard],
+    title: 'Agregar vehículo · AutoCheck-CO',
+    loadComponent: () => import('./pages/garage/add-vehicle.page').then((m) => m.AddVehiclePage)
+  },
+  {
+    path: 'garaje/:placa',
+    canActivate: [authGuard],
+    title: 'Vehículo · AutoCheck-CO',
+    loadComponent: () => import('./pages/garage/vehicle-detail.page').then((m) => m.VehicleDetailPage)
+  },
+  {
+    path: 'demo',
+    canActivate: [authGuard],
+    title: 'Demostración de peritaje · AutoCheck-CO',
     loadComponent: () => import('./pages/inspector/inspector.page').then((m) => m.InspectorPage)
   },
   {
