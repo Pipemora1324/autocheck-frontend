@@ -1,4 +1,5 @@
 /* Estilos globales: base, etiqueta .eyebrow y formularios de autenticación (/login, /registro, etc.). */
+@use 'styles/garage';
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; }
 .eyebrow { color: #0876c7; font-size: .7rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
