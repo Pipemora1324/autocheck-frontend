@@ -1,11 +1,12 @@
 import { Component, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { InspectionDashboardComponent } from '../../components/inspection-dashboard/inspection-dashboard.component';
 import { VehicleScannerComponent } from '../../components/vehicle-scanner/vehicle-scanner.component';
 import type { ScanResult, VehicleData } from '../../models/vehicle';
 
 @Component({
   selector: 'app-inspector-page',
-  imports: [VehicleScannerComponent, InspectionDashboardComponent],
+  imports: [RouterLink, VehicleScannerComponent, InspectionDashboardComponent],
   templateUrl: './inspector.page.html',
   styleUrl: './inspector.page.scss'
 })

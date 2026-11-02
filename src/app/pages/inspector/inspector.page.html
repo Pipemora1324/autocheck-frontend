@@ -1,7 +1,12 @@
 <section class="hero">
-  <div><span class="eyebrow">Peritaje vehicular · Colombia</span><h1>Una visión clara del estado de tu vehículo.</h1><p>Consulta documentos, revisiones técnicas y observaciones en un solo informe.</p></div>
-  <div class="hero-stat"><strong>3</strong><span>categorías de<br />inspección</span></div>
+  <div>
+    <span class="eyebrow">Demostración · datos ficticios</span>
+    <h1>Así se vería un informe de peritaje.</h1>
+    <p>Esta sección usa tres vehículos inventados para mostrar el informe de inspección. No es tu garaje ni una consulta real.</p>
+  </div>
+  <a class="secondary-button" routerLink="/">Ir a mi garaje</a>
 </section>
+<p class="demo-banner" role="note"><strong>Demostración:</strong> las placas ABC-1234, DEF-5678 y GHI-9012, sus propietarios e inspecciones son ficticios.</p>
 <div class="workspace-grid">
   <app-vehicle-scanner (result)="onVehicleScanned($event)" />
   <app-inspection-dashboard [vehicle]="selectedVehicle()" />
