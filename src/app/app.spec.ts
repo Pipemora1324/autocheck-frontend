@@ -58,6 +58,7 @@ describe('App', () => {
     expect(element.querySelector('.user-text strong')?.textContent).toBe('ana@example.com');
     expect(element.querySelector('.logout-button')).toBeTruthy();
     expect(element.querySelector('.role-badge')).toBeNull();
+    expect([...element.querySelectorAll('.main-nav a')].map((link) => link.textContent)).toEqual(['Mi garaje', 'Demostración', 'Mi cuenta']);
   });
 
   it('marca al administrador', async () => {

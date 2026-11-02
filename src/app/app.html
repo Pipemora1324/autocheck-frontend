@@ -1,6 +1,13 @@
 <div class="app-shell">
   <header class="topbar">
-    <a class="brand" routerLink="/" aria-label="AutoCheck-CO inicio"><span class="brand-mark">A</span><span><strong>AutoCheck</strong><small>CO</small></span></a>
+    <a class="brand" routerLink="/" aria-label="AutoCheck-CO, ir a mi garaje"><span class="brand-mark">A</span><span><strong>AutoCheck</strong><small>CO</small></span></a>
+    @if (auth.user()) {
+      <nav class="main-nav" aria-label="Principal">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Mi garaje</a>
+        <a routerLink="/demo" routerLinkActive="active">Demostración</a>
+        <a routerLink="/cuenta" routerLinkActive="active">Mi cuenta</a>
+      </nav>
+    }
     <div class="topbar-meta">
       <span class="system-status {{ health.status() }}" role="status" aria-live="polite"><i aria-hidden="true"></i> {{ healthLabel() }}</span>
       @if (auth.user(); as user) {
@@ -19,5 +26,5 @@
     <app-email-verification-banner />
     <router-outlet />
   </main>
-  <footer><span>AutoCheck-CO</span><span>Informes de inspección · Datos de prueba</span></footer>
+  <footer><span>AutoCheck-CO</span><span>Vigencias calculadas con los datos que registras · No es una consulta oficial · <a routerLink="/privacidad">Privacidad</a></span></footer>
 </div>

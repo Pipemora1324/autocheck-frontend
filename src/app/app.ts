@@ -1,12 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { EmailVerificationBannerComponent } from './components/email-verification-banner/email-verification-banner.component';
 import { AuthService } from './core/auth/auth.service';
 import { HealthService } from './core/http/health.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, EmailVerificationBannerComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, EmailVerificationBannerComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
