@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { isServerWakingError, SERVER_WAKING_MESSAGE } from './server-status.service';
 
 interface ApiErrorBody {
   message?: string;
@@ -20,7 +21,8 @@ export function apiErrorCode(error: unknown): string | undefined {
 /** Mensaje en español para mostrar al usuario a partir de un error de la API. */
 export function apiErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof HttpErrorResponse)) return fallback;
-  if (error.status === 0) return 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.';
+  // Render (plan gratuito) se duerme: en vez de un error seco se explica que está despertando.
+  if (isServerWakingError(error)) return SERVER_WAKING_MESSAGE;
   const { message, errors, code } = body(error);
   // Los 5xx con código (servicio opcional apagado u ocupado) traen un mensaje pensado para el usuario.
   if (error.status >= 500) return code && message ? message : 'El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.';
