@@ -3,10 +3,12 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { EmailVerificationBannerComponent } from './components/email-verification-banner/email-verification-banner.component';
 import { AuthService } from './core/auth/auth.service';
 import { HealthService } from './core/http/health.service';
+import { ServerStatusService } from './core/http/server-status.service';
+import { ServerStatusBannerComponent } from './components/server-status-banner/server-status-banner.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, EmailVerificationBannerComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, EmailVerificationBannerComponent, ServerStatusBannerComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -14,11 +16,12 @@ export class App {
   private readonly router = inject(Router);
   protected readonly auth = inject(AuthService);
   protected readonly health = inject(HealthService);
+  private readonly server = inject(ServerStatusService);
 
   protected readonly healthLabel = computed(() => {
     switch (this.health.status()) {
       case 'online': return 'API conectada';
-      case 'offline': return 'API sin conexión';
+      case 'offline': return this.server.state() === 'down' ? 'API sin respuesta' : 'Conectando con el servidor…';
       default: return 'Comprobando API…';
     }
   });

@@ -39,11 +39,13 @@ describe('App', () => {
     expect(status()).toBe('API conectada');
   });
 
-  it('muestra "API sin conexión" si /health falla', async () => {
+  it('si /health falla dice que está conectando con el servidor y muestra el aviso de espera', async () => {
     const fixture = await render();
     http.expectOne(`${API}/health`).error(new ProgressEvent('error'));
     await fixture.whenStable();
-    expect((fixture.nativeElement as HTMLElement).querySelector('.system-status')!.textContent).toContain('API sin conexión');
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.system-status')!.textContent).toContain('Conectando con el servidor');
+    expect(element.querySelector('app-server-status-banner')!.textContent).toContain('Conectando con el servidor, puede tardar un minuto.');
   });
 
   it('muestra el usuario y el botón de cerrar sesión, sin insignia de admin para un usuario normal', async () => {

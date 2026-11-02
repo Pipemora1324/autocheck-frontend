@@ -5,11 +5,13 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
+import { serverStatusInterceptor } from './core/http/server-status.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    // serverStatusInterceptor va primero para que sus reintentos vuelvan a pasar por authInterceptor (token vigente).
+    provideHttpClient(withInterceptors([serverStatusInterceptor, authInterceptor])),
     provideRouter(routes, withComponentInputBinding()),
     // Arranca la restauración de sesión sin bloquear el render: los guards esperan su resultado.
     provideAppInitializer(() => {
