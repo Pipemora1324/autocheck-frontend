@@ -16,6 +16,7 @@
     @if (auth.status() === 'unknown') {
       <div class="session-loading" role="status"><span class="spinner" aria-hidden="true"></span>Restaurando sesión…</div>
     }
+    <app-email-verification-banner />
     <router-outlet />
   </main>
   <footer><span>AutoCheck-CO</span><span>Informes de inspección · Datos de prueba</span></footer>
