@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { apiErrorMessage } from '../../core/http/api-error';
+import { PublicConfigService } from '../../core/http/public-config.service';
 import { AuthCardComponent } from './auth-card.component';
 import { fieldError, PASSWORD_MAX, PASSWORD_MIN, passwordsMatch, safeReturnUrl } from './auth-forms';
 
@@ -29,6 +30,7 @@ import { fieldError, PASSWORD_MAX, PASSWORD_MIN, passwordsMatch, safeReturnUrl }
           <input id="register-terms" type="checkbox" formControlName="acceptedTerms" [attr.aria-invalid]="!!termsError()" aria-describedby="register-terms-error" />
           <span>Autorizo el tratamiento de mis datos personales según la <a routerLink="/privacidad" target="_blank" rel="noopener">política de privacidad</a>.</span>
         </label>
+        @if (consentText()) { <p class="field-hint">{{ consentText() }}</p> }
         @if (termsError(); as message) { <p class="field-error" id="register-terms-error">{{ message }}</p> }
 
         @if (serverError()) { <p class="form-error" role="alert">{{ serverError() }}</p> }
@@ -44,6 +46,7 @@ import { fieldError, PASSWORD_MAX, PASSWORD_MIN, passwordsMatch, safeReturnUrl }
 export class RegisterPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly publicConfig = inject(PublicConfigService);
   private readonly returnUrl = inject(ActivatedRoute).snapshot.queryParamMap.get('returnUrl');
 
   readonly min = PASSWORD_MIN;
@@ -59,6 +62,12 @@ export class RegisterPage {
   readonly submitting = signal(false);
   readonly submitted = signal(false);
   readonly serverError = signal('');
+  /** Texto de autorización publicado por el backend (GET /config/public); si no carga, queda la frase de la casilla. */
+  readonly consentText = computed(() => this.publicConfig.config()?.privacyPolicy.registrationConsent ?? '');
+
+  constructor() {
+    this.publicConfig.load().subscribe();
+  }
 
   error(name: 'email' | 'password'): string | null {
     return fieldError(this.form.controls[name], this.submitted());
