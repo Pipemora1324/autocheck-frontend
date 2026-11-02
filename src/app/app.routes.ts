@@ -31,5 +31,16 @@ export const routes: Routes = [
     title: 'Nueva contraseña · AutoCheck-CO',
     loadComponent: () => import('./pages/auth/reset-password.page').then((m) => m.ResetPasswordPage)
   },
+  {
+    // La ruta debe coincidir con el enlace del correo: APP_URL/verify-email?token=...
+    path: 'verify-email',
+    title: 'Confirmar correo · AutoCheck-CO',
+    loadComponent: () => import('./pages/auth/verify-email.page').then((m) => m.VerifyEmailPage)
+  },
+  {
+    path: 'privacidad',
+    title: 'Privacidad · AutoCheck-CO',
+    loadComponent: () => import('./pages/privacy/privacy.page').then((m) => m.PrivacyPage)
+  },
   { path: '**', redirectTo: '' }
 ];
