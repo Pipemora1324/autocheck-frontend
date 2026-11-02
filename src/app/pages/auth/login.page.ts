@@ -11,7 +11,7 @@ import { fieldError, PASSWORD_MAX, safeReturnUrl } from './auth-forms';
   selector: 'app-login-page',
   imports: [ReactiveFormsModule, RouterLink, AuthCardComponent],
   template: `
-    <app-auth-card heading="Inicia sesión" description="Ingresa para consultar vehículos e informes de peritaje.">
+    <app-auth-card heading="Inicia sesión" description="Ingresa para ver tu garaje y los vencimientos de tus vehículos.">
       @if (notice()) {
         <p class="form-notice" role="status">{{ notice() }}</p>
       }
@@ -52,7 +52,9 @@ export class LoginPage {
       ? 'Tu sesión expiró. Inicia sesión de nuevo.'
       : this.params.get('reset') === 'ok'
         ? 'Tu contraseña fue actualizada. Ya puedes iniciar sesión.'
-        : ''
+        : this.params.get('cuenta') === 'eliminada'
+          ? 'Tu cuenta y tus datos fueron eliminados.'
+          : ''
   );
   readonly returnQuery = this.params.get('returnUrl') ? { returnUrl: this.params.get('returnUrl') } : {};
 

@@ -57,6 +57,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth/verify-email.page').then((m) => m.VerifyEmailPage)
   },
   {
+    path: 'cuenta',
+    canActivate: [authGuard],
+    title: 'Mi cuenta · AutoCheck-CO',
+    loadComponent: () => import('./pages/account/account.page').then((m) => m.AccountPage)
+  },
+  {
     path: 'privacidad',
     title: 'Privacidad · AutoCheck-CO',
     loadComponent: () => import('./pages/privacy/privacy.page').then((m) => m.PrivacyPage)
