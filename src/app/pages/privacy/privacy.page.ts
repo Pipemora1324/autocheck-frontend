@@ -16,6 +16,12 @@ import { PublicConfigService } from '../../core/http/public-config.service';
         <p>{{ consent() }}</p>
       }
 
+      <h2>Responsable del tratamiento</h2>
+      <p>
+        Juan Felipe Mora. Para consultas, reclamos y solicitudes sobre tus datos escribe a
+        <a href="mailto:juan.morarevel@campusucc.edu.co">juan.morarevel&#64;campusucc.edu.co</a>.
+      </p>
+
       <h2>Qué guardamos y para qué</h2>
       <ul>
         <li><strong>Correo electrónico:</strong> identificar tu cuenta, iniciar sesión y enviarte enlaces de verificación y recuperación.</li>
@@ -23,6 +29,15 @@ import { PublicConfigService } from '../../core/http/public-config.service';
         <li><strong>Fecha en que aceptaste esta política y su versión:</strong> como prueba de tu autorización.</li>
         <li><strong>Vehículos de tu garaje:</strong> placa, marca, modelo, vigencias de SOAT y RTM y los demás datos que registres, para calcular alertas.</li>
         <li><strong>Registros técnicos:</strong> IP, ruta, código de respuesta y hora, para seguridad y diagnóstico. No registramos contraseñas, tokens ni datos de documentos.</li>
+      </ul>
+
+      <h2>Encargados externos</h2>
+      <ul>
+        <li><strong>Vercel:</strong> aloja esta aplicación web.</li>
+        <li><strong>Render:</strong> aloja el servidor (API).</li>
+        <li><strong>Neon:</strong> aloja la base de datos.</li>
+        <li><strong>Brevo:</strong> envía los correos de verificación y recuperación.</li>
+        <li><strong>Proveedor de lectura de la tarjeta</strong> (Google Gemini o Anthropic): recibe la foto, solo si usas esa función.</li>
       </ul>
 
       <h2>Foto de la tarjeta de propiedad</h2>
@@ -50,6 +65,7 @@ import { PublicConfigService } from '../../core/http/public-config.service';
       <ul>
         <li><strong>Conocer y actualizar:</strong> puedes ver y editar los datos de tu garaje en cualquier momento.</li>
         <li><strong>Suprimir y revocar la autorización:</strong> en <a routerLink="/cuenta">Mi cuenta</a> puedes eliminar tu cuenta; se borran tus datos, sesiones y vehículos.</li>
+        <li><strong>Otras solicitudes:</strong> al correo del responsable indicado arriba.</li>
       </ul>
 
       <p class="note">Los conceptos y vigencias que muestra AutoCheck-CO se calculan con los datos que registras y no son una consulta oficial.</p>
@@ -58,7 +74,7 @@ import { PublicConfigService } from '../../core/http/public-config.service';
 })
 export class PrivacyPage {
   private readonly publicConfig = inject(PublicConfigService);
-  readonly version = computed(() => this.publicConfig.config()?.privacyPolicy.version ?? '2026-11-02');
+  readonly version = computed(() => this.publicConfig.config()?.privacyPolicy.version ?? '2026-11-02.2');
   readonly consent = computed(() => this.publicConfig.config()?.privacyPolicy.registrationConsent ?? '');
   readonly scanNotice = computed(() => this.publicConfig.config()?.cardScan.notice ?? '');
 
