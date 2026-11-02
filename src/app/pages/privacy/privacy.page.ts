@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PublicConfigService } from '../../core/http/public-config.service';
 
 /** Resumen de la política de tratamiento de datos (Ley 1581 de 2012). Debe coincidir con la sección del README del backend. */
 @Component({
@@ -9,7 +10,11 @@ import { RouterLink } from '@angular/router';
     <article class="content-page">
       <span class="eyebrow">Ley 1581 de 2012</span>
       <h1>Política de tratamiento de datos</h1>
-      <p class="lead">Versión del 2 de noviembre de 2026. Proyecto académico: este texto no es asesoría legal.</p>
+      <p class="lead">Versión {{ version() }}. Proyecto académico: este texto no es asesoría legal.</p>
+      @if (consent()) {
+        <h2>Lo que autorizas al registrarte</h2>
+        <p>{{ consent() }}</p>
+      }
 
       <h2>Qué guardamos y para qué</h2>
       <ul>
@@ -23,7 +28,14 @@ import { RouterLink } from '@angular/router';
       <h2>Foto de la tarjeta de propiedad</h2>
       <ul>
         <li>Se procesa en memoria y no se guarda en disco ni en la base de datos.</li>
-        <li>Se envía a la API de Anthropic (Estados Unidos, transmisión internacional de datos) solo para leer el texto, y se descarta al terminar.</li>
+        <li>
+          Se envía a un proveedor externo de inteligencia artificial (Google Gemini o Anthropic, en Estados Unidos: transmisión internacional de datos)
+          solo para leer el texto, y se descarta al terminar. Con el plan gratuito de Google Gemini, Google puede usar el contenido enviado para mejorar sus productos.
+        </li>
+        @if (scanNotice()) {
+          <li><strong>Proveedor activo ahora:</strong> {{ scanNotice() }}</li>
+        }
+        <li>No subas la tarjeta de otra persona sin su autorización.</li>
         <li>Los datos leídos se te muestran para que los revises; solo se guarda lo que confirmes.</li>
         <li><strong>El número de documento del propietario nunca se guarda</strong>, ni en el servidor ni en tu navegador.</li>
       </ul>
@@ -44,4 +56,13 @@ import { RouterLink } from '@angular/router';
     </article>
   `
 })
-export class PrivacyPage {}
+export class PrivacyPage {
+  private readonly publicConfig = inject(PublicConfigService);
+  readonly version = computed(() => this.publicConfig.config()?.privacyPolicy.version ?? '2026-11-02');
+  readonly consent = computed(() => this.publicConfig.config()?.privacyPolicy.registrationConsent ?? '');
+  readonly scanNotice = computed(() => this.publicConfig.config()?.cardScan.notice ?? '');
+
+  constructor() {
+    this.publicConfig.load().subscribe();
+  }
+}
