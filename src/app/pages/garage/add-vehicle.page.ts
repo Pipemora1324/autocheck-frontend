@@ -34,7 +34,7 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
       <div>
         <span class="eyebrow">Mi garaje</span>
         <h1>Agregar vehículo</h1>
-        <p>Usa una foto de la tarjeta de propiedad (licencia de tránsito) o llena los datos a mano.</p>
+        <p>Llena los datos a mano o, si prefieres, usa una foto de la tarjeta de propiedad (licencia de tránsito).</p>
       </div>
     </header>
 
@@ -43,7 +43,7 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
         <div class="choice-grid">
           <button type="button" class="choice-card" (click)="step.set('photo')" [disabled]="!scanEnabled()">
             <span class="choice-icon" aria-hidden="true">📷</span>
-            <strong>Con foto de la tarjeta</strong>
+            <strong>Con foto de la tarjeta (opcional)</strong>
             @if (scanEnabled()) {
               <span>Tomamos los datos de la foto y tú los revisas antes de guardar.</span>
             } @else {

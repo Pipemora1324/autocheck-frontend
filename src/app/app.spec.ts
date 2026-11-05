@@ -61,6 +61,7 @@ describe('App', () => {
     expect(element.querySelector('.logout-button')).toBeTruthy();
     expect(element.querySelector('.role-badge')).toBeNull();
     expect([...element.querySelectorAll('.main-nav a')].map((link) => link.textContent)).toEqual(['Mi garaje', 'Mi cuenta']);
+    expect(element.querySelector('footer')?.textContent).toContain('un mecánico debe confirmar el diagnóstico');
   });
 
   it('marca al administrador', async () => {

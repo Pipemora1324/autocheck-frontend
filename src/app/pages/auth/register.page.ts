@@ -11,7 +11,7 @@ import { fieldError, PASSWORD_MAX, PASSWORD_MIN, passwordsMatch, safeReturnUrl }
   selector: 'app-register-page',
   imports: [ReactiveFormsModule, RouterLink, AuthCardComponent],
   template: `
-    <app-auth-card heading="Crea tu cuenta" description="Regístrate con tu correo para llevar tus vehículos y sus vencimientos en un solo lugar.">
+    <app-auth-card heading="Crea tu cuenta" description="Regístrate con tu correo para guardar tus vehículos y entender los testigos del tablero.">
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <label class="field-label" for="register-email">Correo electrónico</label>
         <input id="register-email" type="email" formControlName="email" autocomplete="email" [attr.aria-invalid]="!!error('email')" aria-describedby="register-email-error" />

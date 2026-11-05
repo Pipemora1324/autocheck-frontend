@@ -11,7 +11,7 @@ import { fieldError, PASSWORD_MAX, safeReturnUrl } from './auth-forms';
   selector: 'app-login-page',
   imports: [ReactiveFormsModule, RouterLink, AuthCardComponent],
   template: `
-    <app-auth-card heading="Inicia sesión" description="Ingresa para ver tu garaje y los vencimientos de tus vehículos.">
+    <app-auth-card heading="Inicia sesión" description="Ingresa para ver tu garaje y diagnosticar los testigos del tablero.">
       @if (notice()) {
         <p class="form-notice" role="status">{{ notice() }}</p>
       }

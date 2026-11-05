@@ -29,7 +29,7 @@ import { PASSWORD_MAX } from '../auth/auth-forms';
     <section class="panel">
       <h2>Eliminar mi cuenta</h2>
       <p class="source-note">
-        Se borran tu cuenta, tus sesiones y todos los vehículos de tu garaje. Con esto también revocas la autorización de tratamiento de datos.
+        Se borran tu cuenta, tus sesiones, todos los vehículos de tu garaje y sus diagnósticos. Con esto también revocas la autorización de tratamiento de datos.
         Esta acción no se puede deshacer.
       </p>
       <div class="form-actions">
@@ -39,7 +39,7 @@ import { PASSWORD_MAX } from '../auth/auth-forms';
 
     @if (confirming()) {
       <app-modal heading="¿Eliminar tu cuenta?" (close)="confirming.set(false)">
-        <p>Escribe tu contraseña para confirmar. Se borrarán tu cuenta y todos tus vehículos.</p>
+        <p>Escribe tu contraseña para confirmar. Se borrarán tu cuenta, todos tus vehículos y sus diagnósticos.</p>
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="form-field">
             <label for="delete-password">Contraseña</label>
