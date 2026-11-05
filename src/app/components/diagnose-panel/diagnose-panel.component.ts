@@ -22,18 +22,24 @@ export interface DiagnosisErrorView {
   suggestList: boolean;
 }
 
-/** Traduce los errores de POST /garage/:plate/diagnoses. El 429 de Gemini llega como 503 DIAGNOSIS_PROVIDER_BUSY. */
+/** Qué contador se agotó en un 429 de diagnósticos. Solo con el de la IA tiene sentido ofrecer la lista. */
+const limitScope = (error: unknown): unknown => (error instanceof HttpErrorResponse ? (error.error as { limite?: unknown } | null)?.limite : undefined);
+
+/**
+ * Traduce los errores de POST /garage/:plate/diagnoses.
+ * 503 DIAGNOSIS_PROVIDER_BUSY: Gemini respondió 429 por su plan gratuito, no por este usuario.
+ * 429 RATE_LIMITED: el usuario superó uno de nuestros límites por hora.
+ */
 export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
   const code = apiErrorCode(error);
   const status = error instanceof HttpErrorResponse ? error.status : 0;
   if (code === EMAIL_NOT_VERIFIED) {
     return { message: 'Confirma tu correo para diagnosticar. Abre el enlace que te enviamos o usa "Reenviar correo" en el aviso de arriba.', suggestList: false };
   }
-  // Nuestro límite por usuario (15 por hora) también cuenta la elección manual: sugerirla fallaría.
-  if (code === 'RATE_LIMITED') {
-    return { message: `${apiErrorMessage(error, 'Alcanzaste el máximo de diagnósticos por hora.')} El límite también aplica a la elección manual.`, suggestList: false };
+  if (code === 'RATE_LIMITED' || status === 429) {
+    return { message: apiErrorMessage(error, 'Alcanzaste el límite de diagnósticos por hora. Intenta más tarde.'), suggestList: limitScope(error) === 'ia' };
   }
-  if (code === 'DIAGNOSIS_PROVIDER_BUSY' || status === 429) {
+  if (code === 'DIAGNOSIS_PROVIDER_BUSY') {
     return { message: 'El cupo gratuito de la IA está ocupado en este momento. Intenta en un minuto o elige el testigo de la lista.', suggestList: true };
   }
   if (code === 'AI_NOT_CONFIGURED' || code === 'DIAGNOSIS_UNAVAILABLE') {

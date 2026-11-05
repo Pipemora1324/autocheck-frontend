@@ -20,12 +20,10 @@ const httpError = (status: number, body: object | null) => new HttpErrorResponse
 
 describe('diagnosisErrorView', () => {
   it('el proveedor ocupado sugiere elegir a mano', () => {
-    for (const error of [httpError(503, { code: 'DIAGNOSIS_PROVIDER_BUSY', message: 'x' }), httpError(429, {})]) {
-      const view = diagnosisErrorView(error);
-      expect(view.message).toContain('cupo gratuito');
-      expect(view.message).toContain('elige el testigo de la lista');
-      expect(view.suggestList).toBe(true);
-    }
+    const view = diagnosisErrorView(httpError(503, { code: 'DIAGNOSIS_PROVIDER_BUSY', message: 'x', retryAfterSeconds: 60 }));
+    expect(view.message).toContain('cupo gratuito');
+    expect(view.message).toContain('elige el testigo de la lista');
+    expect(view.suggestList).toBe(true);
   });
 
   it('la IA apagada o caída dice que la elección manual sigue funcionando', () => {
@@ -36,10 +34,26 @@ describe('diagnosisErrorView', () => {
     }
   });
 
-  it('nuestro límite por hora no sugiere la lista, porque también aplica a la elección manual', () => {
-    const view = diagnosisErrorView(httpError(429, { code: 'RATE_LIMITED', message: 'Alcanzaste el máximo de 15 diagnósticos por hora.' }));
-    expect(view.message).toContain('15 diagnósticos por hora');
-    expect(view.message).toContain('también aplica a la elección manual');
+  it('el límite por hora de la IA muestra el mensaje del servidor y ofrece la lista, que tiene otro contador', () => {
+    const message = 'Alcanzaste el máximo de 15 diagnósticos con IA por hora. Intenta más tarde o elige el testigo de la lista, que no cuenta para este límite.';
+    const view = diagnosisErrorView(httpError(429, { code: 'RATE_LIMITED', limite: 'ia', message }));
+    expect(view.message).toBe(message);
+    expect(view.message).not.toContain('cupo gratuito');
+    expect(view.suggestList).toBe(true);
+  });
+
+  it('agotar el límite de la lista o el tope total no ofrece la lista, porque fallaría', () => {
+    for (const limite of ['manual', 'total']) {
+      const view = diagnosisErrorView(httpError(429, { code: 'RATE_LIMITED', limite, message: 'Alcanzaste el máximo por hora.' }));
+      expect(view.message).toBe('Alcanzaste el máximo por hora.');
+      expect(view.suggestList).toBe(false);
+    }
+  });
+
+  it('un 429 sin código es un límite por hora, no el cupo del proveedor', () => {
+    const view = diagnosisErrorView(httpError(429, {}));
+    expect(view.message).toContain('límite de diagnósticos por hora');
+    expect(view.message).not.toContain('cupo gratuito');
     expect(view.suggestList).toBe(false);
   });
 
@@ -268,6 +282,28 @@ describe('DiagnosePanelComponent', () => {
     [...box.querySelectorAll('button')].find((item) => item.textContent?.includes('Elegir de la lista'))!.click();
     await fixture.whenStable();
     http.expectOne(`${API}/telltales`).flush({ telltales: telltales() });
+  });
+
+  it('al agotar el límite de la IA lleva a la lista; sin él, la lista no se ofrece', async () => {
+    const { fixture, element } = await render();
+    describeTelltale(element, 'una luz');
+    acknowledge(element);
+    await fixture.whenStable();
+    button(element, 'Diagnosticar')!.click();
+    http.expectOne(DIAGNOSES).flush(
+      { message: 'Alcanzaste el máximo de 15 diagnósticos con IA por hora.', code: 'RATE_LIMITED', limite: 'ia' },
+      { status: 429, statusText: 'Too Many Requests' }
+    );
+    await fixture.whenStable();
+    const box = element.querySelector('.diagnose-error')!;
+    expect(box.textContent).toContain('15 diagnósticos con IA por hora');
+    expect(box.textContent).not.toContain('cupo gratuito');
+    expect([...box.querySelectorAll('button')].some((item) => item.textContent?.includes('Elegir de la lista'))).toBe(true);
+
+    button(element, 'Diagnosticar')!.click();
+    http.expectOne(DIAGNOSES).flush({ message: 'Alcanzaste el máximo por hora.', code: 'RATE_LIMITED', limite: 'total' }, { status: 429, statusText: 'Too Many Requests' });
+    await fixture.whenStable();
+    expect([...element.querySelector('.diagnose-error')!.querySelectorAll('button')]).toHaveLength(0);
   });
 
   it('con la IA apagada abre la lista y lo explica en la pestaña de foto, sin ofrecer subir nada', async () => {
