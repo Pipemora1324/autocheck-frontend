@@ -62,6 +62,7 @@
 /* Detalle */
 .detail-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.2rem; align-items: start; }
 .detail-grid > .panel { margin-top: 0; }
+.form-notice + .detail-grid { margin-top: 1.2rem; }
 .data-list { margin: 0; }
 .data-list div { display: grid; grid-template-columns: 9rem 1fr; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid #edf1f5; }
 .data-list div:last-child { border-bottom: 0; }

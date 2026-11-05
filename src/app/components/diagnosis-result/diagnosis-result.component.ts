@@ -11,7 +11,7 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
     <article class="diagnosis-card {{ r.severidad }}" aria-labelledby="diagnosis-title">
       @if (mustStop()) {
         <div class="stop-banner" role="alert">
-          <strong>Detente en un lugar seguro y llama a un taller o a una grúa.</strong>
+          <strong>Detente ahora</strong>
           <span>{{ r.urgencia.accion }}</span>
         </div>
       }

@@ -44,7 +44,8 @@ describe('DiagnosisResultComponent', () => {
     const element = await render(diagnosedRed());
     const banner = element.querySelector('.stop-banner')!;
     expect(banner.getAttribute('role')).toBe('alert');
-    expect(banner.textContent).toContain('Detente en un lugar seguro y llama a un taller o a una grúa.');
+    expect(banner.textContent).toContain('Detente en un lugar seguro');
+    expect(banner.textContent).toContain('llama a un taller o a una grúa');
     expect(banner.textContent).toContain('No sigas manejando.');
   });
 
