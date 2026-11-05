@@ -12,7 +12,14 @@ export const authGuard: CanActivateFn = (_route, state) => {
   );
 };
 
-/** Para login/registro: si ya hay sesión, lleva al inicio. */
+/** Para la raíz: con sesión muestra el garaje; sin sesión, la portada pública. */
+export const homeGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return auth.restoreSession().pipe(map(() => auth.isAuthenticated() || router.createUrlTree(['/inicio'])));
+};
+
+/** Para portada, login y registro: si ya hay sesión, lleva al garaje. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

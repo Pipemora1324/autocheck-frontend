@@ -1,13 +1,19 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/auth.guard';
+import { authGuard, guestGuard, homeGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    canActivate: [authGuard],
+    canActivate: [homeGuard],
     title: 'Mi garaje · AutoCheck-CO',
     loadComponent: () => import('./pages/garage/garage.page').then((m) => m.GaragePage)
+  },
+  {
+    path: 'inicio',
+    canActivate: [guestGuard],
+    title: 'Diagnóstico de testigos del tablero · AutoCheck-CO',
+    loadComponent: () => import('./pages/landing/landing.page').then((m) => m.LandingPage)
   },
   {
     path: 'garaje/nuevo',

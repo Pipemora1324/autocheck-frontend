@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree, type ActivatedRouteSnapshot, type RouterStateSnapshot } from '@angular/router';
 import { firstValueFrom, isObservable, Observable, Subject } from 'rxjs';
-import { authGuard, guestGuard } from './auth.guard';
+import { authGuard, guestGuard, homeGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 
 class AuthStub {
@@ -57,6 +57,18 @@ describe('guards de autenticación', () => {
     const tree = await result;
     expect(tree).toBeInstanceOf(UrlTree);
     expect(router.serializeUrl(tree as UrlTree)).toBe('/login?returnUrl=%2F%3Fplaca%3DABC-1234');
+  });
+
+  it('homeGuard muestra el garaje con sesión', async () => {
+    const result = firstValueFrom(run(homeGuard));
+    auth.finishRestore(true);
+    expect(await result).toBe(true);
+  });
+
+  it('homeGuard lleva a la portada sin sesión', async () => {
+    const result = firstValueFrom(run(homeGuard));
+    auth.finishRestore(false);
+    expect(router.serializeUrl((await result) as UrlTree)).toBe('/inicio');
   });
 
   it('guestGuard manda al inicio si ya hay sesión', async () => {
