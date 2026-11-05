@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { DiagnosePanelComponent } from '../../components/diagnose-panel/diagnose-panel.component';
@@ -81,7 +81,7 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
             <div class="detail-grid">
               <div>
                 <app-diagnose-panel [plate]="v.plate" (diagnosed)="historyKey.set(historyKey() + 1)" />
-                <app-diagnosis-history [plate]="v.plate" [refreshKey]="historyKey()" (consult)="consult($event)" />
+                <app-diagnosis-history [plate]="v.plate" [refreshKey]="historyKey()" />
               </div>
               <section class="panel">
                 <h2>Datos del vehículo</h2>
@@ -134,7 +134,6 @@ export class VehicleDetailPage {
   readonly fieldErrors = signal<Record<string, string>>({});
 
   readonly historyKey = signal(0);
-  private readonly panel = viewChild(DiagnosePanelComponent);
 
   readonly confirmingDelete = signal(false);
   readonly deleting = signal(false);
@@ -167,11 +166,6 @@ export class VehicleDetailPage {
         }
       }
     });
-  }
-
-  consult(telltaleId: string): void {
-    this.panel()?.consult(telltaleId);
-    if (typeof window.scrollTo === 'function') window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   startEditing(): void {

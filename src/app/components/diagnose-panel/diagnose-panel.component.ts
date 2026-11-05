@@ -224,11 +224,6 @@ export class DiagnosePanelComponent {
     this.submit({ telltaleId: telltale.id }, 'Preparando la explicación…');
   }
 
-  /** Vuelve a consultar un testigo desde el historial. */
-  consult(telltaleId: string): void {
-    this.submit({ telltaleId }, 'Preparando la explicación…');
-  }
-
   reset(): void {
     this.clearPhoto();
     this.description.set('');

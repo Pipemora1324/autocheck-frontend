@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, shareReplay, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import type { DiagnosisHistory, DiagnosisInput, DiagnosisResult, TelltaleSummary } from '../models/diagnosis';
+import type { DiagnosisDetail, DiagnosisHistory, DiagnosisInput, DiagnosisResult, TelltaleSummary } from '../models/diagnosis';
 
 export const HISTORY_PAGE_SIZE = 10;
 
@@ -40,6 +40,11 @@ export class DiagnosisService {
   history(plate: string, page = 1, limit = HISTORY_PAGE_SIZE): Observable<DiagnosisHistory> {
     const params = new HttpParams().set('page', page).set('limit', limit);
     return this.http.get<DiagnosisHistory>(this.url(plate), { params });
+  }
+
+  /** Solo lee: no crea otra entrada ni cuenta para ningún límite. */
+  detail(plate: string, id: string): Observable<DiagnosisDetail> {
+    return this.http.get<DiagnosisDetail>(`${this.url(plate)}/${encodeURIComponent(id)}`);
   }
 
   remove(plate: string, id: string): Observable<void> {

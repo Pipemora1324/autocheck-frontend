@@ -282,14 +282,4 @@ describe('DiagnosePanelComponent', () => {
     expect(element.textContent).toContain('elección manual sigue funcionando');
     expect(element.querySelector('#dash-file')).toBeNull();
   });
-
-  it('consult vuelve a consultar un testigo sin IA', async () => {
-    const { fixture, element } = await render();
-    fixture.componentInstance.consult('tpms');
-    const request = http.expectOne(DIAGNOSES);
-    expect((request.request.body as FormData).get('telltaleId')).toBe('tpms');
-    request.flush(diagnosed({ origen: 'manual', confianza: null }), { status: 201, statusText: 'Created' });
-    await fixture.whenStable();
-    expect(element.querySelector('app-diagnosis-result')).toBeTruthy();
-  });
 });

@@ -1,15 +1,16 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { formatDateTime } from '../../core/format-date';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
-import { DIAGNOSIS_DISCLAIMER, type DiagnosisHistoryItem } from '../../models/diagnosis';
+import { DIAGNOSIS_DISCLAIMER, type DiagnosisDetail, type DiagnosisHistoryItem } from '../../models/diagnosis';
 import { DiagnosisService } from '../../services/diagnosis.service';
+import { DiagnosisResultComponent } from '../diagnosis-result/diagnosis-result.component';
 import { ModalComponent } from '../modal/modal.component';
 import { SeverityBadgeComponent } from '../severity-badge/severity-badge.component';
 
-/** Historial del vehículo, con detalle y borrado. El backend no guarda la imagen ni el texto de la explicación. */
+/** Historial del vehículo, con detalle y borrado. La explicación se pide al abrirla, sin crear otra entrada. */
 @Component({
   selector: 'app-diagnosis-history',
-  imports: [ModalComponent, SeverityBadgeComponent],
+  imports: [DiagnosisResultComponent, ModalComponent, SeverityBadgeComponent],
   template: `
     <section class="panel" aria-labelledby="history-title">
       <h2 id="history-title">Historial de diagnósticos</h2>
@@ -59,7 +60,7 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
 
     @if (selected(); as item) {
       <app-modal heading="Detalle del diagnóstico" (close)="closeDetail()">
-        @if (item.debeDetenerse) {
+        @if (item.debeDetenerse && !detail()) {
           <div class="stop-banner" role="alert"><strong>Si sigue encendido: detente en un lugar seguro y llama a un taller o a una grúa.</strong></div>
         }
         <dl class="data-list">
@@ -69,7 +70,16 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
           <div><dt>Cómo se identificó</dt><dd>{{ origin(item) }}</dd></div>
           @if (item.descripcion) { <div><dt>Tu descripción</dt><dd>{{ item.descripcion }}</dd></div> }
         </dl>
-        <p class="source-note">{{ disclaimer }} El historial guarda este resumen. Para leer otra vez la explicación completa, vuelve a consultar el testigo: se agrega una entrada nueva al historial.</p>
+        @if (detail(); as explanation) {
+          <p class="source-note">Explicación según la información actual de la app.</p>
+          <app-diagnosis-result [result]="explanation" />
+        } @else {
+          <p class="source-note">{{ disclaimer }}</p>
+        }
+        @if (detailLoading()) {
+          <div class="state-box" role="status"><span class="spinner" aria-hidden="true"></span> Cargando la explicación…</div>
+        }
+        @if (detailError()) { <p class="form-error" role="alert">{{ detailError() }}</p> }
         @if (deleteError()) { <p class="form-error" role="alert">{{ deleteError() }}</p> }
         @if (confirmingDelete()) {
           <p><strong>¿Eliminar este diagnóstico? Esta acción no se puede deshacer.</strong></p>
@@ -79,7 +89,9 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
           </div>
         } @else {
           <div class="form-actions">
-            <button class="secondary-button" type="button" (click)="reconsult(item)">Ver la explicación completa</button>
+            @if (!detail()) {
+              <button class="secondary-button" type="button" [disabled]="detailLoading()" (click)="loadDetail(item)">Ver la explicación completa</button>
+            }
             <button class="danger-button" type="button" (click)="confirmingDelete.set(true)">Eliminar</button>
             <button class="secondary-button" type="button" (click)="closeDetail()">Cerrar</button>
           </div>
@@ -94,7 +106,6 @@ export class DiagnosisHistoryComponent {
   readonly plate = input.required<string>();
   /** Cambia cuando se crea un diagnóstico, para volver a la primera página. */
   readonly refreshKey = input(0);
-  readonly consult = output<string>();
 
   protected readonly date = formatDateTime;
   protected readonly disclaimer = DIAGNOSIS_DISCLAIMER;
@@ -105,6 +116,9 @@ export class DiagnosisHistoryComponent {
   readonly page = signal(1);
   readonly totalPages = signal(0);
   readonly selected = signal<DiagnosisHistoryItem | null>(null);
+  readonly detail = signal<DiagnosisDetail | null>(null);
+  readonly detailLoading = signal(false);
+  readonly detailError = signal('');
   readonly confirmingDelete = signal(false);
   readonly deleting = signal(false);
   readonly deleteError = signal('');
@@ -156,16 +170,37 @@ export class DiagnosisHistoryComponent {
   open(item: DiagnosisHistoryItem): void {
     this.confirmingDelete.set(false);
     this.deleteError.set('');
+    this.resetDetail();
     this.selected.set(item);
   }
 
   closeDetail(): void {
     this.selected.set(null);
+    this.resetDetail();
   }
 
-  reconsult(item: DiagnosisHistoryItem): void {
-    this.closeDetail();
-    this.consult.emit(item.telltaleId);
+  loadDetail(item: DiagnosisHistoryItem): void {
+    this.detailLoading.set(true);
+    this.detailError.set('');
+    this.diagnosis.detail(this.plate(), item.id).subscribe({
+      next: (detail) => {
+        // Si ya se cerró o se abrió otra entrada, esta respuesta no le corresponde.
+        if (this.selected()?.id !== item.id) return;
+        this.detailLoading.set(false);
+        this.detail.set(detail);
+      },
+      error: (error: unknown) => {
+        if (this.selected()?.id !== item.id) return;
+        this.detailLoading.set(false);
+        this.detailError.set(apiErrorMessage(error, 'No pudimos cargar la explicación. Inténtalo de nuevo.'));
+      }
+    });
+  }
+
+  private resetDetail(): void {
+    this.detail.set(null);
+    this.detailLoading.set(false);
+    this.detailError.set('');
   }
 
   remove(item: DiagnosisHistoryItem): void {

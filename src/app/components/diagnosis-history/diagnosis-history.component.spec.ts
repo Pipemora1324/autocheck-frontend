@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting, type TestRequest } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
-import { history, historyItem } from '../../../testing/diagnosis-fixtures';
+import { diagnosedAirbag, diagnosedRed, history, historyItem } from '../../../testing/diagnosis-fixtures';
 import { DiagnosisHistoryComponent } from './diagnosis-history.component';
 
 const DIAGNOSES = `${environment.apiUrl}/garage/ABC-123/diagnoses`;
@@ -56,24 +56,97 @@ describe('DiagnosisHistoryComponent', () => {
     expect(items[2]!.textContent).not.toContain('Detente');
   });
 
-  it('el detalle muestra lo guardado y aclara que la explicación se vuelve a consultar', async () => {
-    const { fixture, element } = await render((request) => request.flush(history([historyItem()])));
-    const emitted: string[] = [];
-    fixture.componentInstance.consult.subscribe((value) => emitted.push(value));
+  const detailRequest = (id = ITEM_ID) => http.expectOne(`${DIAGNOSES}/${id}`);
 
+  it('el detalle muestra lo guardado, sin avisar de entradas nuevas y sin pedir la explicación todavía', async () => {
+    const { fixture, element } = await render((request) => request.flush(history([historyItem()])));
     element.querySelector<HTMLButtonElement>('.history-item')!.click();
     await fixture.whenStable();
     const dialog = element.querySelector('[role="dialog"]')!;
     expect(dialog.textContent).toContain('una llanta baja');
     expect(dialog.textContent).toContain('Elegido por ti de la lista');
-    expect(dialog.textContent).toContain('se agrega una entrada nueva');
+    expect(dialog.textContent).not.toContain('entrada nueva');
     expect(dialog.textContent).toContain('Orientación general. Un mecánico debe confirmar el diagnóstico.');
     expect(dialog.querySelector('.stop-banner')).toBeNull();
+    expect(dialog.querySelector('app-diagnosis-result')).toBeNull();
+    http.expectNone(`${DIAGNOSES}/${ITEM_ID}`);
+  });
+
+  it('la explicación completa usa GET del detalle: no crea otra entrada ni recarga el historial', async () => {
+    const { fixture, element } = await render((request) => request.flush(history([historyItem({ debeDetenerse: true, severidad: 'rojo' })])));
+    element.querySelector<HTMLButtonElement>('.history-item')!.click();
+    await fixture.whenStable();
+    const dialog = element.querySelector('[role="dialog"]')!;
+    expect(dialog.querySelectorAll('.stop-banner')).toHaveLength(1);
 
     button(dialog, 'Ver la explicación completa')!.click();
     await fixture.whenStable();
-    expect(emitted).toEqual(['tpms']);
-    expect(element.querySelector('[role="dialog"]')).toBeNull();
+    expect(dialog.textContent).toContain('Cargando la explicación');
+    expect(button(dialog, 'Ver la explicación completa')!.disabled).toBe(true);
+
+    const request = detailRequest();
+    expect(request.request.method).toBe('GET');
+    request.flush({ ...diagnosedRed({ id: ITEM_ID }), descripcion: 'una llanta baja' });
+    await fixture.whenStable();
+
+    expect(dialog.querySelector('app-diagnosis-result h3')?.textContent).toBe('Presión de aceite');
+    expect(dialog.textContent).toContain('Qué NO hacer');
+    expect(dialog.textContent).toContain('Cuándo ir al mecánico');
+    expect(dialog.querySelector('.diagnosis-disclaimer')?.textContent).toContain('Un mecánico debe confirmar');
+    expect(dialog.textContent).toContain('información actual de la app');
+    // Un solo banner, el del resultado, y ya no se ofrece el botón.
+    expect(dialog.querySelectorAll('.stop-banner')).toHaveLength(1);
+    expect(button(dialog, 'Ver la explicación completa')).toBeUndefined();
+    // El afterEach verifica que no hubo ningún POST ni otra carga del historial.
+  });
+
+  it('la explicación de un airbag no ordena detenerse', async () => {
+    const { fixture, element } = await render((request) => request.flush(history([historyItem({ telltaleId: 'airbag', nombre: 'Airbag', severidad: 'rojo', debeDetenerse: false })])));
+    element.querySelector<HTMLButtonElement>('.history-item')!.click();
+    await fixture.whenStable();
+    const dialog = element.querySelector('[role="dialog"]')!;
+    button(dialog, 'Ver la explicación completa')!.click();
+    detailRequest().flush({ ...diagnosedAirbag({ id: ITEM_ID }), descripcion: null });
+    await fixture.whenStable();
+    expect(dialog.querySelector('.stop-banner')).toBeNull();
+    expect(dialog.querySelector('app-diagnosis-result')?.textContent).toContain('Revísalo hoy');
+  });
+
+  it('si la explicación falla lo dice y permite reintentar', async () => {
+    const { fixture, element } = await render((request) => request.flush(history([historyItem()])));
+    element.querySelector<HTMLButtonElement>('.history-item')!.click();
+    await fixture.whenStable();
+    const dialog = element.querySelector('[role="dialog"]')!;
+    button(dialog, 'Ver la explicación completa')!.click();
+    detailRequest().flush({ code: 'TELLTALE_NOT_IN_CATALOG', message: 'Ese testigo ya no está en el catálogo.' }, { status: 404, statusText: 'Not Found' });
+    await fixture.whenStable();
+    expect(dialog.querySelector('.form-error')?.textContent).toContain('ya no está en el catálogo');
+
+    button(dialog, 'Ver la explicación completa')!.click();
+    detailRequest().flush({ ...diagnosedRed({ id: ITEM_ID }), descripcion: null });
+    await fixture.whenStable();
+    expect(dialog.querySelector('.form-error')).toBeNull();
+    expect(dialog.querySelector('app-diagnosis-result')).toBeTruthy();
+  });
+
+  it('una respuesta que llega tarde no aparece en otra entrada, y al reabrir se empieza de cero', async () => {
+    const other = 'otro-id';
+    const { fixture, element } = await render((request) => request.flush(history([historyItem(), historyItem({ id: other })])));
+    element.querySelectorAll<HTMLButtonElement>('.history-item')[0]!.click();
+    await fixture.whenStable();
+    button(element.querySelector('[role="dialog"]')!, 'Ver la explicación completa')!.click();
+    const late = detailRequest();
+
+    button(element.querySelector('[role="dialog"]')!, 'Cerrar')!.click();
+    await fixture.whenStable();
+    element.querySelectorAll<HTMLButtonElement>('.history-item')[1]!.click();
+    await fixture.whenStable();
+    late.flush({ ...diagnosedRed({ id: ITEM_ID }), descripcion: null });
+    await fixture.whenStable();
+
+    const dialog = element.querySelector('[role="dialog"]')!;
+    expect(dialog.querySelector('app-diagnosis-result')).toBeNull();
+    expect(button(dialog, 'Ver la explicación completa')!.disabled).toBe(false);
   });
 
   it('el detalle de un rojo repite la orden de detenerse y muestra la confianza de la IA', async () => {

@@ -55,6 +55,11 @@ export interface Diagnosed {
   aviso: string;
 }
 
+/** GET /garage/:plate/diagnoses/:id: la explicación sale del catálogo vigente, sin crear otra entrada. */
+export interface DiagnosisDetail extends Diagnosed {
+  descripcion: string | null;
+}
+
 export interface NeedsBetterInput {
   status: 'needs_better_input';
   pista: string;
