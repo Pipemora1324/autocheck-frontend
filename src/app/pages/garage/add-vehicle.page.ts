@@ -63,7 +63,7 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
           <button type="button" class="choice-card" (click)="startManual()">
             <span class="choice-icon" aria-hidden="true">✍️</span>
             <strong>Llenar a mano</strong>
-            <span>Escribe la placa, la marca, el modelo y las fechas de vencimiento.</span>
+            <span>Escribe la placa, la marca, la línea y los demás datos que quieras.</span>
           </button>
         </div>
       }

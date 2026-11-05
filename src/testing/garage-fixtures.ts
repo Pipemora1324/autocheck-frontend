@@ -1,4 +1,4 @@
-import type { Assessment, CardScanResult, GarageVehicle, NewGarageVehicle, PublicConfig } from '../app/models/garage';
+import type { CardScanResult, GarageVehicle, NewGarageVehicle, PublicConfig } from '../app/models/garage';
 
 export const garageVehicle = (overrides: Partial<GarageVehicle> = {}): GarageVehicle => ({
   plate: 'ABC-123',
@@ -10,15 +10,10 @@ export const garageVehicle = (overrides: Partial<GarageVehicle> = {}): GarageVeh
   chassis: '9FBBSRADDKM123456',
   fuelType: 'Gasolina',
   serviceType: 'Particular',
-  soatExpiresOn: '2027-06-30',
-  rtmExpiresOn: null,
-  runtStatus: null,
   source: 'manual',
   kind: 'carro',
   createdAt: '2026-11-02T17:00:00.000Z',
   updatedAt: '2026-11-02T17:00:00.000Z',
-  soat: { status: 'Vigente', expirationDate: '2027-06-30', daysToExpire: 240, alert: 'verde' },
-  rtm: { status: 'Sin información', expirationDate: null, daysToExpire: null, alert: 'gris' },
   ...overrides
 });
 
@@ -32,27 +27,7 @@ export const newGarageVehicle = (overrides: Partial<NewGarageVehicle> = {}): New
   chassis: null,
   fuelType: null,
   serviceType: null,
-  soatExpiresOn: null,
-  rtmExpiresOn: null,
-  runtStatus: null,
   source: 'manual',
-  ...overrides
-});
-
-export const assessment = (overrides: Partial<Assessment> = {}): Assessment => ({
-  plate: 'ABC-123',
-  verdict: 'Revisar',
-  reasons: [{ code: 'RTM_MISSING', severity: 'media', message: 'No registraste la fecha de la revisión técnico-mecánica.' }],
-  missingFields: ['rtmExpiresOn'],
-  basedOn: {
-    source: 'datos_registrados_por_el_usuario',
-    dataOrigin: 'manual',
-    official: false,
-    evaluatedAt: '2026-11-02T17:00:00.000Z',
-    evaluatedOn: '2026-11-02',
-    timeZone: 'America/Bogota',
-    disclaimer: 'Concepto calculado únicamente con los datos registrados en tu garaje. No es una consulta oficial al RUNT.'
-  },
   ...overrides
 });
 

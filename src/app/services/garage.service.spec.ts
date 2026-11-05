@@ -35,7 +35,7 @@ describe('GarageService', () => {
     expect((await result).plate).toBe('ABC-123');
   });
 
-  it('update, remove y assessment codifican la placa en la URL', () => {
+  it('update y remove usan la placa en la URL', () => {
     service.update('ABC-12D', { color: null }).subscribe();
     const patch = http.expectOne(`${GARAGE}/ABC-12D`);
     expect(patch.request.method).toBe('PATCH');
@@ -46,9 +46,6 @@ describe('GarageService', () => {
     const removal = http.expectOne(`${GARAGE}/ABC-123`);
     expect(removal.request.method).toBe('DELETE');
     removal.flush(null, { status: 204, statusText: 'No Content' });
-
-    service.assessment('ABC-123').subscribe();
-    http.expectOne(`${GARAGE}/ABC-123/assessment`).flush({});
   });
 
   it('scanCard sube la foto como multipart en el campo image', () => {

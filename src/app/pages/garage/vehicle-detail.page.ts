@@ -2,17 +2,15 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { ExpirationBadgeComponent, formatDate } from '../../components/expiration-badge/expiration-badge.component';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { VehicleFormComponent, type VehicleFormValue } from '../../components/vehicle-form/vehicle-form.component';
+import { formatDate } from '../../core/format-date';
 import { apiErrorCode, apiErrorMessage, apiFieldErrors, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
-import type { Assessment, GarageVehicle } from '../../models/garage';
+import type { GarageVehicle } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
 
 type LoadState = 'loading' | 'ready' | 'not-found' | 'unverified' | 'error';
 
-const VERDICT_CLASS: Record<Assessment['verdict'], string> = { 'Sin alertas': 'ok', Revisar: 'review', 'No recomendado': 'bad' };
-const VERDICT_ICON: Record<Assessment['verdict'], string> = { 'Sin alertas': '✓', Revisar: '!', 'No recomendado': '✕' };
 const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
   manual: 'registrados a mano',
   scan: 'leídos de la tarjeta de propiedad y confirmados por ti'
@@ -20,7 +18,7 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
 
 @Component({
   selector: 'app-vehicle-detail-page',
-  imports: [RouterLink, ExpirationBadgeComponent, VehicleFormComponent, ModalComponent],
+  imports: [RouterLink, VehicleFormComponent, ModalComponent],
   template: `
     <a class="back-link" routerLink="/">← Volver a mi garaje</a>
 
@@ -79,37 +77,6 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
             </section>
           } @else {
             <div class="detail-grid">
-              <div>
-                <section class="panel">
-                  <h2>Vigencias</h2>
-                  <div class="expiration-list">
-                    <app-expiration-badge document="SOAT" [status]="v.soat" [showDetail]="true" />
-                    <app-expiration-badge document="RTM" [status]="v.rtm" [showDetail]="true" />
-                  </div>
-                </section>
-                <section class="panel">
-                  <h2>Concepto para compra</h2>
-                  @if (assessment(); as a) {
-                    <span class="verdict {{ verdictClass() }}"><span aria-hidden="true">{{ verdictIcon() }}</span> {{ a.verdict }}</span>
-                    @if (a.reasons.length) {
-                      <ul class="reason-list">
-                        @for (reason of a.reasons; track reason.code + reason.message) { <li>{{ reason.message }}</li> }
-                      </ul>
-                    } @else {
-                      <p class="source-note">No encontramos alertas con los datos registrados.</p>
-                    }
-                    <p class="disclaimer">
-                      <strong>Se basa solo en los datos registrados en tu garaje; no es una consulta oficial al RUNT.</strong>
-                      {{ a.basedOn.disclaimer }}
-                    </p>
-                  } @else if (assessmentError()) {
-                    <p class="form-error" role="alert">{{ assessmentError() }}</p>
-                    <button class="secondary-button" type="button" (click)="loadAssessment()">Reintentar</button>
-                  } @else {
-                    <p class="source-note" role="status"><span class="spinner" aria-hidden="true"></span> Calculando concepto…</p>
-                  }
-                </section>
-              </div>
               <section class="panel">
                 <h2>Datos del vehículo</h2>
                 <dl class="data-list">
@@ -122,9 +89,6 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
                   <div><dt>Chasis</dt><dd>{{ v.chassis ?? '—' }}</dd></div>
                   <div><dt>Combustible</dt><dd>{{ v.fuelType ?? '—' }}</dd></div>
                   <div><dt>Servicio</dt><dd>{{ v.serviceType ?? '—' }}</dd></div>
-                  <div><dt>Vence SOAT</dt><dd>{{ format(v.soatExpiresOn) }}</dd></div>
-                  <div><dt>Vence RTM</dt><dd>{{ format(v.rtmExpiresOn) }}</dd></div>
-                  <div><dt>Estado RUNT</dt><dd>{{ v.runtStatus ?? 'Sin consultar' }}</dd></div>
                 </dl>
               </section>
             </div>
@@ -154,9 +118,7 @@ export class VehicleDetailPage {
 
   readonly state = signal<LoadState>('loading');
   readonly vehicle = signal<GarageVehicle | null>(null);
-  readonly assessment = signal<Assessment | null>(null);
   readonly loadError = signal('');
-  readonly assessmentError = signal('');
   readonly notice = signal(this.router.currentNavigation()?.extras.state?.['created'] ? 'Vehículo agregado a tu garaje.' : '');
 
   readonly editing = signal(false);
@@ -168,12 +130,8 @@ export class VehicleDetailPage {
   readonly deleting = signal(false);
   readonly deleteError = signal('');
 
-  readonly verdictClass = computed(() => (this.assessment() ? VERDICT_CLASS[this.assessment()!.verdict] : ''));
-  readonly verdictIcon = computed(() => (this.assessment() ? VERDICT_ICON[this.assessment()!.verdict] : ''));
   readonly sourceLabel = computed(() => (this.vehicle() ? SOURCE_LABEL[this.vehicle()!.source] : ''));
-  readonly updatedOn = computed(() => formatDate(this.vehicle()?.updatedAt.slice(0, 10) ?? null));
-
-  protected readonly format = formatDate;
+  readonly updatedOn = computed(() => (this.vehicle() ? formatDate(this.vehicle()!.updatedAt) : ''));
 
   constructor() {
     toObservable(this.placa).subscribe(() => this.load());
@@ -185,7 +143,6 @@ export class VehicleDetailPage {
       next: (vehicle) => {
         this.vehicle.set(vehicle);
         this.state.set('ready');
-        this.loadAssessment();
       },
       error: (error: unknown) => {
         if (error instanceof HttpErrorResponse && error.status === 404) this.state.set('not-found');
@@ -196,21 +153,6 @@ export class VehicleDetailPage {
         }
       }
     });
-  }
-
-  loadAssessment(): void {
-    this.assessment.set(null);
-    this.assessmentError.set('');
-    this.garage.assessment(this.placa()).subscribe({
-      next: (assessment) => this.assessment.set(assessment),
-      error: (error: unknown) => this.assessmentError.set(apiErrorMessage(error, 'No se pudo calcular el concepto.'))
-    });
-  }
-
-  replaceVehicle(vehicle: GarageVehicle, notice: string): void {
-    this.vehicle.set(vehicle);
-    this.notice.set(notice);
-    this.loadAssessment();
   }
 
   startEditing(): void {
@@ -229,7 +171,8 @@ export class VehicleDetailPage {
       next: (vehicle) => {
         this.saving.set(false);
         this.editing.set(false);
-        this.replaceVehicle(vehicle, 'Cambios guardados.');
+        this.vehicle.set(vehicle);
+        this.notice.set('Cambios guardados.');
       },
       error: (error: unknown) => {
         this.saving.set(false);

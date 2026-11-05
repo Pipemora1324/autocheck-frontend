@@ -29,24 +29,13 @@ describe('GaragePage', () => {
     expect(element.querySelector('a[href="/garaje/nuevo"]')?.textContent).toContain('Agregar vehículo');
   });
 
-  it('lista los vehículos con el estado de SOAT y RTM en texto', async () => {
-    const vehicles = [
-      garageVehicle(),
-      garageVehicle({
-        plate: 'XYZ-98D',
-        kind: 'moto',
-        soat: { status: 'Vencido', expirationDate: '2026-10-01', daysToExpire: -32, alert: 'rojo' },
-        rtm: { status: 'Por Vencer', expirationDate: '2026-11-20', daysToExpire: 18, alert: 'amarillo' }
-      })
-    ];
+  it('lista los vehículos y enlaza a cada uno', async () => {
+    const vehicles = [garageVehicle(), garageVehicle({ plate: 'XYZ-98D', kind: 'moto', brand: 'Yamaha', model: 'NMAX' })];
     const element = await render((request) => request.flush({ vehicles }));
     const cards = element.querySelectorAll('.vehicle-card');
     expect(cards).toHaveLength(2);
-    expect(cards[0]!.textContent).toContain('SOAT: Vigente');
-    expect(cards[0]!.textContent).toContain('RTM: Sin fecha');
-    expect(cards[1]!.textContent).toContain('SOAT: Vencido');
-    expect(cards[1]!.textContent).toContain('RTM: Por vencer');
-    expect(cards[1]!.querySelector('.expiration-badge.rojo')).toBeTruthy();
+    expect(cards[0]!.textContent).toContain('Renault Sandero');
+    expect(cards[1]!.textContent).toContain('Moto');
     expect(cards[1]!.getAttribute('href')).toBe('/garaje/XYZ-98D');
   });
 

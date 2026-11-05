@@ -7,16 +7,7 @@ export type FuelType = (typeof FUEL_TYPES)[number];
 export type ServiceType = (typeof SERVICE_TYPES)[number];
 export type VehicleSource = 'manual' | 'scan';
 
-export type ExpirationStatusName = 'Vigente' | 'Por Vencer' | 'Vencido' | 'Sin información';
-
-export interface ExpirationStatus {
-  status: ExpirationStatusName;
-  expirationDate: string | null;
-  daysToExpire: number | null;
-  alert: 'verde' | 'amarillo' | 'rojo' | 'gris';
-}
-
-/** Campos editables de un vehículo del garaje. Las fechas van en AAAA-MM-DD. */
+/** Campos editables de un vehículo del garaje. model es la línea y year el modelo (año). */
 export interface GarageVehicleFields {
   brand: string;
   model: string;
@@ -26,9 +17,6 @@ export interface GarageVehicleFields {
   chassis: string | null;
   fuelType: FuelType | null;
   serviceType: ServiceType | null;
-  soatExpiresOn: string | null;
-  rtmExpiresOn: string | null;
-  runtStatus: string | null;
 }
 
 export interface GarageVehicle extends GarageVehicleFields {
@@ -37,8 +25,6 @@ export interface GarageVehicle extends GarageVehicleFields {
   kind: 'carro' | 'moto';
   createdAt: string;
   updatedAt: string;
-  soat: ExpirationStatus;
-  rtm: ExpirationStatus;
 }
 
 /** POST /garage. */
@@ -48,24 +34,6 @@ export interface NewGarageVehicle extends GarageVehicleFields {
 }
 
 export type GarageVehiclePatch = Partial<GarageVehicleFields>;
-
-export type Verdict = 'Sin alertas' | 'Revisar' | 'No recomendado';
-
-export interface Assessment {
-  plate: string;
-  verdict: Verdict;
-  reasons: Array<{ code: string; severity: 'alta' | 'media' | 'info'; message: string }>;
-  missingFields: string[];
-  basedOn: {
-    source: string;
-    dataOrigin: VehicleSource;
-    official: boolean;
-    evaluatedAt: string;
-    evaluatedOn: string;
-    timeZone: string;
-    disclaimer: string;
-  };
-}
 
 export interface Prefilled<T> {
   value: T | null;

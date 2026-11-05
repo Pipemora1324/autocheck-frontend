@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import { assessment, garageVehicle } from '../../../testing/garage-fixtures';
+import { garageVehicle } from '../../../testing/garage-fixtures';
 import { VehicleDetailPage } from './vehicle-detail.page';
 
 const GARAGE = `${environment.apiUrl}/garage`;
@@ -27,21 +27,14 @@ describe('VehicleDetailPage', () => {
     await fixture.whenStable();
     http.expectOne(`${GARAGE}/ABC-123`).flush(garageVehicle());
     await fixture.whenStable();
-    http.expectOne(`${GARAGE}/ABC-123/assessment`).flush(assessment());
-    await fixture.whenStable();
     return { fixture, element: fixture.nativeElement as HTMLElement };
   };
 
-  it('muestra datos, vigencias y el concepto con el aviso de que no es una consulta oficial', async () => {
+  it('muestra los datos del vehículo, sin nada de vigencias ni concepto', async () => {
     const { element } = await render();
     expect(element.querySelector('h1')?.textContent).toContain('Renault Sandero');
-    expect(element.textContent).toContain('SOAT: Vigente');
-    expect(element.textContent).toContain('Vence el 30/06/2027');
-    expect(element.querySelector('.verdict')?.textContent).toContain('Revisar');
-    const disclaimer = element.querySelector('.disclaimer')?.textContent ?? '';
-    expect(disclaimer).toContain('Se basa solo en los datos registrados');
-    expect(disclaimer).toContain('no es una consulta oficial');
-    expect(disclaimer).toContain('No es una consulta oficial al RUNT');
+    expect(element.textContent).toContain('9FBBSRADDKM123456');
+    expect(element.textContent).not.toMatch(/SOAT|RTM|RUNT|Concepto/);
   });
 
   it('edita enviando solo los campos editables (sin la placa)', async () => {
@@ -61,8 +54,6 @@ describe('VehicleDetailPage', () => {
     expect(request.request.body).not.toHaveProperty('plate');
     expect(request.request.body.color).toBe('Rojo');
     request.flush(garageVehicle({ color: 'Rojo' }));
-    await fixture.whenStable();
-    http.expectOne(`${GARAGE}/ABC-123/assessment`).flush(assessment());
     await fixture.whenStable();
     expect(element.textContent).toContain('Cambios guardados.');
   });

@@ -12,7 +12,6 @@ export type VehicleFormInitial = Partial<{ [K in VehicleFormField]: VehicleFormV
 
 const PLATE_PATTERN = /^\s*[A-Za-z]{3}[\s-]?\d{2}[0-9A-Za-z]\s*$/;
 const CHASSIS_PATTERN = /^[A-Za-z0-9-]{5,30}$/;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const LABELS: Record<VehicleFormField, string> = {
   plate: 'Placa',
@@ -23,10 +22,7 @@ const LABELS: Record<VehicleFormField, string> = {
   cylinderCc: 'Cilindraje (cc)',
   chassis: 'Número de chasis',
   fuelType: 'Combustible',
-  serviceType: 'Servicio',
-  soatExpiresOn: 'Vencimiento del SOAT',
-  rtmExpiresOn: 'Vencimiento de la RTM',
-  runtStatus: 'Estado en el RUNT'
+  serviceType: 'Servicio'
 };
 
 const text = (value: string) => value.trim() || null;
@@ -92,18 +88,6 @@ const integer = (value: string) => (value.trim() === '' ? null : Number(value));
           </select>
           <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'serviceType' }" />
         </div>
-
-        <h3 class="section-title">Vigencias</h3>
-        <div class="form-field">
-          <label for="vehicle-soat">{{ labels.soatExpiresOn }}</label>
-          <input id="vehicle-soat" type="date" formControlName="soatExpiresOn" [attr.aria-invalid]="!!error('soatExpiresOn')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'soatExpiresOn' }" />
-        </div>
-        <div class="form-field">
-          <label for="vehicle-rtm">{{ labels.rtmExpiresOn }}</label>
-          <input id="vehicle-rtm" type="date" formControlName="rtmExpiresOn" [attr.aria-invalid]="!!error('rtmExpiresOn')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'rtmExpiresOn' }" />
-        </div>
       </div>
 
       <ng-template #hints let-field>
@@ -150,10 +134,7 @@ export class VehicleFormComponent {
     cylinderCc: ['', [Validators.pattern(/^\d+$/), Validators.min(1), Validators.max(20000)]],
     chassis: ['', [Validators.pattern(CHASSIS_PATTERN)]],
     fuelType: [''],
-    serviceType: [''],
-    soatExpiresOn: ['', [Validators.pattern(DATE_PATTERN)]],
-    rtmExpiresOn: ['', [Validators.pattern(DATE_PATTERN)]],
-    runtStatus: ['']
+    serviceType: ['']
   });
 
   private readonly lowFields = computed(() => {
@@ -207,10 +188,7 @@ export class VehicleFormComponent {
       cylinderCc: integer(raw.cylinderCc),
       chassis: text(raw.chassis)?.toUpperCase() ?? null,
       fuelType: (raw.fuelType || null) as VehicleFormValue['fuelType'],
-      serviceType: (raw.serviceType || null) as VehicleFormValue['serviceType'],
-      soatExpiresOn: raw.soatExpiresOn || null,
-      rtmExpiresOn: raw.rtmExpiresOn || null,
-      runtStatus: text(raw.runtStatus)
+      serviceType: (raw.serviceType || null) as VehicleFormValue['serviceType']
     });
   }
 }

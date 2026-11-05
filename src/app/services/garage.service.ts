@@ -3,7 +3,6 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import type {
-  Assessment,
   CardScanResult,
   GarageVehicle,
   GarageVehiclePatch,
@@ -38,10 +37,6 @@ export class GarageService {
 
   remove(plate: string): Observable<void> {
     return this.http.delete<void>(this.plateUrl(plate));
-  }
-
-  assessment(plate: string): Observable<Assessment> {
-    return this.http.get<Assessment>(`${this.plateUrl(plate)}/assessment`);
   }
 
   /** multipart/form-data con un único archivo en el campo "image". */

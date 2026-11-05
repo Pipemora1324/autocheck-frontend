@@ -1,6 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ExpirationBadgeComponent } from '../../components/expiration-badge/expiration-badge.component';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
 import type { GarageVehicle } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
@@ -9,13 +8,13 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
 
 @Component({
   selector: 'app-garage-page',
-  imports: [RouterLink, ExpirationBadgeComponent],
+  imports: [RouterLink],
   template: `
     <header class="page-header">
       <div>
         <span class="eyebrow">Mi garaje</span>
         <h1>Tus vehículos</h1>
-        <p>Vigencias de SOAT y revisión técnico-mecánica calculadas con los datos que registras.</p>
+        <p>Elige un vehículo para diagnosticar un testigo del tablero.</p>
       </div>
       @if (state() === 'ready' && vehicles().length) {
         <a class="primary-button link-button" routerLink="/garaje/nuevo">Agregar vehículo</a>
@@ -56,10 +55,6 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
                   <span class="vehicle-name">
                     <strong>{{ vehicle.brand }} {{ vehicle.model }}</strong>
                     <small>{{ vehicle.kind === 'moto' ? 'Moto' : 'Carro' }}@if (vehicle.year) { · {{ vehicle.year }} }</small>
-                  </span>
-                  <span class="vehicle-badges">
-                    <app-expiration-badge document="SOAT" [status]="vehicle.soat" />
-                    <app-expiration-badge document="RTM" [status]="vehicle.rtm" />
                   </span>
                 </a>
               </li>
