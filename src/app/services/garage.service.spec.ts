@@ -26,12 +26,11 @@ describe('GarageService', () => {
     expect((await result).map((vehicle) => vehicle.plate)).toEqual(['ABC-123']);
   });
 
-  it('create envía el vehículo sin documento del propietario', async () => {
+  it('create envía el vehículo con su origen', async () => {
     const result = firstValueFrom(service.create(newGarageVehicle({ source: 'scan' })));
     const request = http.expectOne(GARAGE);
     expect(request.request.method).toBe('POST');
     expect(request.request.body.source).toBe('scan');
-    expect(request.request.body).not.toHaveProperty('ownerDocument');
     request.flush(garageVehicle(), { status: 201, statusText: 'Created' });
     expect((await result).plate).toBe('ABC-123');
   });
@@ -59,13 +58,6 @@ describe('GarageService', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toBeInstanceOf(FormData);
     expect((request.request.body as FormData).get('image')).toBeInstanceOf(File);
-    request.flush({});
-  });
-
-  it('refreshFromRunt envía consent: true y el documento', () => {
-    service.refreshFromRunt('ABC-123', { type: 'CC', number: '79123456' }).subscribe();
-    const request = http.expectOne(`${GARAGE}/ABC-123/refresh-from-runt`);
-    expect(request.request.body).toEqual({ consent: true, ownerDocument: { type: 'CC', number: '79123456' } });
     request.flush({});
   });
 });

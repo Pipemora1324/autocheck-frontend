@@ -39,6 +39,6 @@ describe('PublicConfigService', () => {
 
     const retry = firstValueFrom(service.load());
     http.expectOne(URL).flush(publicConfig());
-    expect((await retry)?.runtLookup.enabled).toBe(false);
+    expect((await retry)?.cardScan.enabled).toBe(true);
   });
 });

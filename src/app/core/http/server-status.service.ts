@@ -12,7 +12,7 @@ export type ServerState = 'ok' | 'waking' | 'down';
 
 /**
  * Error típico de un backend dormido detrás del rewrite de Vercel: sin respuesta (0) o 502/503/504 del proxy.
- * Un 503 con `code` es un servicio opcional apagado (lectura de tarjeta, RUNT), no un servidor dormido.
+ * Un 503 con `code` es un servicio opcional apagado u ocupado (por ejemplo, la IA), no un servidor dormido.
  */
 export function isServerWakingError(error: unknown): boolean {
   if (!(error instanceof HttpErrorResponse)) return false;

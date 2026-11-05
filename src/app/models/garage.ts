@@ -2,12 +2,10 @@
 
 export const FUEL_TYPES = ['Gasolina', 'Diésel', 'Eléctrico', 'Híbrido', 'Gas natural', 'Gasolina y gas', 'Otro'] as const;
 export const SERVICE_TYPES = ['Particular', 'Público', 'Oficial', 'Diplomático', 'Otro'] as const;
-export const OWNER_DOCUMENT_TYPES = ['CC', 'CE', 'PA', 'NIT', 'RC'] as const;
 
 export type FuelType = (typeof FUEL_TYPES)[number];
 export type ServiceType = (typeof SERVICE_TYPES)[number];
-export type OwnerDocumentType = (typeof OWNER_DOCUMENT_TYPES)[number];
-export type VehicleSource = 'manual' | 'scan' | 'runt';
+export type VehicleSource = 'manual' | 'scan';
 
 export type ExpirationStatusName = 'Vigente' | 'Por Vencer' | 'Vencido' | 'Sin información';
 
@@ -43,7 +41,7 @@ export interface GarageVehicle extends GarageVehicleFields {
   rtm: ExpirationStatus;
 }
 
-/** POST /garage. Nunca lleva el documento del propietario: el backend lo rechaza y el cliente no lo guarda. */
+/** POST /garage. */
 export interface NewGarageVehicle extends GarageVehicleFields {
   plate: string;
   source: 'manual' | 'scan';
@@ -88,18 +86,11 @@ export interface CardScanResult {
     serviceType: Prefilled<ServiceType>;
   };
   kind: 'carro' | 'moto' | null;
-  ownerDocument?: Prefilled<string>;
   warnings: string[];
-}
-
-export interface RuntRefreshResult {
-  vehicle: GarageVehicle;
-  lookup: { provider: string; queriedAt: string; fieldsUpdated: string[] };
 }
 
 export interface FeatureStatus {
   cardScan: { enabled: boolean; provider?: string; notice?: string | null };
-  runtLookup: { enabled: boolean; provider: string };
 }
 
 /** GET /config/public (sin sesión). */

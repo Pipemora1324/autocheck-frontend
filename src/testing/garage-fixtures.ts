@@ -69,13 +69,11 @@ export const cardScanResult = (): CardScanResult => ({
     serviceType: { value: null, confidence: 0 }
   },
   kind: 'carro',
-  ownerDocument: { value: 'C.C. 79123456', confidence: 0.85 },
   warnings: ['La esquina inferior está borrosa.']
 });
 
 export const publicConfig = (overrides: Partial<PublicConfig> = {}): PublicConfig => ({
   privacyPolicy: { version: '2026-11-02.2', registrationConsent: 'Autorizo a AutoCheck-CO a tratar mis datos personales.' },
   cardScan: { enabled: true, provider: 'gemini', notice: 'La foto de la tarjeta se envía a Google (Gemini API).' },
-  runtLookup: { enabled: false, provider: 'none' },
   ...overrides
 });

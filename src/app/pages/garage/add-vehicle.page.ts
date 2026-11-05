@@ -24,10 +24,7 @@ export function cardImageError(file: File): string | null {
   return null;
 }
 
-/**
- * Convierte la lectura de la tarjeta en valores del formulario y su confianza por campo.
- * El documento del propietario se descarta aquí: no se guarda en el cliente ni se envía a POST /garage.
- */
+/** Convierte la lectura de la tarjeta en valores del formulario y su confianza por campo. */
 export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormInitial; confidence: Partial<Record<VehicleFormField, number>> } {
   const initial: VehicleFormInitial = {};
   const confidence: Partial<Record<VehicleFormField, number>> = {};
@@ -75,7 +72,6 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
           <h2>Foto de la tarjeta de propiedad</h2>
           <p class="provider-notice">
             {{ providerNotice() }}
-            El número de documento del propietario no se guarda.
           </p>
           <div class="file-actions">
             <label class="primary-button link-button" for="card-camera">Tomar foto</label>

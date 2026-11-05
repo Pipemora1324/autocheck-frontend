@@ -7,9 +7,7 @@ import type {
   CardScanResult,
   GarageVehicle,
   GarageVehiclePatch,
-  NewGarageVehicle,
-  OwnerDocumentType,
-  RuntRefreshResult
+  NewGarageVehicle
 } from '../models/garage';
 
 @Injectable({ providedIn: 'root' })
@@ -51,10 +49,5 @@ export class GarageService {
     const form = new FormData();
     form.append('image', image, image.name);
     return this.http.post<CardScanResult>(`${this.baseUrl}/scan-card`, form);
-  }
-
-  /** El documento viaja al proveedor y no se guarda en ninguna parte. consent debe ser true en cada consulta. */
-  refreshFromRunt(plate: string, ownerDocument: { type: OwnerDocumentType; number: string }): Observable<RuntRefreshResult> {
-    return this.http.post<RuntRefreshResult>(`${this.plateUrl(plate)}/refresh-from-runt`, { consent: true, ownerDocument });
   }
 }

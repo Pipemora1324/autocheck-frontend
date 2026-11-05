@@ -28,13 +28,11 @@ describe('cardImageError', () => {
 });
 
 describe('prefillFromScan', () => {
-  it('precarga los valores con su confianza y descarta el documento del propietario', () => {
+  it('precarga los valores con su confianza', () => {
     const { initial, confidence } = prefillFromScan(cardScanResult());
     expect(initial.plate).toBe('ABC-123');
     expect(confidence.chassis).toBe(0.6);
     expect(confidence.serviceType).toBe(0);
-    expect(JSON.stringify(initial)).not.toContain('79123456');
-    expect(initial).not.toHaveProperty('ownerDocument');
   });
 });
 
@@ -78,7 +76,7 @@ describe('AddVehiclePage', () => {
     http.expectNone(`${API}/garage/scan-card`);
   });
 
-  it('precarga el formulario, resalta los campos dudosos y guarda con source "scan" sin el documento', async () => {
+  it('precarga el formulario, resalta los campos dudosos y guarda con source "scan"', async () => {
     const { fixture, element } = await render();
     element.querySelector<HTMLButtonElement>('.choice-card')!.click();
     await fixture.whenStable();
@@ -96,7 +94,6 @@ describe('AddVehiclePage', () => {
     element.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     const request = http.expectOne(`${API}/garage`);
     expect(request.request.body).toMatchObject({ plate: 'ABC-123', brand: 'RENAULT', chassis: '9FBBSRADDKM123456', source: 'scan' });
-    expect(JSON.stringify(request.request.body)).not.toContain('79123456');
     request.flush(garageVehicle({ source: 'scan' }), { status: 201, statusText: 'Created' });
     expect(navigate).toHaveBeenCalledWith(['/garaje', 'ABC-123'], { state: { created: true } });
   });

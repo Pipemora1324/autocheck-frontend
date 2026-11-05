@@ -6,8 +6,7 @@ import { ExpirationBadgeComponent, formatDate } from '../../components/expiratio
 import { ModalComponent } from '../../components/modal/modal.component';
 import { VehicleFormComponent, type VehicleFormValue } from '../../components/vehicle-form/vehicle-form.component';
 import { apiErrorCode, apiErrorMessage, apiFieldErrors, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
-import { RuntRefreshDialogComponent } from '../../components/runt-refresh-dialog/runt-refresh-dialog.component';
-import type { Assessment, GarageVehicle, RuntRefreshResult } from '../../models/garage';
+import type { Assessment, GarageVehicle } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
 
 type LoadState = 'loading' | 'ready' | 'not-found' | 'unverified' | 'error';
@@ -16,13 +15,12 @@ const VERDICT_CLASS: Record<Assessment['verdict'], string> = { 'Sin alertas': 'o
 const VERDICT_ICON: Record<Assessment['verdict'], string> = { 'Sin alertas': '✓', Revisar: '!', 'No recomendado': '✕' };
 const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
   manual: 'registrados a mano',
-  scan: 'leídos de la tarjeta de propiedad y confirmados por ti',
-  runt: 'actualizados desde el proveedor RUNT'
+  scan: 'leídos de la tarjeta de propiedad y confirmados por ti'
 };
 
 @Component({
   selector: 'app-vehicle-detail-page',
-  imports: [RouterLink, ExpirationBadgeComponent, VehicleFormComponent, ModalComponent, RuntRefreshDialogComponent],
+  imports: [RouterLink, ExpirationBadgeComponent, VehicleFormComponent, ModalComponent],
   template: `
     <a class="back-link" routerLink="/">← Volver a mi garaje</a>
 
@@ -56,7 +54,6 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
             </div>
             @if (!editing()) {
               <div class="form-actions">
-                <button class="secondary-button" type="button" (click)="runtOpen.set(true)">Actualizar desde RUNT</button>
                 <button class="secondary-button" type="button" (click)="startEditing()">Editar</button>
                 <button class="danger-button" type="button" (click)="confirmingDelete.set(true)">Eliminar</button>
               </div>
@@ -133,15 +130,6 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
             </div>
           }
 
-          @if (runtOpen()) {
-            <app-runt-refresh-dialog
-              [plate]="v.plate"
-              (close)="runtOpen.set(false)"
-              (editManually)="runtOpen.set(false); startEditing()"
-              (updated)="onRuntUpdated($event)"
-            />
-          }
-
           @if (confirmingDelete()) {
             <app-modal heading="¿Eliminar este vehículo?" (close)="confirmingDelete.set(false)">
               <p>Se borrará {{ v.plate }} ({{ v.brand }} {{ v.model }}) de tu garaje. Esta acción no se puede deshacer.</p>
@@ -176,7 +164,6 @@ export class VehicleDetailPage {
   readonly saveError = signal('');
   readonly fieldErrors = signal<Record<string, string>>({});
 
-  readonly runtOpen = signal(false);
   readonly confirmingDelete = signal(false);
   readonly deleting = signal(false);
   readonly deleteError = signal('');
@@ -220,17 +207,10 @@ export class VehicleDetailPage {
     });
   }
 
-  /** Para que otras acciones (por ejemplo, la actualización desde RUNT) reemplacen el vehículo mostrado. */
   replaceVehicle(vehicle: GarageVehicle, notice: string): void {
     this.vehicle.set(vehicle);
     this.notice.set(notice);
     this.loadAssessment();
-  }
-
-  onRuntUpdated({ vehicle, lookup }: RuntRefreshResult): void {
-    this.runtOpen.set(false);
-    const count = lookup.fieldsUpdated.length;
-    this.replaceVehicle(vehicle, count ? `Datos actualizados desde el proveedor RUNT (${count} campo${count === 1 ? '' : 's'}).` : 'El proveedor RUNT no trajo cambios.');
   }
 
   startEditing(): void {
