@@ -4,7 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { cardScanResult, garageVehicle, publicConfig } from '../../../testing/garage-fixtures';
-import { AddVehiclePage, cardImageError, prefillFromScan } from './add-vehicle.page';
+import { imageFileError } from '../../core/image-file';
+import { AddVehiclePage, prefillFromScan } from './add-vehicle.page';
 
 const API = environment.apiUrl;
 
@@ -14,16 +15,16 @@ const imageFile = (type: string, bytes: number) => {
   return file;
 };
 
-describe('cardImageError', () => {
+describe('imageFileError', () => {
   it('acepta JPEG, PNG y WEBP de hasta 5 MB', () => {
-    for (const type of ['image/jpeg', 'image/png', 'image/webp']) expect(cardImageError(imageFile(type, 1024))).toBeNull();
-    expect(cardImageError(imageFile('image/jpeg', 5 * 1024 * 1024))).toBeNull();
+    for (const type of ['image/jpeg', 'image/png', 'image/webp']) expect(imageFileError(imageFile(type, 1024))).toBeNull();
+    expect(imageFileError(imageFile('image/jpeg', 5 * 1024 * 1024))).toBeNull();
   });
 
   it('rechaza otros tipos y archivos de más de 5 MB', () => {
-    expect(cardImageError(imageFile('image/gif', 1024))).toContain('JPEG, PNG o WEBP');
-    expect(cardImageError(imageFile('application/pdf', 1024))).toContain('JPEG, PNG o WEBP');
-    expect(cardImageError(imageFile('image/png', 5 * 1024 * 1024 + 1))).toContain('5 MB');
+    expect(imageFileError(imageFile('image/gif', 1024))).toContain('JPEG, PNG o WEBP');
+    expect(imageFileError(imageFile('application/pdf', 1024))).toContain('JPEG, PNG o WEBP');
+    expect(imageFileError(imageFile('image/png', 5 * 1024 * 1024 + 1))).toContain('5 MB');
   });
 });
 

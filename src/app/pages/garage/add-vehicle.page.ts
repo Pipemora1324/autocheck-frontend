@@ -7,22 +7,12 @@ import {
   type VehicleFormValue
 } from '../../components/vehicle-form/vehicle-form.component';
 import { apiErrorMessage, apiFieldErrors } from '../../core/http/api-error';
+import { IMAGE_ACCEPT, imageFileError } from '../../core/image-file';
 import { PublicConfigService } from '../../core/http/public-config.service';
 import type { CardScanResult } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
 
-export const CARD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-export const CARD_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
-
 type Step = 'choose' | 'photo' | 'reading' | 'review' | 'manual';
-
-/** Valida la foto antes de subirla; el backend vuelve a validar la firma real del archivo. */
-export function cardImageError(file: File): string | null {
-  if (!CARD_IMAGE_TYPES.includes(file.type)) return 'La foto debe ser JPEG, PNG o WEBP.';
-  if (file.size > CARD_IMAGE_MAX_BYTES) return 'La foto pesa más de 5 MB. Toma una con menor resolución o recórtala.';
-  if (file.size === 0) return 'El archivo está vacío.';
-  return null;
-}
 
 /** Convierte la lectura de la tarjeta en valores del formulario y su confianza por campo. */
 export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormInitial; confidence: Partial<Record<VehicleFormField, number>> } {
@@ -75,9 +65,9 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
           </p>
           <div class="file-actions">
             <label class="primary-button link-button" for="card-camera">Tomar foto</label>
-            <input id="card-camera" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" (change)="onFile($event)" />
+            <input id="card-camera" class="visually-hidden" type="file" [accept]="imageAccept" capture="environment" (change)="onFile($event)" />
             <label class="secondary-button" for="card-file">Subir imagen</label>
-            <input id="card-file" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="onFile($event)" />
+            <input id="card-file" class="visually-hidden" type="file" [accept]="imageAccept" (change)="onFile($event)" />
           </div>
           <p class="field-hint">JPEG, PNG o WEBP, máximo 5 MB. Toma la foto de frente, con buena luz y sin reflejos.</p>
           @if (photoError()) {
@@ -138,6 +128,7 @@ export class AddVehiclePage {
   private readonly garage = inject(GarageService);
   private readonly router = inject(Router);
   private readonly publicConfig = inject(PublicConfigService);
+  protected readonly imageAccept = IMAGE_ACCEPT;
 
   readonly step = signal<Step>('choose');
   readonly photoError = signal('');
@@ -173,7 +164,7 @@ export class AddVehiclePage {
     input.value = '';
     if (!file) return;
 
-    const invalid = cardImageError(file);
+    const invalid = imageFileError(file);
     this.photoError.set(invalid ?? '');
     if (invalid) return;
 
