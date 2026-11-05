@@ -3,7 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import { garageVehicle } from '../../../testing/garage-fixtures';
+import { diagnosed, history } from '../../../testing/diagnosis-fixtures';
+import { garageVehicle, publicConfig } from '../../../testing/garage-fixtures';
 import { VehicleDetailPage } from './vehicle-detail.page';
 
 const GARAGE = `${environment.apiUrl}/garage`;
@@ -27,6 +28,9 @@ describe('VehicleDetailPage', () => {
     await fixture.whenStable();
     http.expectOne(`${GARAGE}/ABC-123`).flush(garageVehicle());
     await fixture.whenStable();
+    http.expectOne(`${environment.apiUrl}/config/public`).flush(publicConfig());
+    http.expectOne((request) => request.url === `${GARAGE}/ABC-123/diagnoses`).flush(history());
+    await fixture.whenStable();
     return { fixture, element: fixture.nativeElement as HTMLElement };
   };
 
@@ -36,6 +40,30 @@ describe('VehicleDetailPage', () => {
     expect(element.textContent).toContain('9FBBSRADDKM123456');
     expect(element.textContent).toContain('85.000 km');
     expect(element.textContent).not.toMatch(/SOAT|RTM|RUNT|Concepto/);
+  });
+
+  it('la pantalla principal del vehículo es el diagnóstico, con su historial', async () => {
+    const { element } = await render();
+    expect(element.querySelector('app-diagnose-panel h2')?.textContent).toBe('Diagnosticar un testigo');
+    expect(element.querySelector('app-diagnosis-history h2')?.textContent).toBe('Historial de diagnósticos');
+    const panel = element.querySelector('app-diagnose-panel')!;
+    expect(panel.compareDocumentPosition(element.querySelector('app-diagnosis-history')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('recarga el historial al crear un diagnóstico', async () => {
+    const { fixture, element } = await render();
+    const panel = element.querySelector('app-diagnose-panel')!;
+    const area = panel.querySelector<HTMLTextAreaElement>('#dash-description')!;
+    area.value = 'luz naranja';
+    area.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLInputElement>('.check-field input')!.click();
+    await fixture.whenStable();
+    [...panel.querySelectorAll('button')].find((item) => item.textContent?.includes('Diagnosticar'))!.click();
+    http.expectOne((request) => request.url === `${GARAGE}/ABC-123/diagnoses` && request.method === 'POST').flush(diagnosed(), { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+    http.expectOne((request) => request.url === `${GARAGE}/ABC-123/diagnoses` && request.method === 'GET').flush(history());
+    await fixture.whenStable();
+    expect(element.querySelector('app-diagnosis-result')).toBeTruthy();
   });
 
   it('edita enviando solo los campos editables (sin la placa)', async () => {
@@ -62,6 +90,9 @@ describe('VehicleDetailPage', () => {
     for (const removed of ['soatExpiresOn', 'rtmExpiresOn', 'runtStatus']) expect(request.request.body).not.toHaveProperty(removed);
     request.flush(garageVehicle({ color: 'Rojo' }));
     await fixture.whenStable();
+    // Al salir de la edición vuelven el panel y el historial.
+    http.expectOne((candidate) => candidate.url === `${GARAGE}/ABC-123/diagnoses`).flush(history());
+    await fixture.whenStable();
     expect(element.textContent).toContain('Cambios guardados.');
   });
 
@@ -70,6 +101,7 @@ describe('VehicleDetailPage', () => {
     element.querySelector<HTMLButtonElement>('.page-header .danger-button')!.click();
     await fixture.whenStable();
     expect(element.querySelector('[role="dialog"]')?.textContent).toContain('no se puede deshacer');
+    expect(element.querySelector('[role="dialog"]')?.textContent).toContain('historial de diagnósticos');
 
     element.querySelector<HTMLButtonElement>('[role="dialog"] .danger-button')!.click();
     const request = http.expectOne(`${GARAGE}/ABC-123`);

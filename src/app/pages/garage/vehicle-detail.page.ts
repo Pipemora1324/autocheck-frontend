@@ -1,7 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
+import { DiagnosePanelComponent } from '../../components/diagnose-panel/diagnose-panel.component';
+import { DiagnosisHistoryComponent } from '../../components/diagnosis-history/diagnosis-history.component';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { VehicleFormComponent, type VehicleFormValue } from '../../components/vehicle-form/vehicle-form.component';
 import { formatDate } from '../../core/format-date';
@@ -18,7 +20,7 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
 
 @Component({
   selector: 'app-vehicle-detail-page',
-  imports: [RouterLink, VehicleFormComponent, ModalComponent],
+  imports: [RouterLink, VehicleFormComponent, ModalComponent, DiagnosePanelComponent, DiagnosisHistoryComponent],
   template: `
     <a class="back-link" routerLink="/">← Volver a mi garaje</a>
 
@@ -77,6 +79,10 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
             </section>
           } @else {
             <div class="detail-grid">
+              <div>
+                <app-diagnose-panel [plate]="v.plate" (diagnosed)="historyKey.set(historyKey() + 1)" />
+                <app-diagnosis-history [plate]="v.plate" [refreshKey]="historyKey()" (consult)="consult($event)" />
+              </div>
               <section class="panel">
                 <h2>Datos del vehículo</h2>
                 <dl class="data-list">
@@ -97,7 +103,7 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
 
           @if (confirmingDelete()) {
             <app-modal heading="¿Eliminar este vehículo?" (close)="confirmingDelete.set(false)">
-              <p>Se borrará {{ v.plate }} ({{ v.brand }} {{ v.model }}) de tu garaje. Esta acción no se puede deshacer.</p>
+              <p>Se borrará {{ v.plate }} ({{ v.brand }} {{ v.model }}) de tu garaje, junto con su historial de diagnósticos. Esta acción no se puede deshacer.</p>
               @if (deleteError()) { <p class="form-error" role="alert">{{ deleteError() }}</p> }
               <div class="form-actions">
                 <button class="danger-button" type="button" (click)="remove()" [disabled]="deleting()">{{ deleting() ? 'Eliminando…' : 'Sí, eliminar' }}</button>
@@ -126,6 +132,9 @@ export class VehicleDetailPage {
   readonly saving = signal(false);
   readonly saveError = signal('');
   readonly fieldErrors = signal<Record<string, string>>({});
+
+  readonly historyKey = signal(0);
+  private readonly panel = viewChild(DiagnosePanelComponent);
 
   readonly confirmingDelete = signal(false);
   readonly deleting = signal(false);
@@ -158,6 +167,11 @@ export class VehicleDetailPage {
         }
       }
     });
+  }
+
+  consult(telltaleId: string): void {
+    this.panel()?.consult(telltaleId);
+    if (typeof window.scrollTo === 'function') window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   startEditing(): void {
