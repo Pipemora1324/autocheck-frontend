@@ -12,7 +12,7 @@
       @if (auth.user(); as user) {
         <span class="user-info">
           <span class="user-avatar" aria-hidden="true">{{ initials() }}</span>
-          <span class="user-text"><strong>{{ user.email }}</strong>@if (auth.isAdmin()) {<small class="role-badge">Admin</small>}</span>
+          <span class="user-text"><strong>{{ user.email }}</strong></span>
         </span>
         <button class="logout-button" type="button" (click)="logout()">Cerrar sesión</button>
       }

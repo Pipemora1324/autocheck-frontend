@@ -44,12 +44,6 @@ describe('AuthService', () => {
     expect(sessionStorage.length).toBe(0);
   });
 
-  it('isAdmin depende del rol', () => {
-    auth.login('ana@example.com', 'x').subscribe();
-    http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1', 'admin'));
-    expect(auth.isAdmin()).toBe(true);
-  });
-
   it('register envía acceptedTerms, inicia sesión y propaga el 409 si el correo existe', async () => {
     const failed = firstValueFrom(auth.register('ana@example.com', 'clave-larga', true));
     http.expectOne(`${API}/auth/register`).flush({ message: 'Ya existe una cuenta con este correo.' }, { status: 409, statusText: 'Conflict' });

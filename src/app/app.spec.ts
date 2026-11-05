@@ -48,7 +48,7 @@ describe('App', () => {
     expect(element.querySelector('app-server-status-banner')!.textContent).toContain('Conectando con el servidor, puede tardar un minuto.');
   });
 
-  it('muestra el usuario y el botón de cerrar sesión, sin insignia de admin para un usuario normal', async () => {
+  it('muestra el usuario y el botón de cerrar sesión', async () => {
     const auth = TestBed.inject(AuthService);
     auth.login('ana@example.com', 'x').subscribe();
     http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1', 'user'));
@@ -59,12 +59,11 @@ describe('App', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('.user-text strong')?.textContent).toBe('ana@example.com');
     expect(element.querySelector('.logout-button')).toBeTruthy();
-    expect(element.querySelector('.role-badge')).toBeNull();
     expect([...element.querySelectorAll('.main-nav a')].map((link) => link.textContent)).toEqual(['Mi garaje', 'Mi cuenta']);
     expect(element.querySelector('footer')?.textContent).toContain('un mecánico debe confirmar el diagnóstico');
   });
 
-  it('marca al administrador', async () => {
+  it('no distingue a un administrador en la barra superior', async () => {
     const auth = TestBed.inject(AuthService);
     auth.login('ana@example.com', 'x').subscribe();
     http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1', 'admin'));
@@ -72,6 +71,8 @@ describe('App', () => {
     const fixture = await render();
     http.expectOne(`${API}/health`).flush({ status: 'ok' });
     await fixture.whenStable();
-    expect((fixture.nativeElement as HTMLElement).querySelector('.role-badge')?.textContent).toBe('Admin');
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.user-text strong')?.textContent).toBe('ana@example.com');
+    expect(element.querySelector('.topbar')?.textContent).not.toContain('Admin');
   });
 });

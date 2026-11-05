@@ -21,7 +21,6 @@ export class AuthService {
   readonly user = this.userState.asReadonly();
   readonly status = this.statusState.asReadonly();
   readonly isAuthenticated = computed(() => this.statusState() === 'authenticated');
-  readonly isAdmin = computed(() => this.userState()?.role === 'admin');
 
   getAccessToken(): string | null {
     return this.accessToken;
