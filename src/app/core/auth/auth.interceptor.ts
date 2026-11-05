@@ -35,7 +35,7 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(withToken(apiRequest, auth.getAccessToken())).pipe(
     catchError((error: unknown) => {
-      // /garage/* y /vehicles/* exigen correo confirmado: se marca al usuario para mostrar el aviso con "reenviar correo".
+      // /garage/* exige correo confirmado: se marca al usuario para mostrar el aviso con "reenviar correo".
       if (isEmailNotVerified(error)) auth.setEmailVerified(false);
       if (!isUnauthorized(error) || request.context.get(SKIP_AUTH_REFRESH)) return throwError(() => error);
 

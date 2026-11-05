@@ -22,12 +22,6 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/garage/vehicle-detail.page').then((m) => m.VehicleDetailPage)
   },
   {
-    path: 'demo',
-    canActivate: [authGuard],
-    title: 'Demostración de peritaje · AutoCheck-CO',
-    loadComponent: () => import('./pages/inspector/inspector.page').then((m) => m.InspectorPage)
-  },
-  {
     path: 'login',
     canActivate: [guestGuard],
     title: 'Iniciar sesión · AutoCheck-CO',

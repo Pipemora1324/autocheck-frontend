@@ -36,8 +36,8 @@ describe('authInterceptor', () => {
 
   it('agrega Authorization: Bearer y withCredentials a las peticiones de la API', () => {
     signIn('access-1');
-    client.get(`${API}/vehicles`).subscribe();
-    const request = http.expectOne(`${API}/vehicles`);
+    client.get(`${API}/garage`).subscribe();
+    const request = http.expectOne(`${API}/garage`);
     expect(request.request.headers.get('Authorization')).toBe('Bearer access-1');
     expect(request.request.withCredentials).toBe(true);
     request.flush({ vehicles: [] });
@@ -54,14 +54,14 @@ describe('authInterceptor', () => {
 
   it('ante un 401 refresca una vez y reintenta con el token nuevo', async () => {
     signIn('access-viejo');
-    const result = firstValueFrom(client.get<{ vehicles: unknown[] }>(`${API}/vehicles`));
+    const result = firstValueFrom(client.get<{ vehicles: unknown[] }>(`${API}/garage`));
 
-    http.expectOne(`${API}/vehicles`).flush({ message: 'Debes iniciar sesión.' }, unauthorized);
+    http.expectOne(`${API}/garage`).flush({ message: 'Debes iniciar sesión.' }, unauthorized);
     const refresh = http.expectOne(`${API}/auth/refresh`);
     expect(refresh.request.headers.get('Authorization')).toBe('Bearer access-viejo');
     refresh.flush(sessionFor('access-nuevo'));
 
-    const retry = http.expectOne(`${API}/vehicles`);
+    const retry = http.expectOne(`${API}/garage`);
     expect(retry.request.headers.get('Authorization')).toBe('Bearer access-nuevo');
     retry.flush({ vehicles: [] });
 
@@ -71,19 +71,19 @@ describe('authInterceptor', () => {
 
   it('varias peticiones con 401 simultáneo comparten un solo refresh', async () => {
     signIn('access-viejo');
-    const first = firstValueFrom(client.get(`${API}/vehicles`));
-    const second = firstValueFrom(client.get(`${API}/vehicles/ABC-1234`));
-    const third = firstValueFrom(client.post(`${API}/vehicles/scan`, { plate: 'ABC-1234' }));
+    const first = firstValueFrom(client.get(`${API}/garage`));
+    const second = firstValueFrom(client.get(`${API}/garage/ABC-123`));
+    const third = firstValueFrom(client.post(`${API}/garage/scan-card`, {}));
 
-    http.expectOne(`${API}/vehicles`).flush(null, unauthorized);
-    http.expectOne(`${API}/vehicles/ABC-1234`).flush(null, unauthorized);
-    http.expectOne(`${API}/vehicles/scan`).flush(null, unauthorized);
+    http.expectOne(`${API}/garage`).flush(null, unauthorized);
+    http.expectOne(`${API}/garage/ABC-123`).flush(null, unauthorized);
+    http.expectOne(`${API}/garage/scan-card`).flush(null, unauthorized);
 
     const refreshes = http.match(`${API}/auth/refresh`);
     expect(refreshes.length).toBe(1);
     refreshes[0]!.flush(sessionFor('access-nuevo'));
 
-    for (const url of [`${API}/vehicles`, `${API}/vehicles/ABC-1234`, `${API}/vehicles/scan`]) {
+    for (const url of [`${API}/garage`, `${API}/garage/ABC-123`, `${API}/garage/scan-card`]) {
       const retry = http.expectOne(url);
       expect(retry.request.headers.get('Authorization')).toBe('Bearer access-nuevo');
       retry.flush({ ok: true });
@@ -93,11 +93,11 @@ describe('authInterceptor', () => {
 
   it('si el refresh falla, cierra la sesión, manda a /login y no reintenta', async () => {
     signIn('access-viejo');
-    const result = firstValueFrom(client.get(`${API}/vehicles`));
+    const result = firstValueFrom(client.get(`${API}/garage`));
 
-    http.expectOne(`${API}/vehicles`).flush(null, unauthorized);
+    http.expectOne(`${API}/garage`).flush(null, unauthorized);
     http.expectOne(`${API}/auth/refresh`).flush(null, unauthorized);
-    http.expectNone(`${API}/vehicles`);
+    http.expectNone(`${API}/garage`);
 
     await expect(result).rejects.toMatchObject({ status: 401 });
     expect(auth.status()).toBe('anonymous');
@@ -106,11 +106,11 @@ describe('authInterceptor', () => {
 
   it('no entra en bucle si la petición reintentada vuelve a dar 401', async () => {
     signIn('access-viejo');
-    const result = firstValueFrom(client.get(`${API}/vehicles`));
+    const result = firstValueFrom(client.get(`${API}/garage`));
 
-    http.expectOne(`${API}/vehicles`).flush(null, unauthorized);
+    http.expectOne(`${API}/garage`).flush(null, unauthorized);
     http.expectOne(`${API}/auth/refresh`).flush(sessionFor('access-nuevo'));
-    http.expectOne(`${API}/vehicles`).flush(null, unauthorized);
+    http.expectOne(`${API}/garage`).flush(null, unauthorized);
     http.expectNone(`${API}/auth/refresh`);
 
     await expect(result).rejects.toMatchObject({ status: 401 });
@@ -142,8 +142,8 @@ describe('authInterceptor', () => {
 
   it('no refresca ante un 403 (sin permisos)', async () => {
     signIn('access-1');
-    const result = firstValueFrom(client.patch(`${API}/vehicles/ABC-1234/inspections`, {}));
-    http.expectOne(`${API}/vehicles/ABC-1234/inspections`).flush({ message: 'No tienes permisos.' }, { status: 403, statusText: 'Forbidden' });
+    const result = firstValueFrom(client.get(`${API}/garage/ABC-123`));
+    http.expectOne(`${API}/garage/ABC-123`).flush({ message: 'No tienes permisos.' }, { status: 403, statusText: 'Forbidden' });
     http.expectNone(`${API}/auth/refresh`);
     await expect(result).rejects.toMatchObject({ status: 403 });
     expect(auth.isAuthenticated()).toBe(true);
