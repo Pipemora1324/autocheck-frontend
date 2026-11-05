@@ -13,6 +13,9 @@ export const SEVERITY_LABEL: Record<TelltaleSeverity, string> = {
   informativo: 'No es una falla'
 };
 
+/** Rojo sin orden de detenerse (airbag): el vehículo puede moverse, pero hay que revisarlo hoy. */
+export const RED_NO_STOP_LABEL = 'Revísalo hoy';
+
 export const DIAGNOSIS_DISCLAIMER = 'Orientación general. Un mecánico debe confirmar el diagnóstico.';
 
 export interface TelltaleSummary {
@@ -20,6 +23,7 @@ export interface TelltaleSummary {
   nombre: string;
   alias: string[];
   severidad: TelltaleSeverity;
+  debeDetenerse: boolean;
 }
 
 export interface Urgency {
@@ -73,6 +77,7 @@ export interface DiagnosisHistoryItem {
   /** null si el testigo ya no está en el catálogo. */
   nombre: string | null;
   severidad: TelltaleSeverity;
+  debeDetenerse: boolean;
   origen: DiagnosisOrigin;
   confianza: number | null;
   descripcion: string | null;

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { diagnosed, diagnosedRed } from '../../../testing/diagnosis-fixtures';
+import { diagnosed, diagnosedAirbag, diagnosedRed } from '../../../testing/diagnosis-fixtures';
 import type { Diagnosed, TelltaleSeverity } from '../../models/diagnosis';
 import { DiagnosisResultComponent } from './diagnosis-result.component';
 
@@ -53,6 +53,16 @@ describe('DiagnosisResultComponent', () => {
     const red = diagnosedRed();
     const element = await render(diagnosed({ urgencia: red.urgencia }));
     expect(element.querySelector('.stop-banner')).toBeTruthy();
+  });
+
+  it('un rojo sin orden de detenerse (airbag) no dice "Detente" y muestra la acción del servidor', async () => {
+    const element = await render(diagnosedAirbag());
+    expect(element.querySelector('.stop-banner')).toBeNull();
+    const badge = element.querySelector('.severity-badge')!;
+    expect(badge.classList).toContain('rojo');
+    expect(badge.textContent).toContain('Revísalo hoy');
+    expect(badge.textContent).not.toContain('Detente');
+    expect(element.querySelector('.diagnosis-action')?.textContent).toContain('llévalo a revisión hoy');
   });
 
   it('sin rojo no hay banner, y muestra la acción del servidor', async () => {

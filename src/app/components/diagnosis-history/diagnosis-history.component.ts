@@ -40,7 +40,7 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
                       <strong>{{ name(item) }}</strong>
                       <small>{{ date(item.createdAt) }}</small>
                     </span>
-                    <app-severity-badge [severity]="item.severidad" />
+                    <app-severity-badge [severity]="item.severidad" [stop]="item.debeDetenerse" />
                   </button>
                 </li>
               }
@@ -59,13 +59,13 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
 
     @if (selected(); as item) {
       <app-modal heading="Detalle del diagnóstico" (close)="closeDetail()">
-        @if (item.severidad === 'rojo') {
+        @if (item.debeDetenerse) {
           <div class="stop-banner" role="alert"><strong>Si sigue encendido: detente en un lugar seguro y llama a un taller o a una grúa.</strong></div>
         }
         <dl class="data-list">
           <div><dt>Testigo</dt><dd>{{ name(item) }}</dd></div>
           <div><dt>Fecha</dt><dd>{{ date(item.createdAt) }}</dd></div>
-          <div><dt>Semáforo</dt><dd><app-severity-badge [severity]="item.severidad" /></dd></div>
+          <div><dt>Semáforo</dt><dd><app-severity-badge [severity]="item.severidad" [stop]="item.debeDetenerse" /></dd></div>
           <div><dt>Cómo se identificó</dt><dd>{{ origin(item) }}</dd></div>
           @if (item.descripcion) { <div><dt>Tu descripción</dt><dd>{{ item.descripcion }}</dd></div> }
         </dl>

@@ -1,5 +1,5 @@
 import { Component, computed, input } from '@angular/core';
-import { SEVERITY_LABEL, type TelltaleSeverity } from '../../models/diagnosis';
+import { RED_NO_STOP_LABEL, SEVERITY_LABEL, type TelltaleSeverity } from '../../models/diagnosis';
 
 const ICON: Record<TelltaleSeverity, string> = { rojo: '■', amarillo: '▲', informativo: 'i' };
 
@@ -10,6 +10,8 @@ const ICON: Record<TelltaleSeverity, string> = { rojo: '■', amarillo: '▲', i
 })
 export class SeverityBadgeComponent {
   readonly severity = input.required<TelltaleSeverity>();
-  readonly label = computed(() => SEVERITY_LABEL[this.severity()]);
+  /** Un rojo solo dice "Detente" si el servidor ordena detenerse. */
+  readonly stop = input(true);
+  readonly label = computed(() => (this.severity() === 'rojo' && !this.stop() ? RED_NO_STOP_LABEL : SEVERITY_LABEL[this.severity()]));
   protected readonly icon = computed(() => ICON[this.severity()]);
 }

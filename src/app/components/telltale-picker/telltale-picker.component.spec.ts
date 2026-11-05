@@ -9,6 +9,17 @@ import { groupTelltales, TelltalePickerComponent } from './telltale-picker.compo
 const URL = `${environment.apiUrl}/telltales`;
 
 describe('groupTelltales', () => {
+  it('el airbag queda en su propio grupo rojo, fuera de los que ordenan detenerse', () => {
+    const airbag = { id: 'airbag', nombre: 'Airbag', alias: ['bolsa de aire'], severidad: 'rojo' as const, debeDetenerse: false };
+    const groups = groupTelltales([...telltales(), airbag], '');
+    expect(groups.map((group) => [group.severity, group.stop, group.items[0]!.id])).toEqual([
+      ['rojo', true, 'presion_aceite'],
+      ['rojo', false, 'airbag'],
+      ['amarillo', false, 'check_engine'],
+      ['informativo', false, 'cinturon']
+    ]);
+  });
+
   const ids = (query: string) => groupTelltales(telltales(), query).flatMap((group) => group.items.map((item) => item.id));
 
   it('agrupa de más a menos urgente', () => {

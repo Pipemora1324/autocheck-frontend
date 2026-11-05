@@ -34,6 +34,20 @@ export const diagnosedRed = (overrides: Partial<Diagnosed> = {}): Diagnosed =>
     ...overrides
   });
 
+export const diagnosedAirbag = (overrides: Partial<Diagnosed> = {}): Diagnosed =>
+  diagnosed({
+    telltale: { id: 'airbag', nombre: 'Airbag', descripcionSimbolo: 'Persona con un círculo delante del pecho.' },
+    severidad: 'rojo',
+    urgencia: {
+      semaforo: 'rojo',
+      titulo: 'Revísalo hoy',
+      accion: 'El vehículo puede moverse, pero esta protección puede no funcionar en un choque. No dependas de ella y llévalo a revisión hoy.',
+      debeDetenerse: false,
+      esFalla: true
+    },
+    ...overrides
+  });
+
 export const needsBetterInput = (): NeedsBetterInput => ({
   status: 'needs_better_input',
   pista: 'No pudimos identificar el testigo con seguridad. Toma otra foto más cercana, sin reflejos y con el tablero encendido, o elígelo de la lista.',
@@ -42,10 +56,10 @@ export const needsBetterInput = (): NeedsBetterInput => ({
 });
 
 export const telltales = (): TelltaleSummary[] => [
-  { id: 'presion_aceite', nombre: 'Presión de aceite', alias: ['aceitera', 'lámpara de aceite'], severidad: 'rojo' },
-  { id: 'check_engine', nombre: 'Check engine', alias: ['motor', 'luz del motor'], severidad: 'amarillo' },
-  { id: 'tpms', nombre: 'Presión de llantas (TPMS)', alias: ['herradura'], severidad: 'amarillo' },
-  { id: 'cinturon', nombre: 'Cinturón sin abrochar', alias: ['cinturón'], severidad: 'informativo' }
+  { id: 'presion_aceite', nombre: 'Presión de aceite', alias: ['aceitera', 'lámpara de aceite'], severidad: 'rojo', debeDetenerse: true },
+  { id: 'check_engine', nombre: 'Check engine', alias: ['motor', 'luz del motor'], severidad: 'amarillo', debeDetenerse: false },
+  { id: 'tpms', nombre: 'Presión de llantas (TPMS)', alias: ['herradura'], severidad: 'amarillo', debeDetenerse: false },
+  { id: 'cinturon', nombre: 'Cinturón sin abrochar', alias: ['cinturón'], severidad: 'informativo', debeDetenerse: false }
 ];
 
 export const historyItem = (overrides: Partial<DiagnosisHistoryItem> = {}): DiagnosisHistoryItem => ({
@@ -53,6 +67,7 @@ export const historyItem = (overrides: Partial<DiagnosisHistoryItem> = {}): Diag
   telltaleId: 'tpms',
   nombre: 'Presión de llantas (TPMS)',
   severidad: 'amarillo',
+  debeDetenerse: false,
   origen: 'manual',
   confianza: null,
   descripcion: 'una llanta baja',

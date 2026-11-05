@@ -21,7 +21,7 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
           <h3 id="diagnosis-title">{{ r.telltale.nombre }}</h3>
           <p class="source-note">{{ r.telltale.descripcionSimbolo }}</p>
         </div>
-        <app-severity-badge [severity]="r.severidad" />
+        <app-severity-badge [severity]="r.severidad" [stop]="r.urgencia.debeDetenerse" />
       </header>
 
       @if (!mustStop()) { <p class="diagnosis-action">{{ r.urgencia.accion }}</p> }
@@ -57,7 +57,8 @@ export class DiagnosisResultComponent {
   readonly result = input.required<Diagnosed>();
   protected readonly disclaimer = DIAGNOSIS_DISCLAIMER;
 
-  readonly mustStop = computed(() => this.result().severidad === 'rojo' || this.result().urgencia.debeDetenerse);
+  /** Lo decide el servidor: un rojo como el airbag no ordena detenerse. */
+  readonly mustStop = computed(() => this.result().urgencia.debeDetenerse);
 
   readonly origin = computed(() => {
     const { origen, confianza } = this.result();

@@ -7,10 +7,16 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
 const normalize = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
 
 /** Filtra por nombre y alias (cómo lo llama la gente), sin importar tildes ni mayúsculas, y agrupa por severidad. */
-export function groupTelltales(telltales: TelltaleSummary[], query: string): Array<{ severity: TelltaleSeverity; items: TelltaleSummary[] }> {
+export function groupTelltales(telltales: TelltaleSummary[], query: string): Array<{ severity: TelltaleSeverity; stop: boolean; items: TelltaleSummary[] }> {
   const search = normalize(query);
   const matches = (telltale: TelltaleSummary) => !search || [telltale.nombre, ...telltale.alias].some((text) => normalize(text).includes(search));
-  return SEVERITIES.map((severity) => ({ severity, items: telltales.filter((item) => item.severidad === severity && matches(item)) })).filter((group) => group.items.length > 0);
+  // Los rojos se separan según si el servidor ordena detenerse: el airbag no debe quedar bajo "Detente".
+  const groups = SEVERITIES.flatMap((severity): Array<{ severity: TelltaleSeverity; stop: boolean }> =>
+    severity === 'rojo' ? [{ severity, stop: true }, { severity, stop: false }] : [{ severity, stop: false }]
+  );
+  return groups
+    .map((group) => ({ ...group, items: telltales.filter((item) => item.severidad === group.severity && (group.severity !== 'rojo' || item.debeDetenerse === group.stop) && matches(item)) }))
+    .filter((group) => group.items.length > 0);
 }
 
 /** Lista buscable de GET /telltales, para elegir el testigo a mano. Elegir no envía nada a la IA. */
@@ -34,9 +40,9 @@ export function groupTelltales(telltales: TelltaleSummary[], query: string): Arr
           <label for="telltale-search">Busca por nombre o como le dices</label>
           <input id="telltale-search" type="search" autocomplete="off" placeholder="Por ejemplo, aceite, motor o llanta" [value]="query()" (input)="query.set($any($event.target).value)" />
         </div>
-        @for (group of groups(); track group.severity) {
+        @for (group of groups(); track group.severity + group.stop) {
           <section class="telltale-group" [attr.aria-label]="'Testigos: ' + group.severity">
-            <h3><app-severity-badge [severity]="group.severity" /></h3>
+            <h3><app-severity-badge [severity]="group.severity" [stop]="group.stop" /></h3>
             <ul class="telltale-list">
               @for (telltale of group.items; track telltale.id) {
                 <li>

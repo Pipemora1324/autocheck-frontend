@@ -40,14 +40,20 @@ describe('DiagnosisHistoryComponent', () => {
   it('lista con fecha, testigo y semáforo', async () => {
     const { element } = await render((request) => {
       expect(request.request.params.get('page')).toBe('1');
-      request.flush(history([historyItem(), historyItem({ id: 'otro', telltaleId: 'airbag', nombre: 'Airbag', severidad: 'rojo' })]));
+      request.flush(history([
+        historyItem(),
+        historyItem({ id: 'otro', telltaleId: 'presion_aceite', nombre: 'Presión de aceite', severidad: 'rojo', debeDetenerse: true }),
+        historyItem({ id: 'bolsa', telltaleId: 'airbag', nombre: 'Airbag', severidad: 'rojo', debeDetenerse: false })
+      ]));
     });
     const items = element.querySelectorAll('.history-item');
-    expect(items).toHaveLength(2);
+    expect(items).toHaveLength(3);
     expect(items[0]!.textContent).toContain('Presión de llantas (TPMS)');
     expect(items[0]!.textContent).toContain('04/11/2026');
     expect(items[0]!.textContent).toContain('Revísalo pronto');
     expect(items[1]!.textContent).toContain('Detente');
+    expect(items[2]!.textContent).toContain('Revísalo hoy');
+    expect(items[2]!.textContent).not.toContain('Detente');
   });
 
   it('el detalle muestra lo guardado y aclara que la explicación se vuelve a consultar', async () => {
@@ -71,12 +77,21 @@ describe('DiagnosisHistoryComponent', () => {
   });
 
   it('el detalle de un rojo repite la orden de detenerse y muestra la confianza de la IA', async () => {
-    const { fixture, element } = await render((request) => request.flush(history([historyItem({ severidad: 'rojo', origen: 'ia', confianza: 0.8 })])));
+    const { fixture, element } = await render((request) => request.flush(history([historyItem({ severidad: 'rojo', debeDetenerse: true, origen: 'ia', confianza: 0.8 })])));
     element.querySelector<HTMLButtonElement>('.history-item')!.click();
     await fixture.whenStable();
     const dialog = element.querySelector('[role="dialog"]')!;
     expect(dialog.querySelector('.stop-banner')?.textContent).toContain('llama a un taller o a una grúa');
     expect(dialog.textContent).toContain('confianza 80 %');
+  });
+
+  it('el detalle de un rojo sin orden de detenerse no muestra el banner', async () => {
+    const { fixture, element } = await render((request) => request.flush(history([historyItem({ telltaleId: 'airbag', nombre: 'Airbag', severidad: 'rojo', debeDetenerse: false })])));
+    element.querySelector<HTMLButtonElement>('.history-item')!.click();
+    await fixture.whenStable();
+    const dialog = element.querySelector('[role="dialog"]')!;
+    expect(dialog.querySelector('.stop-banner')).toBeNull();
+    expect(dialog.textContent).toContain('Revísalo hoy');
   });
 
   it('borra tras confirmar y recarga', async () => {
