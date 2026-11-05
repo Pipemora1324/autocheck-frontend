@@ -16,13 +16,14 @@ const CHASSIS_PATTERN = /^[A-Za-z0-9-]{5,30}$/;
 const LABELS: Record<VehicleFormField, string> = {
   plate: 'Placa',
   brand: 'Marca',
-  model: 'Modelo o línea',
-  year: 'Año (modelo)',
+  model: 'Línea',
+  year: 'Modelo (año)',
   color: 'Color',
   cylinderCc: 'Cilindraje (cc)',
   chassis: 'Número de chasis',
   fuelType: 'Combustible',
-  serviceType: 'Servicio'
+  serviceType: 'Servicio',
+  mileageKm: 'Kilometraje'
 };
 
 const text = (value: string) => value.trim() || null;
@@ -49,12 +50,12 @@ const integer = (value: string) => (value.trim() === '' ? null : Number(value));
         </div>
         <div class="form-field" [class.low-confidence]="isLow('model')">
           <label for="vehicle-model">{{ labels.model }} *</label>
-          <input id="vehicle-model" formControlName="model" maxlength="80" [attr.aria-invalid]="!!error('model')" />
+          <input id="vehicle-model" formControlName="model" maxlength="80" placeholder="Por ejemplo, Sandero" [attr.aria-invalid]="!!error('model')" />
           <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'model' }" />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('year')">
           <label for="vehicle-year">{{ labels.year }}</label>
-          <input id="vehicle-year" formControlName="year" inputmode="numeric" [attr.aria-invalid]="!!error('year')" />
+          <input id="vehicle-year" formControlName="year" inputmode="numeric" placeholder="Por ejemplo, 2019" [attr.aria-invalid]="!!error('year')" />
           <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'year' }" />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('color')">
@@ -87,6 +88,11 @@ const integer = (value: string) => (value.trim() === '' ? null : Number(value));
             @for (service of serviceTypes; track service) { <option [value]="service">{{ service }}</option> }
           </select>
           <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'serviceType' }" />
+        </div>
+        <div class="form-field">
+          <label for="vehicle-mileage">{{ labels.mileageKm }} (opcional)</label>
+          <input id="vehicle-mileage" formControlName="mileageKm" inputmode="numeric" placeholder="Solo números, en km" [attr.aria-invalid]="!!error('mileageKm')" />
+          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'mileageKm' }" />
         </div>
       </div>
 
@@ -134,7 +140,8 @@ export class VehicleFormComponent {
     cylinderCc: ['', [Validators.pattern(/^\d+$/), Validators.min(1), Validators.max(20000)]],
     chassis: ['', [Validators.pattern(CHASSIS_PATTERN)]],
     fuelType: [''],
-    serviceType: ['']
+    serviceType: [''],
+    mileageKm: ['', [Validators.pattern(/^\d+$/), Validators.max(9_999_999)]]
   });
 
   private readonly lowFields = computed(() => {
@@ -169,6 +176,7 @@ export class VehicleFormComponent {
     if (field === 'plate') return 'Ingresa una placa colombiana válida: ABC-123 (carro) o ABC-12D (moto).';
     if (field === 'year') return `Ingresa un año entre 1950 y ${new Date().getFullYear() + 1}.`;
     if (field === 'cylinderCc') return 'El cilindraje va en cc, sin decimales (máximo 20000).';
+    if (field === 'mileageKm') return 'El kilometraje va en km, solo números (máximo 9.999.999).';
     if (field === 'chassis') return 'Solo letras, números y guiones (5 a 30 caracteres).';
     if (errors['maxlength']) return `No puede superar ${errors['maxlength'].requiredLength} caracteres.`;
     return 'Revisa este campo.';
@@ -188,7 +196,8 @@ export class VehicleFormComponent {
       cylinderCc: integer(raw.cylinderCc),
       chassis: text(raw.chassis)?.toUpperCase() ?? null,
       fuelType: (raw.fuelType || null) as VehicleFormValue['fuelType'],
-      serviceType: (raw.serviceType || null) as VehicleFormValue['serviceType']
+      serviceType: (raw.serviceType || null) as VehicleFormValue['serviceType'],
+      mileageKm: integer(raw.mileageKm)
     });
   }
 }

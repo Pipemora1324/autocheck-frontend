@@ -34,6 +34,7 @@ describe('VehicleDetailPage', () => {
     const { element } = await render();
     expect(element.querySelector('h1')?.textContent).toContain('Renault Sandero');
     expect(element.textContent).toContain('9FBBSRADDKM123456');
+    expect(element.textContent).toContain('85.000 km');
     expect(element.textContent).not.toMatch(/SOAT|RTM|RUNT|Concepto/);
   });
 
@@ -47,12 +48,18 @@ describe('VehicleDetailPage', () => {
     expect(element.querySelector<HTMLInputElement>('#vehicle-plate')).toBeNull();
     color.value = 'Rojo';
     color.dispatchEvent(new Event('input'));
+    const mileage = element.querySelector<HTMLInputElement>('#vehicle-mileage')!;
+    expect(mileage.value).toBe('85000');
+    mileage.value = '90000';
+    mileage.dispatchEvent(new Event('input'));
     element.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
 
     const request = http.expectOne(`${GARAGE}/ABC-123`);
     expect(request.request.method).toBe('PATCH');
     expect(request.request.body).not.toHaveProperty('plate');
     expect(request.request.body.color).toBe('Rojo');
+    expect(request.request.body.mileageKm).toBe(90000);
+    for (const removed of ['soatExpiresOn', 'rtmExpiresOn', 'runtStatus']) expect(request.request.body).not.toHaveProperty(removed);
     request.flush(garageVehicle({ color: 'Rojo' }));
     await fixture.whenStable();
     expect(element.textContent).toContain('Cambios guardados.');

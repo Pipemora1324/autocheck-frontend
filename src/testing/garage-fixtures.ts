@@ -10,6 +10,7 @@ export const garageVehicle = (overrides: Partial<GarageVehicle> = {}): GarageVeh
   chassis: '9FBBSRADDKM123456',
   fuelType: 'Gasolina',
   serviceType: 'Particular',
+  mileageKm: 85000,
   source: 'manual',
   kind: 'carro',
   createdAt: '2026-11-02T17:00:00.000Z',
@@ -27,6 +28,7 @@ export const newGarageVehicle = (overrides: Partial<NewGarageVehicle> = {}): New
   chassis: null,
   fuelType: null,
   serviceType: null,
+  mileageKm: null,
   source: 'manual',
   ...overrides
 });

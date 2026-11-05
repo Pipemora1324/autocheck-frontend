@@ -82,13 +82,14 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
                 <dl class="data-list">
                   <div><dt>Placa</dt><dd>{{ v.plate }}</dd></div>
                   <div><dt>Marca</dt><dd>{{ v.brand }}</dd></div>
-                  <div><dt>Modelo o línea</dt><dd>{{ v.model }}</dd></div>
-                  <div><dt>Año</dt><dd>{{ v.year ?? '—' }}</dd></div>
+                  <div><dt>Línea</dt><dd>{{ v.model }}</dd></div>
+                  <div><dt>Modelo (año)</dt><dd>{{ v.year ?? '—' }}</dd></div>
                   <div><dt>Color</dt><dd>{{ v.color ?? '—' }}</dd></div>
                   <div><dt>Cilindraje</dt><dd>{{ v.cylinderCc ? v.cylinderCc + ' cc' : '—' }}</dd></div>
                   <div><dt>Chasis</dt><dd>{{ v.chassis ?? '—' }}</dd></div>
                   <div><dt>Combustible</dt><dd>{{ v.fuelType ?? '—' }}</dd></div>
                   <div><dt>Servicio</dt><dd>{{ v.serviceType ?? '—' }}</dd></div>
+                  <div><dt>Kilometraje</dt><dd>{{ mileage() }}</dd></div>
                 </dl>
               </section>
             </div>
@@ -131,6 +132,10 @@ export class VehicleDetailPage {
   readonly deleteError = signal('');
 
   readonly sourceLabel = computed(() => (this.vehicle() ? SOURCE_LABEL[this.vehicle()!.source] : ''));
+  readonly mileage = computed(() => {
+    const km = this.vehicle()?.mileageKm;
+    return km === null || km === undefined ? '—' : `${km.toLocaleString('es-CO')} km`;
+  });
   readonly updatedOn = computed(() => (this.vehicle() ? formatDate(this.vehicle()!.updatedAt) : ''));
 
   constructor() {

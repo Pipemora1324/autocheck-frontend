@@ -30,6 +30,7 @@
 .vehicle-name { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
 .vehicle-name strong { color: #173b5d; font-size: .98rem; }
 .vehicle-name small { color: #718197; font-size: .78rem; }
+.vehicle-cta { color: #0876c7; font-size: .8rem; font-weight: 800; white-space: nowrap; }
 
 /* Formularios del garaje */
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem 1rem; }
@@ -80,4 +81,5 @@
   .vehicle-card { grid-template-columns: auto 1fr; }
   .form-grid, .choice-grid, .detail-grid { grid-template-columns: 1fr; }
   .data-list div { grid-template-columns: 7.5rem 1fr; }
+  .vehicle-cta { grid-column: 1 / -1; }
 }

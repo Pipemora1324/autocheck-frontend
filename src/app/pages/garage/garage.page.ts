@@ -54,8 +54,9 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
                   <span class="plate-tag">{{ vehicle.plate }}</span>
                   <span class="vehicle-name">
                     <strong>{{ vehicle.brand }} {{ vehicle.model }}</strong>
-                    <small>{{ vehicle.kind === 'moto' ? 'Moto' : 'Carro' }}@if (vehicle.year) { · {{ vehicle.year }} }</small>
+                    <small>{{ vehicle.kind === 'moto' ? 'Moto' : 'Carro' }}@if (vehicle.year) { · {{ vehicle.year }} }@if (vehicle.mileageKm !== null) { · {{ vehicle.mileageKm.toLocaleString('es-CO') }} km }</small>
                   </span>
+                  <span class="vehicle-cta">Diagnosticar un testigo →</span>
                 </a>
               </li>
             }

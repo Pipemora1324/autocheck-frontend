@@ -138,7 +138,8 @@ describe('AddVehiclePage', () => {
     element.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
 
     const request = http.expectOne(`${API}/garage`);
-    expect(request.request.body).toMatchObject({ plate: 'ABC123', brand: 'Mazda', model: '3', year: null, source: 'manual' });
+    expect(request.request.body).toMatchObject({ plate: 'ABC123', brand: 'Mazda', model: '3', year: null, mileageKm: null, source: 'manual' });
+    for (const removed of ['soatExpiresOn', 'rtmExpiresOn', 'runtStatus']) expect(request.request.body).not.toHaveProperty(removed);
     request.flush({ message: 'Ya tienes un vehículo con la placa ABC-123.', code: 'DUPLICATE_PLATE' }, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
     expect(element.querySelector('.form-error')?.textContent).toContain('Ya tienes un vehículo');

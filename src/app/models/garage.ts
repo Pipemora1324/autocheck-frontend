@@ -17,6 +17,7 @@ export interface GarageVehicleFields {
   chassis: string | null;
   fuelType: FuelType | null;
   serviceType: ServiceType | null;
+  mileageKm: number | null;
 }
 
 export interface GarageVehicle extends GarageVehicleFields {

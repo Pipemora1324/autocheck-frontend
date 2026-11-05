@@ -30,11 +30,13 @@ describe('GaragePage', () => {
   });
 
   it('lista los vehículos y enlaza a cada uno', async () => {
-    const vehicles = [garageVehicle(), garageVehicle({ plate: 'XYZ-98D', kind: 'moto', brand: 'Yamaha', model: 'NMAX' })];
+    const vehicles = [garageVehicle(), garageVehicle({ plate: 'XYZ-98D', kind: 'moto', brand: 'Yamaha', model: 'NMAX', mileageKm: null })];
     const element = await render((request) => request.flush({ vehicles }));
     const cards = element.querySelectorAll('.vehicle-card');
     expect(cards).toHaveLength(2);
     expect(cards[0]!.textContent).toContain('Renault Sandero');
+    expect(cards[0]!.textContent).toContain('85.000 km');
+    expect(cards[0]!.textContent).toContain('Diagnosticar un testigo');
     expect(cards[1]!.textContent).toContain('Moto');
     expect(cards[1]!.getAttribute('href')).toBe('/garaje/XYZ-98D');
   });
