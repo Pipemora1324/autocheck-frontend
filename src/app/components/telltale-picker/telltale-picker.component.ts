@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { apiErrorMessage } from '../../core/http/api-error';
-import { SEVERITIES, type TelltaleSeverity, type TelltaleSummary } from '../../models/diagnosis';
+import { ordersStop, SEVERITIES, type TelltaleSeverity, type TelltaleSummary } from '../../models/diagnosis';
 import { DiagnosisService } from '../../services/diagnosis.service';
 import { SeverityBadgeComponent } from '../severity-badge/severity-badge.component';
 
@@ -15,7 +15,7 @@ export function groupTelltales(telltales: TelltaleSummary[], query: string): Arr
     severity === 'rojo' ? [{ severity, stop: true }, { severity, stop: false }] : [{ severity, stop: false }]
   );
   return groups
-    .map((group) => ({ ...group, items: telltales.filter((item) => item.severidad === group.severity && (group.severity !== 'rojo' || item.debeDetenerse === group.stop) && matches(item)) }))
+    .map((group) => ({ ...group, items: telltales.filter((item) => item.severidad === group.severity && (group.severity !== 'rojo' || ordersStop(item) === group.stop) && matches(item)) }))
     .filter((group) => group.items.length > 0);
 }
 

@@ -16,6 +16,9 @@ export const SEVERITY_LABEL: Record<TelltaleSeverity, string> = {
 /** Rojo sin orden de detenerse (airbag): el vehículo puede moverse, pero hay que revisarlo hoy. */
 export const RED_NO_STOP_LABEL = 'Revísalo hoy';
 
+/** Un rojo solo deja de ordenar detenerse si el servidor lo dice de forma explícita. */
+export const ordersStop = (item: { debeDetenerse?: boolean }): boolean => item.debeDetenerse !== false;
+
 export const DIAGNOSIS_DISCLAIMER = 'Orientación general. Un mecánico debe confirmar el diagnóstico.';
 
 export interface TelltaleSummary {

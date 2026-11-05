@@ -9,6 +9,11 @@ import { groupTelltales, TelltalePickerComponent } from './telltale-picker.compo
 const URL = `${environment.apiUrl}/telltales`;
 
 describe('groupTelltales', () => {
+  it('si el backend no envía debeDetenerse, un rojo no desaparece: queda bajo "Detente"', () => {
+    const oldBackend = { id: 'presion_aceite', nombre: 'Presión de aceite', alias: [], severidad: 'rojo' } as unknown as TelltaleSummary;
+    expect(groupTelltales([oldBackend], '').map((group) => [group.severity, group.stop, group.items.length])).toEqual([['rojo', true, 1]]);
+  });
+
   it('el airbag queda en su propio grupo rojo, fuera de los que ordenan detenerse', () => {
     const airbag = { id: 'airbag', nombre: 'Airbag', alias: ['bolsa de aire'], severidad: 'rojo' as const, debeDetenerse: false };
     const groups = groupTelltales([...telltales(), airbag], '');

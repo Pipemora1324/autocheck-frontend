@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { formatDateTime } from '../../core/format-date';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
-import { DIAGNOSIS_DISCLAIMER, type DiagnosisDetail, type DiagnosisHistoryItem } from '../../models/diagnosis';
+import { DIAGNOSIS_DISCLAIMER, ordersStop, type DiagnosisDetail, type DiagnosisHistoryItem } from '../../models/diagnosis';
 import { DiagnosisService } from '../../services/diagnosis.service';
 import { DiagnosisResultComponent } from '../diagnosis-result/diagnosis-result.component';
 import { ModalComponent } from '../modal/modal.component';
@@ -41,7 +41,7 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
                       <strong>{{ name(item) }}</strong>
                       <small>{{ date(item.createdAt) }}</small>
                     </span>
-                    <app-severity-badge [severity]="item.severidad" [stop]="item.debeDetenerse" />
+                    <app-severity-badge [severity]="item.severidad" [stop]="stops(item)" />
                   </button>
                 </li>
               }
@@ -60,13 +60,13 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
 
     @if (selected(); as item) {
       <app-modal heading="Detalle del diagnóstico" (close)="closeDetail()">
-        @if (item.debeDetenerse && !detail()) {
+        @if (item.severidad === 'rojo' && stops(item) && !detail()) {
           <div class="stop-banner" role="alert"><strong>Si sigue encendido: detente en un lugar seguro y llama a un taller o a una grúa.</strong></div>
         }
         <dl class="data-list">
           <div><dt>Testigo</dt><dd>{{ name(item) }}</dd></div>
           <div><dt>Fecha</dt><dd>{{ date(item.createdAt) }}</dd></div>
-          <div><dt>Semáforo</dt><dd><app-severity-badge [severity]="item.severidad" [stop]="item.debeDetenerse" /></dd></div>
+          <div><dt>Semáforo</dt><dd><app-severity-badge [severity]="item.severidad" [stop]="stops(item)" /></dd></div>
           <div><dt>Cómo se identificó</dt><dd>{{ origin(item) }}</dd></div>
           @if (item.descripcion) { <div><dt>Tu descripción</dt><dd>{{ item.descripcion }}</dd></div> }
         </dl>
@@ -108,6 +108,7 @@ export class DiagnosisHistoryComponent {
   readonly refreshKey = input(0);
 
   protected readonly date = formatDateTime;
+  protected readonly stops = ordersStop;
   protected readonly disclaimer = DIAGNOSIS_DISCLAIMER;
 
   readonly state = signal<'loading' | 'ready' | 'unverified' | 'error'>('loading');

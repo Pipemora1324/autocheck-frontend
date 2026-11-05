@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting, type TestRequest } fro
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
 import { diagnosedAirbag, diagnosedRed, history, historyItem } from '../../../testing/diagnosis-fixtures';
+import type { DiagnosisHistoryItem } from '../../models/diagnosis';
 import { DiagnosisHistoryComponent } from './diagnosis-history.component';
 
 const DIAGNOSES = `${environment.apiUrl}/garage/ABC-123/diagnoses`;
@@ -165,6 +166,15 @@ describe('DiagnosisHistoryComponent', () => {
     const dialog = element.querySelector('[role="dialog"]')!;
     expect(dialog.querySelector('.stop-banner')).toBeNull();
     expect(dialog.textContent).toContain('Revísalo hoy');
+  });
+
+  it('si el backend no envía debeDetenerse, un rojo sigue diciendo "Detente"', async () => {
+    const { debeDetenerse: _ignored, ...oldItem } = historyItem({ severidad: 'rojo' });
+    const { fixture, element } = await render((request) => request.flush(history([oldItem as DiagnosisHistoryItem])));
+    expect(element.querySelector('.history-item')!.textContent).toContain('Detente');
+    element.querySelector<HTMLButtonElement>('.history-item')!.click();
+    await fixture.whenStable();
+    expect(element.querySelector('[role="dialog"] .stop-banner')).toBeTruthy();
   });
 
   it('borra tras confirmar y recarga', async () => {
