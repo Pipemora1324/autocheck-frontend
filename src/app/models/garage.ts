@@ -60,6 +60,8 @@ export interface CardScanResult {
 
 export interface FeatureStatus {
   cardScan: { enabled: boolean; provider?: string; notice?: string | null };
+  /** enabled se refiere a la IA: elegir el testigo de la lista siempre funciona. */
+  diagnosis: { enabled: boolean; provider: 'gemini' | 'none'; manualSelection: boolean; notice: string | null };
 }
 
 /** GET /config/public (sin sesión). */

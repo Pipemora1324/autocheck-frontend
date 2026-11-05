@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import type { PublicConfig } from '../../models/garage';
 
 /**
- * GET /config/public: texto de consentimiento, aviso del proveedor de lectura y qué funciones opcionales están activas.
+ * GET /config/public: texto de consentimiento, avisos de los proveedores de IA y qué funciones opcionales están activas.
  * Se pide una vez; si falla, `config()` queda en null y las pantallas usan su texto por defecto.
  */
 @Injectable({ providedIn: 'root' })

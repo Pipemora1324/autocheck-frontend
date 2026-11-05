@@ -50,7 +50,13 @@ export const cardScanResult = (): CardScanResult => ({
 });
 
 export const publicConfig = (overrides: Partial<PublicConfig> = {}): PublicConfig => ({
-  privacyPolicy: { version: '2026-11-02.2', registrationConsent: 'Autorizo a AutoCheck-CO a tratar mis datos personales.' },
+  privacyPolicy: { version: '2026-11-04.1', registrationConsent: 'Autorizo a AutoCheck-CO a tratar mis datos personales.' },
   cardScan: { enabled: true, provider: 'gemini', notice: 'La foto de la tarjeta se envía a Google (Gemini API).' },
+  diagnosis: {
+    enabled: true,
+    provider: 'gemini',
+    manualSelection: true,
+    notice: 'La foto del tablero se envía a un proveedor externo de inteligencia artificial. No se guarda en nuestros servidores.'
+  },
   ...overrides
 });
