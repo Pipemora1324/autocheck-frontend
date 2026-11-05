@@ -1,33 +1,43 @@
 # AutoCheck-CO Frontend
 
-Cliente Angular 21 (sin zone.js, con signals) de AutoCheck-CO: un **garaje personal** para registrar tus carros y motos, ver si el SOAT y la revisión técnico-mecánica están vigentes y obtener un concepto orientativo antes de comprar. Funciona contra el backend [autocheck-backend](https://github.com/Pipemora1324/autocheck-backend).
+Cliente Angular 21 (sin zone.js, con signals) de AutoCheck-CO: un **garaje personal con diagnóstico de testigos del tablero con IA**. Registras tus carros y motos, fotografías un testigo encendido (o lo describes o lo eliges de una lista) y la app te explica qué es, qué tan urgente es, qué puedes revisar tú con seguridad y cuándo ir al mecánico. Funciona contra el backend [autocheck-backend](https://github.com/Pipemora1324/autocheck-backend).
 
 - Producción: <https://autocheck-frontend-phi.vercel.app>
 - Contrato de la API: `docs/API.md` del backend
 
-## Qué es real, qué es demostración y qué depende de un proveedor externo
+## Qué es real, qué es IA y qué queda como trabajo futuro
 
 | Parte | Estado |
 | --- | --- |
 | Registro con autorización de tratamiento de datos, login, sesión con refresh rotativo, recuperación de contraseña | **Real** |
 | Confirmación de correo (`/verify-email`), aviso y botón "Reenviar correo" | **Real**. El envío depende del **proveedor de correo** del backend (Brevo) |
-| Mi garaje: lista, alta manual, detalle, edición y borrado de vehículos | **Real**, guardado en Postgres |
-| Vigencias de SOAT y RTM (Vigente / Por vencer / Vencido) y concepto de compra | **Real**, pero calculado **solo con los datos que registra el usuario**. No es una consulta oficial y la pantalla lo dice |
-| Alta con foto de la tarjeta de propiedad | **Proveedor externo** (Google Gemini o Anthropic, según el backend). Si está apagado u ocupado, la app lo explica y deja seguir a mano |
-| "Actualizar desde RUNT" | **Proveedor externo, todavía no disponible**: el backend responde 501/503 y la app muestra un mensaje y mantiene el flujo manual |
+| Mi garaje: lista, alta manual, detalle, edición y borrado de vehículos, con kilometraje opcional | **Real**, guardado en Postgres |
+| Elegir el testigo de la lista (`GET /telltales`) y ver su explicación | **Real**, sin IA y sin enviar nada a terceros. Funciona aunque la IA esté apagada |
+| Explicación del testigo: significado, causas, qué revisar, qué no hacer, cuándo ir al mecánico | **Real**: viene del catálogo del backend, que aún debe revisar una persona con conocimiento mecánico. El frontend no redacta nada |
+| Semáforo y banner de "Detente" | **Real**: los decide el servidor, no el modelo |
+| Diagnóstico con foto o descripción | **IA (Google Gemini, desde el backend), solo para identificar el testigo.** Si está apagada u ocupada, la app lo explica y ofrece la lista. La precisión con fotos reales aún no está medida |
+| Alta con foto de la tarjeta de propiedad | **IA, opcional** (Google Gemini o Anthropic, según el backend). Si está apagada u ocupada, la app lo explica y deja seguir a mano |
+| Historial por vehículo: fecha, testigo, semáforo, detalle y borrado | **Real**, sin la imagen. El backend guarda un resumen; para releer la explicación completa hay que volver a consultar el testigo, y eso crea una entrada nueva |
 | Eliminar mi cuenta (con contraseña) y página de privacidad | **Real** |
-| `/demo`: informe de peritaje de las placas ABC-1234, DEF-5678 y GHI-9012 | **Demostración**: datos ficticios del backend, rotulados como tales en la pantalla |
+
+**Es orientación general:** no lee los códigos de falla del vehículo ni reemplaza a un mecánico, y cada resultado lo dice.
+
+**Trabajo futuro:**
+
+- Consulta al RUNT con un proveedor autorizado. Se retiró de la app porque esa información es confidencial y de pago.
+- Medir la precisión del reconocimiento con fotos reales de tableros.
+- Mostrar la explicación completa en el historial sin crear otra entrada, cuando el backend la exponga.
 
 ## Pantallas
 
 | Ruta | Descripción |
 | --- | --- |
-| `/` | Mi garaje (pantalla principal tras el login) |
-| `/garaje/nuevo` | Agregar vehículo: foto de la tarjeta (cámara en móvil o archivo) o formulario manual |
-| `/garaje/:placa` | Detalle: datos, vigencias, concepto, editar, eliminar y "Actualizar desde RUNT" |
+| `/inicio` | Portada pública (quien entra a `/` sin sesión llega aquí) |
+| `/` | Mi garaje (pantalla principal con sesión) |
+| `/garaje/nuevo` | Agregar vehículo: formulario manual o, como opción, foto de la tarjeta (cámara en móvil o archivo) |
+| `/garaje/:placa` | Pantalla principal del vehículo: diagnosticar un testigo, historial, datos, editar y eliminar |
 | `/cuenta` | Mi cuenta y "Eliminar mi cuenta" |
 | `/privacidad` | Política de tratamiento de datos (pública) |
-| `/demo` | Informe de peritaje de demostración |
 | `/login`, `/registro`, `/olvide-contrasena` | Autenticación |
 | `/verify-email?token=...`, `/reset-password?token=...` | Enlaces que envía el backend por correo; el token se borra de la URL al leerlo |
 
@@ -88,19 +98,27 @@ Render se duerme sin tráfico y tarda 30–60 s en despertar. `serverStatusInter
 - reintenta los GET hasta 4 veces cada 5 s (las escrituras no se reintentan para no duplicarlas);
 - pasados 2 minutos sin respuesta, avisa que el servidor no responde.
 
+### Diagnóstico de un testigo
+
+- **Con foto o descripción:** en móvil, "Tomar foto" abre la cámara (`capture="environment"`); también se puede subir un archivo. El cliente valida JPEG, PNG o WEBP de máximo 5 MB y muestra una vista previa. El backend vuelve a validar la firma real.
+- **Antes de enviar** se muestra `diagnosis.notice` de `GET /config/public` y el usuario debe confirmar que leyó el aviso y que es su propio tablero. Sin esa casilla no se envía nada.
+- **Con la lista:** búsqueda por nombre y alias, agrupada por severidad. Si se elige de la lista, una foto ya seleccionada no se envía.
+- **Resultado:** semáforo con color, forma y texto (Detente, Revísalo pronto, No es una falla) y las secciones que devuelve el servidor. En rojo aparece un banner de detenerse en un lugar seguro y llamar a un taller o grúa.
+- **`needs_better_input`:** muestra la pista del servidor y ofrece repetir la foto o elegir de la lista, sin inventar un resultado.
+
+| Respuesta del backend | Qué muestra la app |
+| --- | --- |
+| `503 DIAGNOSIS_PROVIDER_BUSY` (el 429 de Gemini) | Cupo gratuito de la IA ocupado; sugiere elegir de la lista |
+| `503 AI_NOT_CONFIGURED`, `503 DIAGNOSIS_UNAVAILABLE` | La IA no está disponible y la elección manual sigue funcionando |
+| `429 RATE_LIMITED` (15 diagnósticos por hora) | El mensaje del límite. **No** sugiere la lista, porque el límite también la cuenta |
+| `403 EMAIL_NOT_VERIFIED` | Pide confirmar el correo, con el aviso "Reenviar correo" |
+| Sin respuesta, 502, 503 o 504 sin código | "Conectando con el servidor, puede tardar un minuto" |
+
 ### Lectura de la tarjeta de propiedad
 
-- En móvil, "Tomar foto" abre la cámara (`capture="environment"`); también se puede subir un archivo.
-- El cliente valida JPEG, PNG o WEBP de máximo 5 MB antes de subir. El backend vuelve a validar la firma real.
+- Es opcional: el alta manual siempre está disponible.
 - Antes de subir se muestra el aviso del proveedor activo (`cardScan.notice`).
 - La respuesta precarga un formulario editable. Los campos con confianza menor a 0,8 se resaltan, y los que no se leyeron se piden a mano. Nada se guarda hasta que el usuario confirma.
-- **El número de documento del propietario se descarta en el cliente:** no se guarda ni se envía a `POST /garage`.
-
-### Actualizar desde RUNT
-
-- Pide el documento del propietario y un consentimiento explícito en cada consulta.
-- El documento solo vive en el formulario del diálogo y se borra al terminar.
-- Si `GET /config/public` indica que la consulta está apagada, o el backend responde 501/503, la app dice que la función aún no está disponible y ofrece editar los datos a mano.
 
 ## Despliegue en Vercel
 
