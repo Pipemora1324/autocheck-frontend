@@ -8,7 +8,10 @@ import { PrivacyPage } from './privacy.page';
 
 describe('PrivacyPage', () => {
   const render = async () => {
-    TestBed.configureTestingModule({ imports: [PrivacyPage], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    TestBed.configureTestingModule({
+      imports: [PrivacyPage],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
     const http = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(PrivacyPage);
     fixture.detectChanges();

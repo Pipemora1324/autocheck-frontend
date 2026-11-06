@@ -10,15 +10,20 @@ import { apiErrorMessage } from '../../core/http/api-error';
       <section class="notice-banner" role="status" aria-live="polite">
         <div>
           <strong>Confirma tu correo para usar tu garaje.</strong>
-          <span>Te enviamos un enlace a {{ auth.user()?.email }}. Revisa también la carpeta de spam.</span>
-          @if (feedback()) { <span class="notice-feedback">{{ feedback() }}</span> }
+          <span
+            >Te enviamos un enlace a {{ auth.user()?.email }}. Revisa también la carpeta de
+            spam.</span
+          >
+          @if (feedback()) {
+            <span class="notice-feedback">{{ feedback() }}</span>
+          }
         </div>
         <button type="button" class="notice-action" (click)="resend()" [disabled]="sending()">
           {{ sending() ? 'Enviando…' : 'Reenviar correo' }}
         </button>
       </section>
     }
-  `
+  `,
 })
 export class EmailVerificationBannerComponent {
   protected readonly auth = inject(AuthService);
@@ -38,8 +43,13 @@ export class EmailVerificationBannerComponent {
       },
       error: (error: unknown) => {
         this.sending.set(false);
-        this.feedback.set(apiErrorMessage(error, 'No se pudo reenviar el correo. Inténtalo de nuevo en unos minutos.'));
-      }
+        this.feedback.set(
+          apiErrorMessage(
+            error,
+            'No se pudo reenviar el correo. Inténtalo de nuevo en unos minutos.',
+          ),
+        );
+      },
     });
   }
 }

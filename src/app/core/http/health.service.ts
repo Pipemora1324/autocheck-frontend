@@ -28,13 +28,15 @@ export class HealthService {
     timer(0, HEALTH_POLL_MS)
       .pipe(
         exhaustMap(() =>
-          this.http.get<{ status: string }>(`${environment.apiUrl}/health`, { context: skipWakeRetry() }).pipe(
-            timeout(HEALTH_TIMEOUT_MS),
-            map((response): ApiHealth => (response.status === 'ok' ? 'online' : 'offline')),
-            catchError(() => of<ApiHealth>('offline'))
-          )
+          this.http
+            .get<{ status: string }>(`${environment.apiUrl}/health`, { context: skipWakeRetry() })
+            .pipe(
+              timeout(HEALTH_TIMEOUT_MS),
+              map((response): ApiHealth => (response.status === 'ok' ? 'online' : 'offline')),
+              catchError(() => of<ApiHealth>('offline')),
+            ),
         ),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((status) => {
         this.state.set(status);

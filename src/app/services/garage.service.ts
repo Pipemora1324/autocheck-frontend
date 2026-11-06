@@ -6,7 +6,7 @@ import type {
   CardScanResult,
   GarageVehicle,
   GarageVehiclePatch,
-  NewGarageVehicle
+  NewGarageVehicle,
 } from '../models/garage';
 
 @Injectable({ providedIn: 'root' })
@@ -19,7 +19,9 @@ export class GarageService {
   }
 
   list(): Observable<GarageVehicle[]> {
-    return this.http.get<{ vehicles: GarageVehicle[] }>(this.baseUrl).pipe(map(({ vehicles }) => vehicles));
+    return this.http
+      .get<{ vehicles: GarageVehicle[] }>(this.baseUrl)
+      .pipe(map(({ vehicles }) => vehicles));
   }
 
   get(plate: string): Observable<GarageVehicle> {
@@ -36,7 +38,7 @@ export class GarageService {
   }
 
   remove(plate: string): Observable<void> {
-    return this.http.delete<void>(this.plateUrl(plate));
+    return this.http.delete<undefined>(this.plateUrl(plate));
   }
 
   /** multipart/form-data con un único archivo en el campo "image". */

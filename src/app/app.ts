@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ConnectionStatusComponent } from './components/connection-status/connection-status.component';
 import { EmailVerificationBannerComponent } from './components/email-verification-banner/email-verification-banner.component';
 import { AuthService } from './core/auth/auth.service';
 import { HealthService } from './core/http/health.service';
@@ -8,9 +9,16 @@ import { ServerStatusBannerComponent } from './components/server-status-banner/s
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, EmailVerificationBannerComponent, ServerStatusBannerComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    ConnectionStatusComponent,
+    EmailVerificationBannerComponent,
+    ServerStatusBannerComponent,
+  ],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App {
   private readonly router = inject(Router);
@@ -20,9 +28,12 @@ export class App {
 
   protected readonly healthLabel = computed(() => {
     switch (this.health.status()) {
-      case 'online': return 'API conectada';
-      case 'offline': return this.server.state() === 'down' ? 'API sin respuesta' : 'Conectando con el servidor…';
-      default: return 'Comprobando API…';
+      case 'online':
+        return 'API conectada';
+      case 'offline':
+        return this.server.state() === 'down' ? 'API sin respuesta' : 'Conectando con el servidor…';
+      default:
+        return 'Comprobando API…';
     }
   });
 
@@ -30,7 +41,9 @@ export class App {
     const email = this.auth.user()?.email ?? '';
     const name = email.split('@')[0] ?? '';
     const parts = name.split(/[._-]+/).filter(Boolean);
-    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? parts[0]?.[1] ?? '')).toUpperCase() || '?';
+    const first = parts.at(0) ?? '';
+    const second = parts.at(1) ?? '';
+    return (first.charAt(0) + (second.charAt(0) || first.charAt(1))).toUpperCase() || '?';
   });
 
   constructor() {

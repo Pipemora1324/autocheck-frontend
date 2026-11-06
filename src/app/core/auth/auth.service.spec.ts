@@ -15,12 +15,16 @@ describe('AuthService', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     auth = TestBed.inject(AuthService);
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+  });
 
   it('empieza sin sesión conocida', () => {
     expect(auth.status()).toBe('unknown');
@@ -46,14 +50,23 @@ describe('AuthService', () => {
 
   it('register envía acceptedTerms, inicia sesión y propaga el 409 si el correo existe', async () => {
     const failed = firstValueFrom(auth.register('ana@example.com', 'clave-larga', true));
-    http.expectOne(`${API}/auth/register`).flush({ message: 'Ya existe una cuenta con este correo.' }, { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(`${API}/auth/register`)
+      .flush(
+        { message: 'Ya existe una cuenta con este correo.' },
+        { status: 409, statusText: 'Conflict' },
+      );
     await expect(failed).rejects.toMatchObject({ status: 409 });
     expect(auth.isAuthenticated()).toBe(false);
 
     const clave = 'clave-larga';
     auth.register('nuevo@example.com', clave, true).subscribe();
     const request = http.expectOne(`${API}/auth/register`);
-    expect(request.request.body).toEqual({ email: 'nuevo@example.com', password: clave, acceptedTerms: true });
+    expect(request.request.body).toEqual({
+      email: 'nuevo@example.com',
+      password: clave,
+      acceptedTerms: true,
+    });
     expect(request.request.withCredentials).toBe(true);
     request.flush(sessionFor('access-2', 'user', false));
     expect(auth.isAuthenticated()).toBe(true);
@@ -75,7 +88,12 @@ describe('AuthService', () => {
 
   it('verifyEmail sin sesión no falla y propaga el 400 de un token vencido', async () => {
     const result = firstValueFrom(auth.verifyEmail('vencido'));
-    http.expectOne(`${API}/auth/verify-email`).flush({ message: 'El enlace no es válido o expiró.' }, { status: 400, statusText: 'Bad Request' });
+    http
+      .expectOne(`${API}/auth/verify-email`)
+      .flush(
+        { message: 'El enlace no es válido o expiró.' },
+        { status: 400, statusText: 'Bad Request' },
+      );
     await expect(result).rejects.toMatchObject({ status: 400 });
     expect(auth.user()).toBeNull();
   });
@@ -84,7 +102,10 @@ describe('AuthService', () => {
     const result = firstValueFrom(auth.resendVerification('ana@example.com'));
     const request = http.expectOne(`${API}/auth/resend-verification`);
     expect(request.request.body).toEqual({ email: 'ana@example.com' });
-    request.flush({ message: 'Si el correo está registrado…' }, { status: 202, statusText: 'Accepted' });
+    request.flush(
+      { message: 'Si el correo está registrado…' },
+      { status: 202, statusText: 'Accepted' },
+    );
     expect((await result).message).toContain('Si el correo');
   });
 
@@ -107,7 +128,12 @@ describe('AuthService', () => {
     http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1'));
 
     const done = firstValueFrom(auth.deleteAccount('mala'));
-    http.expectOne(`${API}/auth/me`).flush({ message: 'La contraseña no es correcta.', code: 'INVALID_PASSWORD' }, { status: 403, statusText: 'Forbidden' });
+    http
+      .expectOne(`${API}/auth/me`)
+      .flush(
+        { message: 'La contraseña no es correcta.', code: 'INVALID_PASSWORD' },
+        { status: 403, statusText: 'Forbidden' },
+      );
     await expect(done).rejects.toMatchObject({ status: 403 });
     expect(auth.isAuthenticated()).toBe(true);
   });
@@ -117,8 +143,8 @@ describe('AuthService', () => {
     const second = firstValueFrom(auth.refresh());
     const requests = http.match(`${API}/auth/refresh`);
     expect(requests.length).toBe(1);
-    expect(requests[0]!.request.withCredentials).toBe(true);
-    requests[0]!.flush(sessionFor('access-nuevo'));
+    expect(requests[0].request.withCredentials).toBe(true);
+    requests[0].flush(sessionFor('access-nuevo'));
 
     expect(await first).toBe('access-nuevo');
     expect(await second).toBe('access-nuevo');
@@ -134,7 +160,12 @@ describe('AuthService', () => {
     http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1'));
 
     const result = firstValueFrom(auth.refresh());
-    http.expectOne(`${API}/auth/refresh`).flush({ message: 'La sesión no es válida o expiró.' }, { status: 401, statusText: 'Unauthorized' });
+    http
+      .expectOne(`${API}/auth/refresh`)
+      .flush(
+        { message: 'La sesión no es válida o expiró.' },
+        { status: 401, statusText: 'Unauthorized' },
+      );
     await expect(result).rejects.toMatchObject({ status: 401 });
     expect(auth.status()).toBe('anonymous');
     expect(auth.getAccessToken()).toBeNull();

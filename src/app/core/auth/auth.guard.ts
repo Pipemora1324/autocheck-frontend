@@ -7,21 +7,31 @@ import { AuthService } from './auth.service';
 export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  return auth.restoreSession().pipe(
-    map(() => auth.isAuthenticated() || router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } }))
-  );
+  return auth
+    .restoreSession()
+    .pipe(
+      map(
+        () =>
+          auth.isAuthenticated() ||
+          router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } }),
+      ),
+    );
 };
 
 /** Para la raíz: con sesión muestra el garaje; sin sesión, la portada pública. */
 export const homeGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  return auth.restoreSession().pipe(map(() => auth.isAuthenticated() || router.createUrlTree(['/inicio'])));
+  return auth
+    .restoreSession()
+    .pipe(map(() => auth.isAuthenticated() || router.createUrlTree(['/inicio'])));
 };
 
 /** Para portada, login y registro: si ya hay sesión, lleva al garaje. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  return auth.restoreSession().pipe(map(() => !auth.isAuthenticated() || router.createUrlTree(['/'])));
+  return auth
+    .restoreSession()
+    .pipe(map(() => !auth.isAuthenticated() || router.createUrlTree(['/'])));
 };

@@ -27,7 +27,7 @@ export class PublicConfigService {
         this.request$ = null;
         return of(null);
       }),
-      shareReplay({ bufferSize: 1, refCount: false })
+      shareReplay({ bufferSize: 1, refCount: false }),
     );
     return this.request$;
   }

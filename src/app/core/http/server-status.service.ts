@@ -6,7 +6,8 @@ export const SLOW_REQUEST_MS = 3_000;
 /** Si el servidor sigue sin responder pasado este tiempo, se deja de decir "despertando" y se muestra que no responde. */
 export const UNREACHABLE_GIVE_UP_MS = 120_000;
 
-export const SERVER_WAKING_MESSAGE = 'Conectando con el servidor, puede tardar un minuto. Inténtalo de nuevo en unos segundos.';
+export const SERVER_WAKING_MESSAGE =
+  'Conectando con el servidor, puede tardar un minuto. Inténtalo de nuevo en unos segundos.';
 
 export type ServerState = 'ok' | 'waking' | 'down';
 
@@ -17,7 +18,7 @@ export type ServerState = 'ok' | 'waking' | 'down';
 export function isServerWakingError(error: unknown): boolean {
   if (!(error instanceof HttpErrorResponse)) return false;
   if (![0, 502, 503, 504].includes(error.status)) return false;
-  const body = error.error;
+  const body: unknown = error.error;
   return !(body && typeof body === 'object' && 'code' in body);
 }
 
@@ -44,7 +45,9 @@ export class ServerStatusService {
   markUnreachable(): void {
     if (this.unreachable()) return;
     this.unreachable.set(true);
-    this.giveUpTimer = setTimeout(() => this.gaveUp.set(true), UNREACHABLE_GIVE_UP_MS);
+    this.giveUpTimer = setTimeout(() => {
+      this.gaveUp.set(true);
+    }, UNREACHABLE_GIVE_UP_MS);
   }
 
   markReachable(): void {
