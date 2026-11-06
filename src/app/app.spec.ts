@@ -17,7 +17,11 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter([]), provideHttpClient(withInterceptors([authInterceptor])), provideHttpClientTesting()]
+      providers: [
+        provideRouter([]),
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
   });
@@ -31,7 +35,8 @@ describe('App', () => {
 
   it('muestra "API conectada" solo si /health responde', async () => {
     const fixture = await render();
-    const status = () => (fixture.nativeElement as HTMLElement).querySelector('.system-status')!.textContent.trim();
+    const status = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('.system-status')!.textContent.trim();
     expect(status()).toBe('Comprobando API…');
 
     http.expectOne(`${API}/health`).flush({ status: 'ok', service: 'AutoCheck-CO' });
@@ -44,8 +49,12 @@ describe('App', () => {
     http.expectOne(`${API}/health`).error(new ProgressEvent('error'));
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelector('.system-status')!.textContent).toContain('Conectando con el servidor');
-    expect(element.querySelector('app-server-status-banner')!.textContent).toContain('Conectando con el servidor, puede tardar un minuto.');
+    expect(element.querySelector('.system-status')!.textContent).toContain(
+      'Conectando con el servidor',
+    );
+    expect(element.querySelector('app-server-status-banner')!.textContent).toContain(
+      'Conectando con el servidor, puede tardar un minuto.',
+    );
   });
 
   it('muestra el usuario y el botón de cerrar sesión', async () => {
@@ -59,8 +68,13 @@ describe('App', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('.user-text strong')?.textContent).toBe('ana@example.com');
     expect(element.querySelector('.logout-button')).toBeTruthy();
-    expect([...element.querySelectorAll('.main-nav a')].map((link) => link.textContent)).toEqual(['Mi garaje', 'Mi cuenta']);
-    expect(element.querySelector('footer')?.textContent).toContain('un mecánico debe confirmar el diagnóstico');
+    expect([...element.querySelectorAll('.main-nav a')].map((link) => link.textContent)).toEqual([
+      'Mi garaje',
+      'Mi cuenta',
+    ]);
+    expect(element.querySelector('footer')?.textContent).toContain(
+      'un mecánico debe confirmar el diagnóstico',
+    );
   });
 
   it('no distingue a un administrador en la barra superior', async () => {

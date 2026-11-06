@@ -23,12 +23,17 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
 
     @switch (state()) {
       @case ('loading') {
-        <div class="state-box" role="status"><span class="spinner" aria-hidden="true"></span> Cargando tu garaje…</div>
+        <div class="state-box" role="status">
+          <span class="spinner" aria-hidden="true"></span> Cargando tu garaje…
+        </div>
       }
       @case ('unverified') {
         <div class="state-box">
           <strong>Confirma tu correo para ver tu garaje.</strong>
-          <p>Abre el enlace que te enviamos. Si no te llegó, usa el botón "Reenviar correo" del aviso de arriba.</p>
+          <p>
+            Abre el enlace que te enviamos. Si no te llegó, usa el botón "Reenviar correo" del aviso
+            de arriba.
+          </p>
         </div>
       }
       @case ('error') {
@@ -43,7 +48,10 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
           <div class="state-box empty">
             <span class="empty-icon" aria-hidden="true">🚗</span>
             <strong>Aún no tienes vehículos en tu garaje.</strong>
-            <p>Agrega tu carro o moto con una foto de la tarjeta de propiedad o llenando los datos a mano.</p>
+            <p>
+              Agrega tu carro o moto con una foto de la tarjeta de propiedad o llenando los datos a
+              mano.
+            </p>
             <a class="primary-button link-button" routerLink="/garaje/nuevo">Agregar vehículo</a>
           </div>
         } @else {
@@ -54,7 +62,15 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
                   <span class="plate-tag">{{ vehicle.plate }}</span>
                   <span class="vehicle-name">
                     <strong>{{ vehicle.brand }} {{ vehicle.model }}</strong>
-                    <small>{{ vehicle.kind === 'moto' ? 'Moto' : 'Carro' }}@if (vehicle.year) { · {{ vehicle.year }} }@if (vehicle.mileageKm !== null) { · {{ vehicle.mileageKm.toLocaleString('es-CO') }} km }</small>
+                    <small
+                      >{{ vehicle.kind === 'moto' ? 'Moto' : 'Carro' }}
+                      @if (vehicle.year) {
+                        · {{ vehicle.year }}
+                      }
+                      @if (vehicle.mileageKm !== null) {
+                        · {{ vehicle.mileageKm.toLocaleString('es-CO') }} km
+                      }
+                    </small>
                   </span>
                   <span class="vehicle-cta">Diagnosticar un testigo →</span>
                 </a>
@@ -64,7 +80,7 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
         }
       }
     }
-  `
+  `,
 })
 export class GaragePage {
   private readonly garage = inject(GarageService);
@@ -91,7 +107,7 @@ export class GaragePage {
         }
         this.error.set(apiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'));
         this.state.set('error');
-      }
+      },
     });
   }
 }

@@ -17,7 +17,8 @@ const imageFile = (type: string, bytes: number) => {
 
 describe('imageFileError', () => {
   it('acepta JPEG, PNG y WEBP de hasta 5 MB', () => {
-    for (const type of ['image/jpeg', 'image/png', 'image/webp']) expect(imageFileError(imageFile(type, 1024))).toBeNull();
+    for (const type of ['image/jpeg', 'image/png', 'image/webp'])
+      expect(imageFileError(imageFile(type, 1024))).toBeNull();
     expect(imageFileError(imageFile('image/jpeg', 5 * 1024 * 1024))).toBeNull();
   });
 
@@ -42,12 +43,17 @@ describe('AddVehiclePage', () => {
   let navigate: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [AddVehiclePage], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    TestBed.configureTestingModule({
+      imports: [AddVehiclePage],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
     http = TestBed.inject(HttpTestingController);
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   });
 
-  afterEach(() => { http.verify(); });
+  afterEach(() => {
+    http.verify();
+  });
 
   const render = async (config = publicConfig()) => {
     const fixture = TestBed.createComponent(AddVehiclePage);
@@ -87,14 +93,25 @@ describe('AddVehiclePage', () => {
     await fixture.whenStable();
 
     expect(element.querySelector<HTMLInputElement>('#vehicle-plate')!.value).toBe('ABC-123');
-    expect(element.querySelector('#vehicle-chassis')!.closest('.form-field')!.classList).toContain('low-confidence');
-    expect(element.querySelector('#vehicle-brand')!.closest('.form-field')!.classList).not.toContain('low-confidence');
-    expect(element.querySelector('#vehicle-service')!.closest('.form-field')!.textContent).toContain('No se pudo leer');
+    expect(element.querySelector('#vehicle-chassis')!.closest('.form-field')!.classList).toContain(
+      'low-confidence',
+    );
+    expect(
+      element.querySelector('#vehicle-brand')!.closest('.form-field')!.classList,
+    ).not.toContain('low-confidence');
+    expect(
+      element.querySelector('#vehicle-service')!.closest('.form-field')!.textContent,
+    ).toContain('No se pudo leer');
     expect(element.textContent).toContain('La esquina inferior está borrosa.');
 
     element.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     const request = http.expectOne(`${API}/garage`);
-    expect(request.request.body).toMatchObject({ plate: 'ABC-123', brand: 'RENAULT', chassis: '9FBBSRADDKM123456', source: 'scan' });
+    expect(request.request.body).toMatchObject({
+      plate: 'ABC-123',
+      brand: 'RENAULT',
+      chassis: '9FBBSRADDKM123456',
+      source: 'scan',
+    });
     request.flush(garageVehicle({ source: 'scan' }), { status: 201, statusText: 'Created' });
     expect(navigate).toHaveBeenCalledWith(['/garaje', 'ABC-123'], { state: { created: true } });
   });
@@ -108,8 +125,12 @@ describe('AddVehiclePage', () => {
     http
       .expectOne(`${API}/garage/scan-card`)
       .flush(
-        { message: 'El servicio gratuito de lectura está ocupado. Intenta en un minuto o ingresa los datos a mano.', code: 'SCAN_PROVIDER_BUSY' },
-        { status: 503, statusText: 'Service Unavailable' }
+        {
+          message:
+            'El servicio gratuito de lectura está ocupado. Intenta en un minuto o ingresa los datos a mano.',
+          code: 'SCAN_PROVIDER_BUSY',
+        },
+        { status: 503, statusText: 'Service Unavailable' },
       );
     await fixture.whenStable();
     expect(element.querySelector('.form-error')?.textContent).toContain('ingresa los datos a mano');
@@ -117,7 +138,9 @@ describe('AddVehiclePage', () => {
   });
 
   it('desactiva la opción de foto si el backend la tiene apagada', async () => {
-    const { element } = await render(publicConfig({ cardScan: { enabled: false, provider: 'none', notice: null } }));
+    const { element } = await render(
+      publicConfig({ cardScan: { enabled: false, provider: 'none', notice: null } }),
+    );
     const photo = element.querySelector<HTMLButtonElement>('.choice-card')!;
     expect(photo.disabled).toBe(true);
     expect(photo.textContent).toContain('no está disponible');
@@ -139,9 +162,20 @@ describe('AddVehiclePage', () => {
     element.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
 
     const request = http.expectOne(`${API}/garage`);
-    expect(request.request.body).toMatchObject({ plate: 'ABC123', brand: 'Mazda', model: '3', year: null, mileageKm: null, source: 'manual' });
-    for (const removed of ['soatExpiresOn', 'rtmExpiresOn', 'runtStatus']) expect(request.request.body).not.toHaveProperty(removed);
-    request.flush({ message: 'Ya tienes un vehículo con la placa ABC-123.', code: 'DUPLICATE_PLATE' }, { status: 409, statusText: 'Conflict' });
+    expect(request.request.body).toMatchObject({
+      plate: 'ABC123',
+      brand: 'Mazda',
+      model: '3',
+      year: null,
+      mileageKm: null,
+      source: 'manual',
+    });
+    for (const removed of ['soatExpiresOn', 'rtmExpiresOn', 'runtStatus'])
+      expect(request.request.body).not.toHaveProperty(removed);
+    request.flush(
+      { message: 'Ya tienes un vehículo con la placa ABC-123.', code: 'DUPLICATE_PLATE' },
+      { status: 409, statusText: 'Conflict' },
+    );
     await fixture.whenStable();
     expect(element.querySelector('.form-error')?.textContent).toContain('Ya tienes un vehículo');
   });

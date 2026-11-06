@@ -12,10 +12,20 @@ describe('chatErrorMessage', () => {
   const error = (status: number, body: object) => new HttpErrorResponse({ status, error: body });
 
   it('explica cada error en español', () => {
-    expect(chatErrorMessage(error(503, { code: 'CHAT_PROVIDER_BUSY', message: 'x' }))).toContain('ocupado');
-    expect(chatErrorMessage(error(503, { code: 'CHAT_UNAVAILABLE', message: 'x' }))).toContain('problema del servicio');
-    expect(chatErrorMessage(error(429, { code: 'RATE_LIMITED', message: 'Máximo de 40 por hora.' }))).toBe('Máximo de 40 por hora.');
-    expect(chatErrorMessage(error(429, { code: 'CHAT_LIMIT_REACHED', message: 'Máximo de 20 mensajes.' }))).toBe('Máximo de 20 mensajes.');
+    expect(chatErrorMessage(error(503, { code: 'CHAT_PROVIDER_BUSY', message: 'x' }))).toContain(
+      'ocupado',
+    );
+    expect(chatErrorMessage(error(503, { code: 'CHAT_UNAVAILABLE', message: 'x' }))).toContain(
+      'problema del servicio',
+    );
+    expect(
+      chatErrorMessage(error(429, { code: 'RATE_LIMITED', message: 'Máximo de 40 por hora.' })),
+    ).toBe('Máximo de 40 por hora.');
+    expect(
+      chatErrorMessage(
+        error(429, { code: 'CHAT_LIMIT_REACHED', message: 'Máximo de 20 mensajes.' }),
+      ),
+    ).toBe('Máximo de 20 mensajes.');
   });
 });
 
@@ -23,10 +33,15 @@ describe('DiagnosisChatComponent', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [DiagnosisChatComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      imports: [DiagnosisChatComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     http = TestBed.inject(HttpTestingController);
   });
-  afterEach(() => { http.verify(); });
+  afterEach(() => {
+    http.verify();
+  });
 
   const render = async (history = chatHistory()) => {
     const fixture = TestBed.createComponent(DiagnosisChatComponent);
@@ -38,7 +53,8 @@ describe('DiagnosisChatComponent', () => {
     await fixture.whenStable();
     return { fixture, element: fixture.nativeElement as HTMLElement };
   };
-  const button = (element: HTMLElement, text: string) => [...element.querySelectorAll('button')].find((item) => item.textContent?.includes(text))!;
+  const button = (element: HTMLElement, text: string) =>
+    [...element.querySelectorAll('button')].find((item) => item.textContent?.includes(text))!;
   const type = (element: HTMLElement, text: string) => {
     const area = element.querySelector<HTMLTextAreaElement>('#chat-message')!;
     area.value = text;
@@ -46,7 +62,12 @@ describe('DiagnosisChatComponent', () => {
   };
 
   it('al reabrir un diagnóstico muestra la conversación guardada, sin HTML del mensaje', async () => {
-    const { element } = await render(chatHistory([chatMessage('user', '<img src=x>'), chatMessage('assistant', 'Respuesta guardada.')], 19));
+    const { element } = await render(
+      chatHistory(
+        [chatMessage('user', '<img src=x>'), chatMessage('assistant', 'Respuesta guardada.')],
+        19,
+      ),
+    );
     const bubbles = element.querySelectorAll('.chat-bubble');
     expect(bubbles).toHaveLength(2);
     expect(bubbles[0].classList).toContain('user');
@@ -69,23 +90,36 @@ describe('DiagnosisChatComponent', () => {
     const request = http.expectOne(MESSAGES);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ message: '¿qué hago?' });
-    request.flush(chatExchange('¿qué hago?', 'Revisa la tapa.'), { status: 201, statusText: 'Created' });
+    request.flush(chatExchange('¿qué hago?', 'Revisa la tapa.'), {
+      status: 201,
+      statusText: 'Created',
+    });
     await fixture.whenStable();
 
     expect(element.querySelector('.typing')).toBeNull();
     expect(element.querySelectorAll('.chat-bubble')).toHaveLength(2);
-    expect(element.querySelector('.chat-bubble.assistant')?.textContent).toContain('Revisa la tapa.');
+    expect(element.querySelector('.chat-bubble.assistant')?.textContent).toContain(
+      'Revisa la tapa.',
+    );
     expect(element.querySelector<HTMLTextAreaElement>('#chat-message')!.value).toBe('');
   });
 
   it('las sugerencias rápidas envían la pregunta', async () => {
     const { fixture, element } = await render();
-    for (const text of ['¿Por qué está en rojo?', '¿Puedo seguir manejando?', '¿Qué le digo al mecánico?']) expect(button(element, text)).toBeTruthy();
+    for (const text of [
+      '¿Por qué está en rojo?',
+      '¿Puedo seguir manejando?',
+      '¿Qué le digo al mecánico?',
+    ])
+      expect(button(element, text)).toBeTruthy();
     button(element, '¿Puedo seguir manejando?').click();
     await fixture.whenStable();
     const request = http.expectOne(MESSAGES);
     expect(request.request.body).toEqual({ message: '¿Puedo seguir manejando?' });
-    request.flush(chatExchange('¿Puedo seguir manejando?', 'No.'), { status: 201, statusText: 'Created' });
+    request.flush(chatExchange('¿Puedo seguir manejando?', 'No.'), {
+      status: 201,
+      statusText: 'Created',
+    });
   });
 
   it('limita el mensaje a 500 caracteres', async () => {
@@ -98,7 +132,12 @@ describe('DiagnosisChatComponent', () => {
     type(element, 'mi pregunta');
     await fixture.whenStable();
     button(element, 'Enviar').click();
-    http.expectOne(MESSAGES).flush({ code: 'CHAT_PROVIDER_BUSY', message: 'x' }, { status: 503, statusText: 'Service Unavailable' });
+    http
+      .expectOne(MESSAGES)
+      .flush(
+        { code: 'CHAT_PROVIDER_BUSY', message: 'x' },
+        { status: 503, statusText: 'Service Unavailable' },
+      );
     await fixture.whenStable();
     expect(element.querySelector('.form-error')?.textContent).toContain('ocupado');
     expect(element.querySelector<HTMLTextAreaElement>('#chat-message')!.value).toBe('mi pregunta');
@@ -106,7 +145,9 @@ describe('DiagnosisChatComponent', () => {
   });
 
   it('al llegar al máximo deja leer pero no escribir', async () => {
-    const { element } = await render(chatHistory([chatMessage('assistant', 'Última respuesta.')], 0));
+    const { element } = await render(
+      chatHistory([chatMessage('assistant', 'Última respuesta.')], 0),
+    );
     expect(element.querySelector('#chat-message')).toBeNull();
     expect(element.textContent).toContain('máximo de mensajes');
     expect(element.textContent).toContain('Última respuesta.');
@@ -117,7 +158,15 @@ describe('DiagnosisChatComponent', () => {
     type(element, 'hola');
     await fixture.whenStable();
     button(element, 'Enviar').click();
-    http.expectOne(MESSAGES).flush({ code: 'CHAT_LIMIT_REACHED', message: 'Alcanzaste el máximo de 20 mensajes de este diagnóstico.' }, { status: 429, statusText: 'Too Many Requests' });
+    http
+      .expectOne(MESSAGES)
+      .flush(
+        {
+          code: 'CHAT_LIMIT_REACHED',
+          message: 'Alcanzaste el máximo de 20 mensajes de este diagnóstico.',
+        },
+        { status: 429, statusText: 'Too Many Requests' },
+      );
     await fixture.whenStable();
     expect(element.querySelector('#chat-message')).toBeNull();
     expect(element.querySelector('.form-error')?.textContent).toContain('20 mensajes');

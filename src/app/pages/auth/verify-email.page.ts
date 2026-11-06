@@ -13,17 +13,24 @@ type VerifyState = 'missing' | 'verifying' | 'done' | 'failed';
     <app-auth-card heading="Confirmación de correo">
       @switch (state()) {
         @case ('verifying') {
-          <p class="form-notice" role="status"><span class="spinner" aria-hidden="true"></span> Confirmando tu correo…</p>
+          <p class="form-notice" role="status">
+            <span class="spinner" aria-hidden="true"></span> Confirmando tu correo…
+          </p>
         }
         @case ('done') {
           <p class="form-notice" role="status">{{ message() }} Ya puedes usar tu garaje.</p>
         }
         @case ('missing') {
-          <p class="form-error" role="alert">El enlace no es válido: falta el código de confirmación.</p>
+          <p class="form-error" role="alert">
+            El enlace no es válido: falta el código de confirmación.
+          </p>
         }
         @case ('failed') {
           <p class="form-error" role="alert">{{ message() }}</p>
-          <p class="field-hint">El enlace vence a las 24 horas y solo sirve una vez. Puedes pedir uno nuevo desde el aviso de la parte superior cuando inicies sesión.</p>
+          <p class="field-hint">
+            El enlace vence a las 24 horas y solo sirve una vez. Puedes pedir uno nuevo desde el
+            aviso de la parte superior cuando inicies sesión.
+          </p>
         }
       }
       <div class="auth-links">
@@ -34,7 +41,7 @@ type VerifyState = 'missing' | 'verifying' | 'done' | 'failed';
         }
       </div>
     </app-auth-card>
-  `
+  `,
 })
 export class VerifyEmailPage {
   protected readonly auth = inject(AuthService);
@@ -51,16 +58,22 @@ export class VerifyEmailPage {
       return;
     }
     // Se quita el token de la barra de direcciones y del historial apenas se lee.
-    void this.router.navigate([], { relativeTo: this.route, queryParams: { token: null }, replaceUrl: true });
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { token: null },
+      replaceUrl: true,
+    });
     this.auth.verifyEmail(token).subscribe({
       next: ({ message }) => {
         this.message.set(message);
         this.state.set('done');
       },
       error: (error: unknown) => {
-        this.message.set(apiErrorMessage(error, 'No se pudo confirmar el correo. Inténtalo de nuevo.'));
+        this.message.set(
+          apiErrorMessage(error, 'No se pudo confirmar el correo. Inténtalo de nuevo.'),
+        );
         this.state.set('failed');
-      }
+      },
     });
   }
 }

@@ -13,12 +13,17 @@ describe('EmailVerificationBannerComponent', () => {
   let auth: AuthService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [EmailVerificationBannerComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      imports: [EmailVerificationBannerComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     http = TestBed.inject(HttpTestingController);
     auth = TestBed.inject(AuthService);
   });
 
-  afterEach(() => { http.verify(); });
+  afterEach(() => {
+    http.verify();
+  });
 
   const signIn = (emailVerified: boolean) => {
     auth.login('ana@example.com', 'x').subscribe();
@@ -47,8 +52,16 @@ describe('EmailVerificationBannerComponent', () => {
     element.querySelector<HTMLButtonElement>('.notice-action')!.click();
     const request = http.expectOne(`${API}/auth/resend-verification`);
     expect(request.request.body).toEqual({ email: 'ana@example.com' });
-    request.flush({ message: 'Si el correo está registrado y aún no se ha confirmado, recibirás un nuevo enlace.' }, { status: 202, statusText: 'Accepted' });
+    request.flush(
+      {
+        message:
+          'Si el correo está registrado y aún no se ha confirmado, recibirás un nuevo enlace.',
+      },
+      { status: 202, statusText: 'Accepted' },
+    );
     await fixture.whenStable();
-    expect(element.querySelector('.notice-feedback')?.textContent).toContain('recibirás un nuevo enlace');
+    expect(element.querySelector('.notice-feedback')?.textContent).toContain(
+      'recibirás un nuevo enlace',
+    );
   });
 });

@@ -8,9 +8,15 @@ import { ServerStatusBannerComponent } from './components/server-status-banner/s
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, EmailVerificationBannerComponent, ServerStatusBannerComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    EmailVerificationBannerComponent,
+    ServerStatusBannerComponent,
+  ],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App {
   private readonly router = inject(Router);
@@ -20,9 +26,12 @@ export class App {
 
   protected readonly healthLabel = computed(() => {
     switch (this.health.status()) {
-      case 'online': return 'API conectada';
-      case 'offline': return this.server.state() === 'down' ? 'API sin respuesta' : 'Conectando con el servidor…';
-      default: return 'Comprobando API…';
+      case 'online':
+        return 'API conectada';
+      case 'offline':
+        return this.server.state() === 'down' ? 'API sin respuesta' : 'Conectando con el servidor…';
+      default:
+        return 'Comprobando API…';
     }
   });
 

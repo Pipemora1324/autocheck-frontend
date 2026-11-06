@@ -28,7 +28,11 @@ export class AuthService {
 
   login(email: string, password: string): Observable<AuthUser> {
     return this.http
-      .post<SessionResponse>(`${this.apiUrl}/auth/login`, { email, password }, { context: skipAuthRefresh(), withCredentials: true })
+      .post<SessionResponse>(
+        `${this.apiUrl}/auth/login`,
+        { email, password },
+        { context: skipAuthRefresh(), withCredentials: true },
+      )
       .pipe(map((session) => this.setSession(session)));
   }
 
@@ -38,32 +42,48 @@ export class AuthService {
       .post<SessionResponse>(
         `${this.apiUrl}/auth/register`,
         { email, password, acceptedTerms },
-        { context: skipAuthRefresh(), withCredentials: true }
+        { context: skipAuthRefresh(), withCredentials: true },
       )
       .pipe(map((session) => this.setSession(session)));
   }
 
   verifyEmail(token: string): Observable<MessageResponse> {
     return this.http
-      .post<MessageResponse>(`${this.apiUrl}/auth/verify-email`, { token }, { context: skipAuthRefresh() })
-      .pipe(tap(() => { this.setEmailVerified(true); }));
+      .post<MessageResponse>(
+        `${this.apiUrl}/auth/verify-email`,
+        { token },
+        { context: skipAuthRefresh() },
+      )
+      .pipe(
+        tap(() => {
+          this.setEmailVerified(true);
+        }),
+      );
   }
 
   /** Responde siempre 202 con el mismo mensaje, exista o no el correo. */
   resendVerification(email: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/auth/resend-verification`, { email }, { context: skipAuthRefresh() });
+    return this.http.post<MessageResponse>(
+      `${this.apiUrl}/auth/resend-verification`,
+      { email },
+      { context: skipAuthRefresh() },
+    );
   }
 
   /** DELETE /auth/me. Una contraseña errada responde 403 INVALID_PASSWORD (no 401), así que la sesión sigue viva. */
   deleteAccount(password: string): Observable<void> {
-    return this.http
-      .delete<undefined>(`${this.apiUrl}/auth/me`, { body: { password } })
-      .pipe(tap(() => { this.clearSession(); }));
+    return this.http.delete<undefined>(`${this.apiUrl}/auth/me`, { body: { password } }).pipe(
+      tap(() => {
+        this.clearSession();
+      }),
+    );
   }
 
   /** Lo usa el interceptor cuando el backend responde 403 EMAIL_NOT_VERIFIED, y la pantalla /verify-email al confirmar. */
   setEmailVerified(verified: boolean): void {
-    this.userState.update((user) => (user && user.emailVerified !== verified ? { ...user, emailVerified: verified } : user));
+    this.userState.update((user) =>
+      user && user.emailVerified !== verified ? { ...user, emailVerified: verified } : user,
+    );
   }
 
   /**
@@ -72,7 +92,10 @@ export class AuthService {
    */
   refresh(): Observable<string> {
     this.refreshInFlight$ ??= this.http
-      .post<SessionResponse>(`${this.apiUrl}/auth/refresh`, null, { context: skipAuthRefresh(), withCredentials: true })
+      .post<SessionResponse>(`${this.apiUrl}/auth/refresh`, null, {
+        context: skipAuthRefresh(),
+        withCredentials: true,
+      })
       .pipe(
         map((session) => {
           this.setSession(session);
@@ -83,7 +106,7 @@ export class AuthService {
           return throwError(() => error);
         }),
         finalize(() => (this.refreshInFlight$ = null)),
-        shareReplay({ bufferSize: 1, refCount: false })
+        shareReplay({ bufferSize: 1, refCount: false }),
       );
     return this.refreshInFlight$;
   }
@@ -93,27 +116,40 @@ export class AuthService {
     this.restore$ ??= this.refresh().pipe(
       map(() => undefined),
       catchError(() => of(undefined)),
-      shareReplay({ bufferSize: 1, refCount: false })
+      shareReplay({ bufferSize: 1, refCount: false }),
     );
     return this.restore$;
   }
 
   logout(): Observable<void> {
     return this.http
-      .post<undefined>(`${this.apiUrl}/auth/logout`, null, { context: skipAuthRefresh(), withCredentials: true })
+      .post<undefined>(`${this.apiUrl}/auth/logout`, null, {
+        context: skipAuthRefresh(),
+        withCredentials: true,
+      })
       .pipe(
         catchError(() => of(undefined)),
         map(() => undefined),
-        finalize(() => { this.clearSession(); })
+        finalize(() => {
+          this.clearSession();
+        }),
       );
   }
 
   forgotPassword(email: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/auth/forgot-password`, { email }, { context: skipAuthRefresh() });
+    return this.http.post<MessageResponse>(
+      `${this.apiUrl}/auth/forgot-password`,
+      { email },
+      { context: skipAuthRefresh() },
+    );
   }
 
   resetPassword(token: string, password: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/auth/reset-password`, { token, password }, { context: skipAuthRefresh() });
+    return this.http.post<MessageResponse>(
+      `${this.apiUrl}/auth/reset-password`,
+      { token, password },
+      { context: skipAuthRefresh() },
+    );
   }
 
   clearSession(): void {

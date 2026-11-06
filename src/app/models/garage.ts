@@ -1,6 +1,14 @@
 // Contrato de /garage y /config/public (ver docs/API.md del backend).
 
-export const FUEL_TYPES = ['Gasolina', 'Diésel', 'Eléctrico', 'Híbrido', 'Gas natural', 'Gasolina y gas', 'Otro'] as const;
+export const FUEL_TYPES = [
+  'Gasolina',
+  'Diésel',
+  'Eléctrico',
+  'Híbrido',
+  'Gas natural',
+  'Gasolina y gas',
+  'Otro',
+] as const;
 export const SERVICE_TYPES = ['Particular', 'Público', 'Oficial', 'Diplomático', 'Otro'] as const;
 
 export type FuelType = (typeof FUEL_TYPES)[number];
@@ -61,7 +69,12 @@ export interface CardScanResult {
 export interface FeatureStatus {
   cardScan: { enabled: boolean; provider?: string; notice?: string | null };
   /** enabled se refiere a la IA: elegir el testigo de la lista siempre funciona. */
-  diagnosis: { enabled: boolean; provider: 'gemini' | 'none'; manualSelection: boolean; notice: string | null };
+  diagnosis: {
+    enabled: boolean;
+    provider: 'gemini' | 'none';
+    manualSelection: boolean;
+    notice: string | null;
+  };
 }
 
 /** GET /config/public (sin sesión). */

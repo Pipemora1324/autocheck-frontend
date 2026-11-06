@@ -3,7 +3,14 @@ import { Component, computed, DestroyRef, inject, input, output, signal } from '
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
 import { PublicConfigService } from '../../core/http/public-config.service';
 import { IMAGE_ACCEPT, imageFileError } from '../../core/image-file';
-import type { BetterInputReason, Diagnosed, DiagnosisInput, NeedsBetterInput, NotRecognized, TelltaleSummary } from '../../models/diagnosis';
+import type {
+  BetterInputReason,
+  Diagnosed,
+  DiagnosisInput,
+  NeedsBetterInput,
+  NotRecognized,
+  TelltaleSummary,
+} from '../../models/diagnosis';
 import { DiagnosisService } from '../../services/diagnosis.service';
 import { DiagnosisChatComponent } from '../diagnosis-chat/diagnosis-chat.component';
 import { DiagnosisResultComponent } from '../diagnosis-result/diagnosis-result.component';
@@ -16,10 +23,13 @@ const DEFAULT_NOTICE =
 
 /** Pista adicional según por qué no se pudo leer la foto. */
 export const REASON_HINT: Record<BetterInputReason, string> = {
-  no_telltales_found: 'Asegúrate de que el tablero esté encendido y de que los testigos se vean en la foto.',
-  low_confidence: 'Vimos algo, pero no lo suficiente: acércate más al testigo y evita los reflejos.'
+  no_telltales_found:
+    'Asegúrate de que el tablero esté encendido y de que los testigos se vean en la foto.',
+  low_confidence:
+    'Vimos algo, pero no lo suficiente: acércate más al testigo y evita los reflejos.',
 };
-const WHILE_WAITING = 'Mientras tanto: si el testigo es rojo o notas algo raro al manejar, detente en un lugar seguro.';
+const WHILE_WAITING =
+  'Mientras tanto: si el testigo es rojo o notas algo raro al manejar, detente en un lugar seguro.';
 
 type Mode = 'photo' | 'list';
 
@@ -30,7 +40,10 @@ export interface DiagnosisErrorView {
 }
 
 /** Qué contador se agotó en un 429 de diagnósticos. Solo con el de la IA tiene sentido ofrecer la lista. */
-const limitScope = (error: unknown): unknown => (error instanceof HttpErrorResponse ? (error.error as { limite?: unknown } | null)?.limite : undefined);
+const limitScope = (error: unknown): unknown =>
+  error instanceof HttpErrorResponse
+    ? (error.error as { limite?: unknown } | null)?.limite
+    : undefined;
 
 /**
  * Traduce los errores de POST /garage/:plate/diagnoses.
@@ -42,21 +55,46 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
   const code = apiErrorCode(error);
   const status = error instanceof HttpErrorResponse ? error.status : 0;
   if (code === EMAIL_NOT_VERIFIED) {
-    return { message: 'Confirma tu correo para diagnosticar. Abre el enlace que te enviamos o usa "Reenviar correo" en el aviso de arriba.', suggestList: false };
+    return {
+      message:
+        'Confirma tu correo para diagnosticar. Abre el enlace que te enviamos o usa "Reenviar correo" en el aviso de arriba.',
+      suggestList: false,
+    };
   }
   if (code === 'RATE_LIMITED' || status === 429) {
-    return { message: apiErrorMessage(error, 'Alcanzaste el límite de diagnósticos por hora. Intenta más tarde.'), suggestList: limitScope(error) === 'ia' };
+    return {
+      message: apiErrorMessage(
+        error,
+        'Alcanzaste el límite de diagnósticos por hora. Intenta más tarde.',
+      ),
+      suggestList: limitScope(error) === 'ia',
+    };
   }
   if (code === 'DIAGNOSIS_PROVIDER_BUSY') {
-    return { message: 'El cupo gratuito de la IA está ocupado en este momento. Intenta en un minuto o elige el testigo de la lista.', suggestList: true };
+    return {
+      message:
+        'El cupo gratuito de la IA está ocupado en este momento. Intenta en un minuto o elige el testigo de la lista.',
+      suggestList: true,
+    };
   }
   if (code === 'DIAGNOSIS_UNAVAILABLE') {
-    return { message: 'La IA falló por un problema del servicio, no por tu foto. Intenta más tarde. La elección manual sigue funcionando: elige el testigo de la lista.', suggestList: true };
+    return {
+      message:
+        'La IA falló por un problema del servicio, no por tu foto. Intenta más tarde. La elección manual sigue funcionando: elige el testigo de la lista.',
+      suggestList: true,
+    };
   }
   if (code === 'AI_NOT_CONFIGURED') {
-    return { message: 'La IA no está disponible en este momento. La elección manual sigue funcionando: elige el testigo de la lista.', suggestList: true };
+    return {
+      message:
+        'La IA no está disponible en este momento. La elección manual sigue funcionando: elige el testigo de la lista.',
+      suggestList: true,
+    };
   }
-  return { message: apiErrorMessage(error, 'No pudimos hacer el diagnóstico. Inténtalo de nuevo.'), suggestList: false };
+  return {
+    message: apiErrorMessage(error, 'No pudimos hacer el diagnóstico. Inténtalo de nuevo.'),
+    suggestList: false,
+  };
 }
 
 /** Pantalla principal del vehículo: foto o descripción con IA, o elección manual de la lista. */
@@ -71,7 +109,9 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
         <app-diagnosis-result [result]="diagnosis" />
         <app-diagnosis-chat [plate]="plate()" [diagnosisId]="diagnosis.id" />
         <div class="form-actions">
-          <button class="primary-button" type="button" (click)="reset()">Diagnosticar otro testigo</button>
+          <button class="primary-button" type="button" (click)="reset()">
+            Diagnosticar otro testigo
+          </button>
         </div>
       } @else if (sending()) {
         <div class="state-box" role="status">
@@ -81,18 +121,40 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
         </div>
       } @else {
         <div class="tab-list" role="group" aria-label="Cómo quieres identificar el testigo">
-          <button type="button" class="tab" [class.active]="mode() === 'photo'" [attr.aria-pressed]="mode() === 'photo'" (click)="setMode('photo')">Con foto o descripción</button>
-          <button type="button" class="tab" [class.active]="mode() === 'list'" [attr.aria-pressed]="mode() === 'list'" (click)="setMode('list')">Elegir de la lista</button>
+          <button
+            type="button"
+            class="tab"
+            [class.active]="mode() === 'photo'"
+            [attr.aria-pressed]="mode() === 'photo'"
+            (click)="setMode('photo')"
+          >
+            Con foto o descripción
+          </button>
+          <button
+            type="button"
+            class="tab"
+            [class.active]="mode() === 'list'"
+            [attr.aria-pressed]="mode() === 'list'"
+            (click)="setMode('list')"
+          >
+            Elegir de la lista
+          </button>
         </div>
 
         @if (betterInput(); as better) {
           <div class="better-input" role="status">
             <strong>{{ better.pista }}</strong>
-            @if (reasonHint(); as hint) { <span>{{ hint }}</span> }
+            @if (reasonHint(); as hint) {
+              <span>{{ hint }}</span>
+            }
             <span>{{ better.avisoSeguridad }}</span>
             <div class="form-actions">
-              <button class="secondary-button" type="button" (click)="retryPhoto()">Repetir la foto</button>
-              <button class="secondary-button" type="button" (click)="setMode('list')">Elegir de la lista</button>
+              <button class="secondary-button" type="button" (click)="retryPhoto()">
+                Repetir la foto
+              </button>
+              <button class="secondary-button" type="button" (click)="setMode('list')">
+                Elegir de la lista
+              </button>
             </div>
           </div>
         }
@@ -102,7 +164,9 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
             <p>{{ view.message }}</p>
             <p>{{ whileWaiting }}</p>
             @if (view.suggestList && mode() !== 'list') {
-              <button class="secondary-button" type="button" (click)="setMode('list')">Elegir de la lista</button>
+              <button class="secondary-button" type="button" (click)="setMode('list')">
+                Elegir de la lista
+              </button>
             }
           </div>
         }
@@ -110,51 +174,102 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
         @if (mode() === 'photo') {
           @if (aiEnabled()) {
             <p class="provider-notice">{{ notice() }}</p>
-            <p class="provider-notice">Usa solo fotos del tablero de tu propio vehículo o de uno que estés autorizado a usar.</p>
+            <p class="provider-notice">
+              Usa solo fotos del tablero de tu propio vehículo o de uno que estés autorizado a usar.
+            </p>
 
             <div class="file-actions">
               <label class="primary-button link-button" for="dash-camera">Tomar foto</label>
-              <input id="dash-camera" class="visually-hidden" type="file" [accept]="imageAccept" capture="environment" (change)="onFile($event)" />
+              <input
+                id="dash-camera"
+                class="visually-hidden"
+                type="file"
+                [accept]="imageAccept"
+                capture="environment"
+                (change)="onFile($event)"
+              />
               <label class="secondary-button" for="dash-file">Subir imagen</label>
-              <input id="dash-file" class="visually-hidden" type="file" [accept]="imageAccept" (change)="onFile($event)" />
+              <input
+                id="dash-file"
+                class="visually-hidden"
+                type="file"
+                [accept]="imageAccept"
+                (change)="onFile($event)"
+              />
             </div>
-            <p class="field-hint">JPEG, PNG o WEBP, máximo 5 MB. Acércate al testigo, con el tablero encendido y sin reflejos.</p>
-            @if (photoError()) { <p class="form-error" role="alert">{{ photoError() }}</p> }
+            <p class="field-hint">
+              JPEG, PNG o WEBP, máximo 5 MB. Acércate al testigo, con el tablero encendido y sin
+              reflejos.
+            </p>
+            @if (photoError()) {
+              <p class="form-error" role="alert">{{ photoError() }}</p>
+            }
 
             @if (previewUrl(); as url) {
               <figure class="photo-preview">
                 <img [src]="url" alt="Vista previa de la foto del tablero" />
                 <figcaption>
-                  <button class="secondary-button" type="button" (click)="clearPhoto()">Quitar foto</button>
+                  <button class="secondary-button" type="button" (click)="clearPhoto()">
+                    Quitar foto
+                  </button>
                 </figcaption>
               </figure>
             }
 
             <div class="form-field">
               <label for="dash-description">Descripción (opcional si tienes foto)</label>
-              <textarea id="dash-description" rows="3" [attr.maxlength]="maxDescription" placeholder="Por ejemplo, una luz naranja con forma de motor" [value]="description()" (input)="description.set($any($event.target).value)"></textarea>
-              <p class="field-hint">{{ description().length }} de {{ maxDescription }} caracteres.</p>
+              <textarea
+                id="dash-description"
+                rows="3"
+                [attr.maxlength]="maxDescription"
+                placeholder="Por ejemplo, una luz naranja con forma de motor"
+                [value]="description()"
+                (input)="description.set($any($event.target).value)"
+              ></textarea>
+              <p class="field-hint">
+                {{ description().length }} de {{ maxDescription }} caracteres.
+              </p>
             </div>
 
             <label class="check-field blink-field">
-              <input type="checkbox" [checked]="blinking()" (change)="blinking.set($any($event.target).checked)" />
-              <span>¿El testigo parpadea? Márcalo si alguno parpadea: una foto no lo muestra, y puede ser más urgente.</span>
+              <input
+                type="checkbox"
+                [checked]="blinking()"
+                (change)="blinking.set($any($event.target).checked)"
+              />
+              <span
+                >¿El testigo parpadea? Márcalo si alguno parpadea: una foto no lo muestra, y puede
+                ser más urgente.</span
+              >
             </label>
 
             <label class="check-field ack-field">
-              <input type="checkbox" [checked]="acknowledged()" (change)="acknowledged.set($any($event.target).checked)" />
-              <span>Leí el aviso y es el tablero de mi propio vehículo o de uno que estoy autorizado a usar.</span>
+              <input
+                type="checkbox"
+                [checked]="acknowledged()"
+                (change)="acknowledged.set($any($event.target).checked)"
+              />
+              <span
+                >Leí el aviso y es el tablero de mi propio vehículo o de uno que estoy autorizado a
+                usar.</span
+              >
             </label>
 
             <div class="form-actions">
-              <button class="primary-button" type="button" [disabled]="!canSend()" (click)="send()">Diagnosticar</button>
+              <button class="primary-button" type="button" [disabled]="!canSend()" (click)="send()">
+                Diagnosticar
+              </button>
             </div>
-            @if (!hasInput()) { <p class="field-hint">Agrega una foto o una descripción para continuar.</p> }
+            @if (!hasInput()) {
+              <p class="field-hint">Agrega una foto o una descripción para continuar.</p>
+            }
           } @else {
             <div class="state-box">
               <strong>El diagnóstico con IA no está disponible en este momento.</strong>
               <p>La elección manual sigue funcionando: busca el testigo en la lista.</p>
-              <button class="primary-button" type="button" (click)="setMode('list')">Elegir de la lista</button>
+              <button class="primary-button" type="button" (click)="setMode('list')">
+                Elegir de la lista
+              </button>
             </div>
           }
         } @else {
@@ -163,7 +278,7 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
         }
       }
     </section>
-  `
+  `,
 })
 export class DiagnosePanelComponent {
   private readonly diagnosis = inject(DiagnosisService);
@@ -205,7 +320,9 @@ export class DiagnosePanelComponent {
     this.publicConfig.load().subscribe((config) => {
       if (config && !config.diagnosis.enabled) this.mode.set('list');
     });
-    inject(DestroyRef).onDestroy(() => { this.revokePreview(); });
+    inject(DestroyRef).onDestroy(() => {
+      this.revokePreview();
+    });
   }
 
   setMode(mode: Mode): void {
@@ -247,7 +364,14 @@ export class DiagnosePanelComponent {
     if (!this.canSend()) return;
     const description = this.description().trim();
     const photo = this.photo();
-    this.submit({ ...(photo ? { image: photo } : {}), ...(description ? { description } : {}), ...(this.blinking() ? { blinking: true } : {}) }, 'Analizando los testigos…');
+    this.submit(
+      {
+        ...(photo ? { image: photo } : {}),
+        ...(description ? { description } : {}),
+        ...(this.blinking() ? { blinking: true } : {}),
+      },
+      'Analizando los testigos…',
+    );
   }
 
   choose(telltale: TelltaleSummary): void {
@@ -285,7 +409,7 @@ export class DiagnosePanelComponent {
       error: (error: unknown) => {
         this.sending.set(false);
         this.errorView.set(diagnosisErrorView(error));
-      }
+      },
     });
   }
 

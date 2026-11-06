@@ -1,4 +1,10 @@
-import { HttpContext, HttpContextToken, HttpErrorResponse, HttpResponse, type HttpInterceptorFn } from '@angular/common/http';
+import {
+  HttpContext,
+  HttpContextToken,
+  HttpErrorResponse,
+  HttpResponse,
+  type HttpInterceptorFn,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
 import { finalize, retry, tap, throwError, timer } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -12,7 +18,8 @@ export const WAKE_RETRY_DELAY_MS = 5_000;
 export const SKIP_WAKE_RETRY = new HttpContextToken<boolean>(() => false);
 export const skipWakeRetry = () => new HttpContext().set(SKIP_WAKE_RETRY, true);
 
-const isApiRequest = (url: string) => url === environment.apiUrl || url.startsWith(`${environment.apiUrl}/`);
+const isApiRequest = (url: string) =>
+  url === environment.apiUrl || url.startsWith(`${environment.apiUrl}/`);
 
 /**
  * Detecta cuándo el backend (Render, plan gratuito) está despertando: avisa si una petición tarda y reintenta
@@ -22,7 +29,8 @@ export const serverStatusInterceptor: HttpInterceptorFn = (request, next) => {
   if (!isApiRequest(request.url)) return next(request);
 
   const status = inject(ServerStatusService);
-  const retries = request.method === 'GET' && !request.context.get(SKIP_WAKE_RETRY) ? WAKE_RETRIES : 0;
+  const retries =
+    request.method === 'GET' && !request.context.get(SKIP_WAKE_RETRY) ? WAKE_RETRIES : 0;
   let slow = false;
   const slowTimer = setTimeout(() => {
     slow = true;
@@ -36,7 +44,7 @@ export const serverStatusInterceptor: HttpInterceptorFn = (request, next) => {
         if (!isServerWakingError(error)) return throwError(() => error);
         status.markUnreachable();
         return timer(WAKE_RETRY_DELAY_MS);
-      }
+      },
     }),
     tap({
       next: (event) => {
@@ -46,11 +54,11 @@ export const serverStatusInterceptor: HttpInterceptorFn = (request, next) => {
         if (isServerWakingError(error)) status.markUnreachable();
         // Cualquier otra respuesta HTTP (400, 401, 404…) demuestra que el servidor ya está despierto.
         else if (error instanceof HttpErrorResponse) status.markReachable();
-      }
+      },
     }),
     finalize(() => {
       clearTimeout(slowTimer);
       if (slow) status.slowRequestFinished();
-    })
+    }),
   );
 };

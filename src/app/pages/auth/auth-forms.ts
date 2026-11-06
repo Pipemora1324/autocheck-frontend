@@ -20,12 +20,16 @@ export function fieldError(control: AbstractControl | null, submitted: boolean):
   const errors = control.errors ?? {};
   if (errors['required']) return 'Este campo es obligatorio.';
   if (errors['email']) return 'Ingresa un correo válido, por ejemplo nombre@dominio.com.';
-  if (errors['minlength']) return `Debe tener al menos ${(errors['minlength'] as LengthError).requiredLength} caracteres.`;
-  if (errors['maxlength']) return `No puede superar ${(errors['maxlength'] as LengthError).requiredLength} caracteres.`;
+  if (errors['minlength'])
+    return `Debe tener al menos ${(errors['minlength'] as LengthError).requiredLength} caracteres.`;
+  if (errors['maxlength'])
+    return `No puede superar ${(errors['maxlength'] as LengthError).requiredLength} caracteres.`;
   return 'Revisa este campo.';
 }
 
 /** Solo rutas internas, para evitar redirecciones abiertas a otros sitios. */
 export function safeReturnUrl(value: string | null | undefined): string {
-  return value && value.startsWith('/') && !value.startsWith('//') && !value.startsWith('/login') ? value : '/';
+  return value && value.startsWith('/') && !value.startsWith('//') && !value.startsWith('/login')
+    ? value
+    : '/';
 }

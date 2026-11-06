@@ -8,12 +8,18 @@ let nextId = 0;
   host: { '(document:keydown.escape)': 'closed.emit()', '(click)': 'closeOnBackdrop($event)' },
   template: `
     <div class="modal-backdrop">
-      <section class="dialog" role="dialog" aria-modal="true" [attr.aria-labelledby]="headingId" tabindex="-1">
+      <section
+        class="dialog"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="headingId"
+        tabindex="-1"
+      >
         <h2 [id]="headingId">{{ heading() }}</h2>
         <ng-content />
       </section>
     </div>
-  `
+  `,
 })
 export class ModalComponent {
   readonly heading = input.required<string>();
@@ -28,7 +34,9 @@ export class ModalComponent {
   constructor() {
     const host = inject<ElementRef<HTMLElement>>(ElementRef);
     afterNextRender(() => {
-      const target = host.nativeElement.querySelector<HTMLElement>('input, select, textarea') ?? host.nativeElement.querySelector<HTMLElement>('.dialog');
+      const target =
+        host.nativeElement.querySelector<HTMLElement>('input, select, textarea') ??
+        host.nativeElement.querySelector<HTMLElement>('.dialog');
       target?.focus();
     });
   }

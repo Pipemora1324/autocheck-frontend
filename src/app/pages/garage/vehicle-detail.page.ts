@@ -5,9 +5,17 @@ import { Router, RouterLink } from '@angular/router';
 import { DiagnosePanelComponent } from '../../components/diagnose-panel/diagnose-panel.component';
 import { DiagnosisHistoryComponent } from '../../components/diagnosis-history/diagnosis-history.component';
 import { ModalComponent } from '../../components/modal/modal.component';
-import { VehicleFormComponent, type VehicleFormValue } from '../../components/vehicle-form/vehicle-form.component';
+import {
+  VehicleFormComponent,
+  type VehicleFormValue,
+} from '../../components/vehicle-form/vehicle-form.component';
 import { formatDate } from '../../core/format-date';
-import { apiErrorCode, apiErrorMessage, apiFieldErrors, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
+import {
+  apiErrorCode,
+  apiErrorMessage,
+  apiFieldErrors,
+  EMAIL_NOT_VERIFIED,
+} from '../../core/http/api-error';
 import type { GarageVehicle } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
 
@@ -15,18 +23,26 @@ type LoadState = 'loading' | 'ready' | 'not-found' | 'unverified' | 'error';
 
 const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
   manual: 'registrados a mano',
-  scan: 'leídos de la tarjeta de propiedad y confirmados por ti'
+  scan: 'leídos de la tarjeta de propiedad y confirmados por ti',
 };
 
 @Component({
   selector: 'app-vehicle-detail-page',
-  imports: [RouterLink, VehicleFormComponent, ModalComponent, DiagnosePanelComponent, DiagnosisHistoryComponent],
+  imports: [
+    RouterLink,
+    VehicleFormComponent,
+    ModalComponent,
+    DiagnosePanelComponent,
+    DiagnosisHistoryComponent,
+  ],
   template: `
     <a class="back-link" routerLink="/">← Volver a mi garaje</a>
 
     @switch (state()) {
       @case ('loading') {
-        <div class="state-box" role="status"><span class="spinner" aria-hidden="true"></span> Cargando el vehículo…</div>
+        <div class="state-box" role="status">
+          <span class="spinner" aria-hidden="true"></span> Cargando el vehículo…
+        </div>
       }
       @case ('not-found') {
         <div class="state-box">
@@ -50,17 +66,26 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
             <div>
               <span class="plate-tag">{{ v.plate }}</span>
               <h1>{{ v.brand }} {{ v.model }}</h1>
-              <p class="source-note">{{ v.kind === 'moto' ? 'Moto' : 'Carro' }} · datos {{ sourceLabel() }} · actualizado el {{ updatedOn() }}</p>
+              <p class="source-note">
+                {{ v.kind === 'moto' ? 'Moto' : 'Carro' }} · datos {{ sourceLabel() }} · actualizado
+                el {{ updatedOn() }}
+              </p>
             </div>
             @if (!editing()) {
               <div class="form-actions">
-                <button class="secondary-button" type="button" (click)="startEditing()">Editar</button>
-                <button class="danger-button" type="button" (click)="confirmingDelete.set(true)">Eliminar</button>
+                <button class="secondary-button" type="button" (click)="startEditing()">
+                  Editar
+                </button>
+                <button class="danger-button" type="button" (click)="confirmingDelete.set(true)">
+                  Eliminar
+                </button>
               </div>
             }
           </header>
 
-          @if (notice()) { <p class="form-notice" role="status">{{ notice() }}</p> }
+          @if (notice()) {
+            <p class="form-notice" role="status">{{ notice() }}</p>
+          }
 
           @if (editing()) {
             <section class="panel">
@@ -74,28 +99,63 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
                 [serverFieldErrors]="fieldErrors()"
                 (save)="saveChanges($event)"
               >
-                <button type="button" class="secondary-button" (click)="editing.set(false)">Cancelar</button>
+                <button type="button" class="secondary-button" (click)="editing.set(false)">
+                  Cancelar
+                </button>
               </app-vehicle-form>
             </section>
           } @else {
             <div class="detail-grid">
               <div>
-                <app-diagnose-panel [plate]="v.plate" (diagnosed)="historyKey.set(historyKey() + 1)" />
+                <app-diagnose-panel
+                  [plate]="v.plate"
+                  (diagnosed)="historyKey.set(historyKey() + 1)"
+                />
                 <app-diagnosis-history [plate]="v.plate" [refreshKey]="historyKey()" />
               </div>
               <section class="panel">
                 <h2>Datos del vehículo</h2>
                 <dl class="data-list">
-                  <div><dt>Placa</dt><dd>{{ v.plate }}</dd></div>
-                  <div><dt>Marca</dt><dd>{{ v.brand }}</dd></div>
-                  <div><dt>Línea</dt><dd>{{ v.model }}</dd></div>
-                  <div><dt>Modelo (año)</dt><dd>{{ v.year ?? '—' }}</dd></div>
-                  <div><dt>Color</dt><dd>{{ v.color ?? '—' }}</dd></div>
-                  <div><dt>Cilindraje</dt><dd>{{ v.cylinderCc ? v.cylinderCc + ' cc' : '—' }}</dd></div>
-                  <div><dt>Chasis</dt><dd>{{ v.chassis ?? '—' }}</dd></div>
-                  <div><dt>Combustible</dt><dd>{{ v.fuelType ?? '—' }}</dd></div>
-                  <div><dt>Servicio</dt><dd>{{ v.serviceType ?? '—' }}</dd></div>
-                  <div><dt>Kilometraje</dt><dd>{{ mileage() }}</dd></div>
+                  <div>
+                    <dt>Placa</dt>
+                    <dd>{{ v.plate }}</dd>
+                  </div>
+                  <div>
+                    <dt>Marca</dt>
+                    <dd>{{ v.brand }}</dd>
+                  </div>
+                  <div>
+                    <dt>Línea</dt>
+                    <dd>{{ v.model }}</dd>
+                  </div>
+                  <div>
+                    <dt>Modelo (año)</dt>
+                    <dd>{{ v.year ?? '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Color</dt>
+                    <dd>{{ v.color ?? '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Cilindraje</dt>
+                    <dd>{{ v.cylinderCc ? v.cylinderCc + ' cc' : '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Chasis</dt>
+                    <dd>{{ v.chassis ?? '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Combustible</dt>
+                    <dd>{{ v.fuelType ?? '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Servicio</dt>
+                    <dd>{{ v.serviceType ?? '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Kilometraje</dt>
+                    <dd>{{ mileage() }}</dd>
+                  </div>
                 </dl>
               </section>
             </div>
@@ -103,18 +163,36 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
 
           @if (confirmingDelete()) {
             <app-modal heading="¿Eliminar este vehículo?" (closed)="confirmingDelete.set(false)">
-              <p>Se borrará {{ v.plate }} ({{ v.brand }} {{ v.model }}) de tu garaje, junto con su historial de diagnósticos. Esta acción no se puede deshacer.</p>
-              @if (deleteError()) { <p class="form-error" role="alert">{{ deleteError() }}</p> }
+              <p>
+                Se borrará {{ v.plate }} ({{ v.brand }} {{ v.model }}) de tu garaje, junto con su
+                historial de diagnósticos. Esta acción no se puede deshacer.
+              </p>
+              @if (deleteError()) {
+                <p class="form-error" role="alert">{{ deleteError() }}</p>
+              }
               <div class="form-actions">
-                <button class="danger-button" type="button" (click)="remove()" [disabled]="deleting()">{{ deleting() ? 'Eliminando…' : 'Sí, eliminar' }}</button>
-                <button class="secondary-button" type="button" (click)="confirmingDelete.set(false)">Cancelar</button>
+                <button
+                  class="danger-button"
+                  type="button"
+                  (click)="remove()"
+                  [disabled]="deleting()"
+                >
+                  {{ deleting() ? 'Eliminando…' : 'Sí, eliminar' }}
+                </button>
+                <button
+                  class="secondary-button"
+                  type="button"
+                  (click)="confirmingDelete.set(false)"
+                >
+                  Cancelar
+                </button>
               </div>
             </app-modal>
           }
         }
       }
     }
-  `
+  `,
 })
 export class VehicleDetailPage {
   private readonly garage = inject(GarageService);
@@ -126,7 +204,11 @@ export class VehicleDetailPage {
   readonly state = signal<LoadState>('loading');
   readonly vehicle = signal<GarageVehicle | null>(null);
   readonly loadError = signal('');
-  readonly notice = signal(this.router.currentNavigation()?.extras.state?.['created'] ? 'Vehículo agregado a tu garaje.' : '');
+  readonly notice = signal(
+    this.router.currentNavigation()?.extras.state?.['created']
+      ? 'Vehículo agregado a tu garaje.'
+      : '',
+  );
 
   readonly editing = signal(false);
   readonly saving = signal(false);
@@ -153,7 +235,9 @@ export class VehicleDetailPage {
   });
 
   constructor() {
-    toObservable(this.placa).subscribe(() => { this.load(); });
+    toObservable(this.placa).subscribe(() => {
+      this.load();
+    });
   }
 
   load(): void {
@@ -170,7 +254,7 @@ export class VehicleDetailPage {
           this.loadError.set(apiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'));
           this.state.set('error');
         }
-      }
+      },
     });
   }
 
@@ -197,7 +281,7 @@ export class VehicleDetailPage {
         this.saving.set(false);
         this.fieldErrors.set(apiFieldErrors(error));
         this.saveError.set(apiErrorMessage(error, 'No se pudieron guardar los cambios.'));
-      }
+      },
     });
   }
 
@@ -209,7 +293,7 @@ export class VehicleDetailPage {
       error: (error: unknown) => {
         this.deleting.set(false);
         this.deleteError.set(apiErrorMessage(error, 'No se pudo eliminar el vehículo.'));
-      }
+      },
     });
   }
 }

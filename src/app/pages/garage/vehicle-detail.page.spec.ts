@@ -14,14 +14,21 @@ describe('VehicleDetailPage', () => {
   let navigate: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [VehicleDetailPage], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    TestBed.configureTestingModule({
+      imports: [VehicleDetailPage],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
     http = TestBed.inject(HttpTestingController);
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   });
 
   afterEach(() => {
     // El chat aparece junto al resultado y pide la conversación guardada.
-    http.match((request) => request.url.endsWith('/messages')).forEach((request) => { request.flush({ messages: [], restantes: 20 }); });
+    http
+      .match((request) => request.url.endsWith('/messages'))
+      .forEach((request) => {
+        request.flush({ messages: [], restantes: 20 });
+      });
     http.verify();
   });
 
@@ -48,10 +55,17 @@ describe('VehicleDetailPage', () => {
 
   it('la pantalla principal del vehículo es el diagnóstico, con su historial', async () => {
     const { element } = await render();
-    expect(element.querySelector('app-diagnose-panel h2')?.textContent).toBe('Diagnosticar un testigo');
-    expect(element.querySelector('app-diagnosis-history h2')?.textContent).toBe('Historial de diagnósticos');
+    expect(element.querySelector('app-diagnose-panel h2')?.textContent).toBe(
+      'Diagnosticar un testigo',
+    );
+    expect(element.querySelector('app-diagnosis-history h2')?.textContent).toBe(
+      'Historial de diagnósticos',
+    );
     const panel = element.querySelector('app-diagnose-panel')!;
-    expect(panel.compareDocumentPosition(element.querySelector('app-diagnosis-history')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      panel.compareDocumentPosition(element.querySelector('app-diagnosis-history')!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('recarga el historial al crear un diagnóstico', async () => {
@@ -62,17 +76,29 @@ describe('VehicleDetailPage', () => {
     area.dispatchEvent(new Event('input'));
     panel.querySelector<HTMLInputElement>('.ack-field input')!.click();
     await fixture.whenStable();
-    [...panel.querySelectorAll('button')].find((item) => item.textContent?.includes('Diagnosticar'))!.click();
-    http.expectOne((request) => request.url === `${GARAGE}/ABC-123/diagnoses` && request.method === 'POST').flush(diagnosed(), { status: 201, statusText: 'Created' });
+    [...panel.querySelectorAll('button')]
+      .find((item) => item.textContent?.includes('Diagnosticar'))!
+      .click();
+    http
+      .expectOne(
+        (request) => request.url === `${GARAGE}/ABC-123/diagnoses` && request.method === 'POST',
+      )
+      .flush(diagnosed(), { status: 201, statusText: 'Created' });
     await fixture.whenStable();
-    http.expectOne((request) => request.url === `${GARAGE}/ABC-123/diagnoses` && request.method === 'GET').flush(history());
+    http
+      .expectOne(
+        (request) => request.url === `${GARAGE}/ABC-123/diagnoses` && request.method === 'GET',
+      )
+      .flush(history());
     await fixture.whenStable();
     expect(element.querySelector('app-diagnosis-result')).toBeTruthy();
   });
 
   it('edita enviando solo los campos editables (sin la placa)', async () => {
     const { fixture, element } = await render();
-    [...element.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('Editar'))!.click();
+    [...element.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.includes('Editar'))!
+      .click();
     await fixture.whenStable();
 
     const color = element.querySelector<HTMLInputElement>('#vehicle-color')!;
@@ -91,7 +117,8 @@ describe('VehicleDetailPage', () => {
     expect(request.request.body).not.toHaveProperty('plate');
     expect(request.request.body.color).toBe('Rojo');
     expect(request.request.body.mileageKm).toBe(90000);
-    for (const removed of ['soatExpiresOn', 'rtmExpiresOn', 'runtStatus']) expect(request.request.body).not.toHaveProperty(removed);
+    for (const removed of ['soatExpiresOn', 'rtmExpiresOn', 'runtStatus'])
+      expect(request.request.body).not.toHaveProperty(removed);
     request.flush(garageVehicle({ color: 'Rojo' }));
     await fixture.whenStable();
     // Al salir de la edición vuelven el panel y el historial.
@@ -105,7 +132,9 @@ describe('VehicleDetailPage', () => {
     element.querySelector<HTMLButtonElement>('.page-header .danger-button')!.click();
     await fixture.whenStable();
     expect(element.querySelector('[role="dialog"]')?.textContent).toContain('no se puede deshacer');
-    expect(element.querySelector('[role="dialog"]')?.textContent).toContain('historial de diagnósticos');
+    expect(element.querySelector('[role="dialog"]')?.textContent).toContain(
+      'historial de diagnósticos',
+    );
 
     element.querySelector<HTMLButtonElement>('[role="dialog"] .danger-button')!.click();
     const request = http.expectOne(`${GARAGE}/ABC-123`);
@@ -119,7 +148,9 @@ describe('VehicleDetailPage', () => {
     fixture.componentRef.setInput('placa', 'ZZZ-999');
     fixture.detectChanges();
     await fixture.whenStable();
-    http.expectOne(`${GARAGE}/ZZZ-999`).flush({ message: 'No encontrado.' }, { status: 404, statusText: 'Not Found' });
+    http
+      .expectOne(`${GARAGE}/ZZZ-999`)
+      .flush({ message: 'No encontrado.' }, { status: 404, statusText: 'Not Found' });
     await fixture.whenStable();
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('no está en tu garaje');
   });

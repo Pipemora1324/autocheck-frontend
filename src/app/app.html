@@ -1,18 +1,26 @@
 <div class="app-shell">
   <header class="topbar">
-    <a class="brand" routerLink="/" aria-label="AutoCheck-CO, ir a mi garaje"><span class="brand-mark">A</span><span><strong>AutoCheck</strong><small>CO</small></span></a>
+    <a class="brand" routerLink="/" aria-label="AutoCheck-CO, ir a mi garaje"
+      ><span class="brand-mark">A</span><span><strong>AutoCheck</strong><small>CO</small></span></a
+    >
     @if (auth.user()) {
       <nav class="main-nav" aria-label="Principal">
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Mi garaje</a>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+          >Mi garaje</a
+        >
         <a routerLink="/cuenta" routerLinkActive="active">Mi cuenta</a>
       </nav>
     }
     <div class="topbar-meta">
-      <span class="system-status {{ health.status() }}" role="status" aria-live="polite"><i aria-hidden="true"></i> {{ healthLabel() }}</span>
+      <span class="system-status {{ health.status() }}" role="status" aria-live="polite"
+        ><i aria-hidden="true"></i> {{ healthLabel() }}</span
+      >
       @if (auth.user(); as user) {
         <span class="user-info">
           <span class="user-avatar" aria-hidden="true">{{ initials() }}</span>
-          <span class="user-text"><strong>{{ user.email }}</strong></span>
+          <span class="user-text"
+            ><strong>{{ user.email }}</strong></span
+          >
         </span>
         <button class="logout-button" type="button" (click)="logout()">Cerrar sesión</button>
       }
@@ -20,11 +28,19 @@
   </header>
   <main id="top">
     @if (auth.status() === 'unknown') {
-      <div class="session-loading" role="status"><span class="spinner" aria-hidden="true"></span>Restaurando sesión…</div>
+      <div class="session-loading" role="status">
+        <span class="spinner" aria-hidden="true"></span>Restaurando sesión…
+      </div>
     }
     <app-server-status-banner />
     <app-email-verification-banner />
     <router-outlet />
   </main>
-  <footer><span>AutoCheck-CO</span><span>Orientación general: un mecánico debe confirmar el diagnóstico · <a routerLink="/privacidad">Privacidad</a></span></footer>
+  <footer>
+    <span>AutoCheck-CO</span
+    ><span
+      >Orientación general: un mecánico debe confirmar el diagnóstico ·
+      <a routerLink="/privacidad">Privacidad</a></span
+    >
+  </footer>
 </div>

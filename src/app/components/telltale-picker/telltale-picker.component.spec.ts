@@ -10,25 +10,47 @@ const URL = `${environment.apiUrl}/telltales`;
 
 describe('groupTelltales', () => {
   it('si el backend no envía debeDetenerse, un rojo no desaparece: queda bajo "Detente"', () => {
-    const oldBackend = { id: 'presion_aceite', nombre: 'Presión de aceite', alias: [], severidad: 'rojo' } as unknown as TelltaleSummary;
-    expect(groupTelltales([oldBackend], '').map((group) => [group.severity, group.stop, group.items.length])).toEqual([['rojo', true, 1]]);
+    const oldBackend = {
+      id: 'presion_aceite',
+      nombre: 'Presión de aceite',
+      alias: [],
+      severidad: 'rojo',
+    } as unknown as TelltaleSummary;
+    expect(
+      groupTelltales([oldBackend], '').map((group) => [
+        group.severity,
+        group.stop,
+        group.items.length,
+      ]),
+    ).toEqual([['rojo', true, 1]]);
   });
 
   it('el airbag queda en su propio grupo rojo, fuera de los que ordenan detenerse', () => {
-    const airbag = { id: 'airbag', nombre: 'Airbag', alias: ['bolsa de aire'], severidad: 'rojo' as const, debeDetenerse: false };
+    const airbag = {
+      id: 'airbag',
+      nombre: 'Airbag',
+      alias: ['bolsa de aire'],
+      severidad: 'rojo' as const,
+      debeDetenerse: false,
+    };
     const groups = groupTelltales([...telltales(), airbag], '');
     expect(groups.map((group) => [group.severity, group.stop, group.items[0].id])).toEqual([
       ['rojo', true, 'presion_aceite'],
       ['rojo', false, 'airbag'],
       ['amarillo', false, 'check_engine'],
-      ['informativo', false, 'cinturon']
+      ['informativo', false, 'cinturon'],
     ]);
   });
 
-  const ids = (query: string) => groupTelltales(telltales(), query).flatMap((group) => group.items.map((item) => item.id));
+  const ids = (query: string) =>
+    groupTelltales(telltales(), query).flatMap((group) => group.items.map((item) => item.id));
 
   it('agrupa de más a menos urgente', () => {
-    expect(groupTelltales(telltales(), '').map((group) => group.severity)).toEqual(['rojo', 'amarillo', 'informativo']);
+    expect(groupTelltales(telltales(), '').map((group) => group.severity)).toEqual([
+      'rojo',
+      'amarillo',
+      'informativo',
+    ]);
   });
 
   it('busca por nombre y por alias, sin importar tildes ni mayúsculas', () => {
@@ -40,7 +62,9 @@ describe('groupTelltales', () => {
   });
 
   it('omite los grupos sin resultados', () => {
-    expect(groupTelltales(telltales(), 'herradura').map((group) => group.severity)).toEqual(['amarillo']);
+    expect(groupTelltales(telltales(), 'herradura').map((group) => group.severity)).toEqual([
+      'amarillo',
+    ]);
     expect(groupTelltales(telltales(), 'nada que ver')).toEqual([]);
   });
 });
@@ -49,11 +73,16 @@ describe('TelltalePickerComponent', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [TelltalePickerComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      imports: [TelltalePickerComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => { http.verify(); });
+  afterEach(() => {
+    http.verify();
+  });
 
   const render = () => {
     const fixture = TestBed.createComponent(TelltalePickerComponent);

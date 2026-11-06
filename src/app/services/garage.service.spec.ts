@@ -13,12 +13,16 @@ describe('GarageService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(GarageService);
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => { http.verify(); });
+  afterEach(() => {
+    http.verify();
+  });
 
   it('list devuelve el arreglo de vehículos', async () => {
     const result = firstValueFrom(service.list());

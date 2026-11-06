@@ -4,7 +4,7 @@ import {
   VehicleFormComponent,
   type VehicleFormField,
   type VehicleFormInitial,
-  type VehicleFormValue
+  type VehicleFormValue,
 } from '../../components/vehicle-form/vehicle-form.component';
 import { apiErrorMessage, apiFieldErrors } from '../../core/http/api-error';
 import { IMAGE_ACCEPT, imageFileError } from '../../core/image-file';
@@ -15,10 +15,15 @@ import { GarageService } from '../../services/garage.service';
 type Step = 'choose' | 'photo' | 'reading' | 'review' | 'manual';
 
 /** Convierte la lectura de la tarjeta en valores del formulario y su confianza por campo. */
-export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormInitial; confidence: Partial<Record<VehicleFormField, number>> } {
+export function prefillFromScan(scan: CardScanResult): {
+  initial: VehicleFormInitial;
+  confidence: Partial<Record<VehicleFormField, number>>;
+} {
   const initial: VehicleFormInitial = {};
   const confidence: Partial<Record<VehicleFormField, number>> = {};
-  for (const [field, prefilled] of Object.entries(scan.vehicle) as Array<[VehicleFormField, { value: unknown; confidence: number }]>) {
+  for (const [field, prefilled] of Object.entries(scan.vehicle) as Array<
+    [VehicleFormField, { value: unknown; confidence: number }]
+  >) {
     (initial as Record<string, unknown>)[field] = prefilled.value;
     confidence[field] = prefilled.value === null ? 0 : prefilled.confidence;
   }
@@ -34,20 +39,31 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
       <div>
         <span class="eyebrow">Mi garaje</span>
         <h1>Agregar vehículo</h1>
-        <p>Llena los datos a mano o, si prefieres, usa una foto de la tarjeta de propiedad (licencia de tránsito).</p>
+        <p>
+          Llena los datos a mano o, si prefieres, usa una foto de la tarjeta de propiedad (licencia
+          de tránsito).
+        </p>
       </div>
     </header>
 
     @switch (step()) {
       @case ('choose') {
         <div class="choice-grid">
-          <button type="button" class="choice-card" (click)="step.set('photo')" [disabled]="!scanEnabled()">
+          <button
+            type="button"
+            class="choice-card"
+            (click)="step.set('photo')"
+            [disabled]="!scanEnabled()"
+          >
             <span class="choice-icon" aria-hidden="true">📷</span>
             <strong>Con foto de la tarjeta (opcional)</strong>
             @if (scanEnabled()) {
               <span>Tomamos los datos de la foto y tú los revisas antes de guardar.</span>
             } @else {
-              <span>La lectura automática no está disponible en este momento. Puedes llenarlo a mano.</span>
+              <span
+                >La lectura automática no está disponible en este momento. Puedes llenarlo a
+                mano.</span
+              >
             }
           </button>
           <button type="button" class="choice-card" (click)="startManual()">
@@ -65,17 +81,36 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
           </p>
           <div class="file-actions">
             <label class="primary-button link-button" for="card-camera">Tomar foto</label>
-            <input id="card-camera" class="visually-hidden" type="file" [accept]="imageAccept" capture="environment" (change)="onFile($event)" />
+            <input
+              id="card-camera"
+              class="visually-hidden"
+              type="file"
+              [accept]="imageAccept"
+              capture="environment"
+              (change)="onFile($event)"
+            />
             <label class="secondary-button" for="card-file">Subir imagen</label>
-            <input id="card-file" class="visually-hidden" type="file" [accept]="imageAccept" (change)="onFile($event)" />
+            <input
+              id="card-file"
+              class="visually-hidden"
+              type="file"
+              [accept]="imageAccept"
+              (change)="onFile($event)"
+            />
           </div>
-          <p class="field-hint">JPEG, PNG o WEBP, máximo 5 MB. Toma la foto de frente, con buena luz y sin reflejos.</p>
+          <p class="field-hint">
+            JPEG, PNG o WEBP, máximo 5 MB. Toma la foto de frente, con buena luz y sin reflejos.
+          </p>
           @if (photoError()) {
             <p class="form-error" role="alert">{{ photoError() }}</p>
           }
           <div class="form-actions">
-            <button type="button" class="secondary-button" (click)="startManual()">Prefiero llenarlo a mano</button>
-            <button type="button" class="secondary-button" (click)="step.set('choose')">Cancelar</button>
+            <button type="button" class="secondary-button" (click)="startManual()">
+              Prefiero llenarlo a mano
+            </button>
+            <button type="button" class="secondary-button" (click)="step.set('choose')">
+              Cancelar
+            </button>
           </div>
         </section>
       }
@@ -89,10 +124,15 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
       @case ('review') {
         <section class="panel">
           <h2>Revisa los datos antes de guardar</h2>
-          <p class="provider-notice">Los campos resaltados se leyeron con poca claridad o no se pudieron leer. Corrige lo que haga falta: solo se guarda lo que confirmes.</p>
+          <p class="provider-notice">
+            Los campos resaltados se leyeron con poca claridad o no se pudieron leer. Corrige lo que
+            haga falta: solo se guarda lo que confirmes.
+          </p>
           @if (warnings().length) {
             <ul class="warning-list">
-              @for (warning of warnings(); track warning) { <li>{{ warning }}</li> }
+              @for (warning of warnings(); track warning) {
+                <li>{{ warning }}</li>
+              }
             </ul>
           }
           <app-vehicle-form
@@ -104,7 +144,9 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
             [serverFieldErrors]="fieldErrors()"
             (save)="save($event, 'scan')"
           >
-            <button type="button" class="secondary-button" (click)="step.set('photo')">Tomar otra foto</button>
+            <button type="button" class="secondary-button" (click)="step.set('photo')">
+              Tomar otra foto
+            </button>
           </app-vehicle-form>
         </section>
       }
@@ -122,7 +164,7 @@ export function prefillFromScan(scan: CardScanResult): { initial: VehicleFormIni
         </section>
       }
     }
-  `
+  `,
 })
 export class AddVehiclePage {
   private readonly garage = inject(GarageService);
@@ -144,7 +186,7 @@ export class AddVehiclePage {
   readonly providerNotice = computed(
     () =>
       this.publicConfig.config()?.cardScan.notice ??
-      'La foto se envía a un proveedor externo de lectura solo para extraer los datos; AutoCheck-CO no la guarda.'
+      'La foto se envía a un proveedor externo de lectura solo para extraer los datos; AutoCheck-CO no la guarda.',
   );
 
   constructor() {
@@ -179,9 +221,14 @@ export class AddVehiclePage {
         this.step.set('review');
       },
       error: (error: unknown) => {
-        this.photoError.set(apiErrorMessage(error, 'No pudimos leer la tarjeta. Intenta con otra foto o llena los datos a mano.'));
+        this.photoError.set(
+          apiErrorMessage(
+            error,
+            'No pudimos leer la tarjeta. Intenta con otra foto o llena los datos a mano.',
+          ),
+        );
         this.step.set('photo');
-      }
+      },
     });
   }
 
@@ -189,12 +236,15 @@ export class AddVehiclePage {
     this.resetSaveState();
     this.saving.set(true);
     this.garage.create({ ...value, source }).subscribe({
-      next: (vehicle) => void this.router.navigate(['/garaje', vehicle.plate], { state: { created: true } }),
+      next: (vehicle) =>
+        void this.router.navigate(['/garaje', vehicle.plate], { state: { created: true } }),
       error: (error: unknown) => {
         this.saving.set(false);
         this.fieldErrors.set(apiFieldErrors(error));
-        this.saveError.set(apiErrorMessage(error, 'No se pudo guardar el vehículo. Inténtalo de nuevo.'));
-      }
+        this.saveError.set(
+          apiErrorMessage(error, 'No se pudo guardar el vehículo. Inténtalo de nuevo.'),
+        );
+      },
     });
   }
 

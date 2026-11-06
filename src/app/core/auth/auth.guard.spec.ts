@@ -1,6 +1,12 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router, UrlTree, type ActivatedRouteSnapshot, type RouterStateSnapshot } from '@angular/router';
+import {
+  provideRouter,
+  Router,
+  UrlTree,
+  type ActivatedRouteSnapshot,
+  type RouterStateSnapshot,
+} from '@angular/router';
 import { firstValueFrom, isObservable, Observable, Subject } from 'rxjs';
 import { authGuard, guestGuard, homeGuard } from './auth.guard';
 import { AuthService } from './auth.service';
@@ -32,7 +38,9 @@ describe('guards de autenticación', () => {
 
   beforeEach(() => {
     auth = new AuthStub();
-    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: AuthService, useValue: auth }] });
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
+    });
     router = TestBed.inject(Router);
   });
 

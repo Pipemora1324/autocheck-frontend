@@ -2,5 +2,5 @@
 // así el navegador ve un solo origen y la cookie de refresh es de primera parte.
 export const environment = {
   production: true,
-  apiUrl: '/api'
+  apiUrl: '/api',
 };

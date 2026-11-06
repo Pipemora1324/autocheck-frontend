@@ -13,12 +13,16 @@ describe('PublicConfigService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(PublicConfigService);
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => { http.verify(); });
+  afterEach(() => {
+    http.verify();
+  });
 
   it('pide la configuración una sola vez y la deja en la señal', async () => {
     const first = firstValueFrom(service.load());

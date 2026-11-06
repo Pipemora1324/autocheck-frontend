@@ -6,7 +6,7 @@ import type {
   CardScanResult,
   GarageVehicle,
   GarageVehiclePatch,
-  NewGarageVehicle
+  NewGarageVehicle,
 } from '../models/garage';
 
 @Injectable({ providedIn: 'root' })
@@ -19,7 +19,9 @@ export class GarageService {
   }
 
   list(): Observable<GarageVehicle[]> {
-    return this.http.get<{ vehicles: GarageVehicle[] }>(this.baseUrl).pipe(map(({ vehicles }) => vehicles));
+    return this.http
+      .get<{ vehicles: GarageVehicle[] }>(this.baseUrl)
+      .pipe(map(({ vehicles }) => vehicles));
   }
 
   get(plate: string): Observable<GarageVehicle> {

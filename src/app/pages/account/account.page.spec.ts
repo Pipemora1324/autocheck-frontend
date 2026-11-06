@@ -15,7 +15,10 @@ describe('AccountPage', () => {
   let navigate: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [AccountPage], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    TestBed.configureTestingModule({
+      imports: [AccountPage],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
     http = TestBed.inject(HttpTestingController);
     auth = TestBed.inject(AuthService);
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -23,7 +26,9 @@ describe('AccountPage', () => {
     http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1'));
   });
 
-  afterEach(() => { http.verify(); });
+  afterEach(() => {
+    http.verify();
+  });
 
   const openAndSubmit = async (password: string) => {
     const fixture = TestBed.createComponent(AccountPage);
@@ -34,7 +39,9 @@ describe('AccountPage', () => {
     const input = element.querySelector<HTMLInputElement>('#delete-password')!;
     input.value = password;
     input.dispatchEvent(new Event('input'));
-    element.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit'));
+    element
+      .querySelector<HTMLFormElement>('[role="dialog"] form')!
+      .dispatchEvent(new Event('submit'));
     return { fixture, element };
   };
 
@@ -52,9 +59,16 @@ describe('AccountPage', () => {
 
   it('con la contraseña errada lo dice y mantiene la sesión', async () => {
     const { fixture, element } = await openAndSubmit('mala');
-    http.expectOne(`${API}/auth/me`).flush({ message: 'Contraseña incorrecta.', code: 'INVALID_PASSWORD' }, { status: 403, statusText: 'Forbidden' });
+    http
+      .expectOne(`${API}/auth/me`)
+      .flush(
+        { message: 'Contraseña incorrecta.', code: 'INVALID_PASSWORD' },
+        { status: 403, statusText: 'Forbidden' },
+      );
     await fixture.whenStable();
-    expect(element.querySelector('.form-error')?.textContent).toContain('La contraseña no es correcta.');
+    expect(element.querySelector('.form-error')?.textContent).toContain(
+      'La contraseña no es correcta.',
+    );
     expect(auth.isAuthenticated()).toBe(true);
   });
 
