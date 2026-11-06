@@ -73,6 +73,26 @@ describe('DiagnosisService', () => {
     request.flush(diagnosed({ origen: 'manual', confianza: null }), { status: 201, statusText: 'Created' });
   });
 
+  it('diagnose solo envía parpadea si se indica', () => {
+    service.diagnose('ABC-123', { description: 'luz', blinking: true }).subscribe();
+    const request = http.expectOne(DIAGNOSES);
+    expect((request.request.body as FormData).get('parpadea')).toBe('true');
+    request.flush(diagnosed(), { status: 201, statusText: 'Created' });
+  });
+
+  it('messages lee la conversación y sendMessage envía el texto', () => {
+    service.messages('ABC-123', 'id-1').subscribe();
+    const read = http.expectOne(`${DIAGNOSES}/id-1/messages`);
+    expect(read.request.method).toBe('GET');
+    read.flush({ messages: [], restantes: 20 });
+
+    service.sendMessage('ABC-123', 'id-1', 'hola').subscribe();
+    const sent = http.expectOne(`${DIAGNOSES}/id-1/messages`);
+    expect(sent.request.method).toBe('POST');
+    expect(sent.request.body).toEqual({ message: 'hola' });
+    sent.flush({});
+  });
+
   it('history pide la página con page y limit', async () => {
     const result = firstValueFrom(service.history('ABC-123', 2));
     const request = http.expectOne((candidate) => candidate.url === DIAGNOSES);

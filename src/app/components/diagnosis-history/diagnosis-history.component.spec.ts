@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting, type TestRequest } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
-import { diagnosedAirbag, diagnosedRed, history, historyItem } from '../../../testing/diagnosis-fixtures';
+import { chatHistory, chatMessage, diagnosedAirbag, diagnosedRed, history, historyItem } from '../../../testing/diagnosis-fixtures';
 import type { DiagnosisHistoryItem } from '../../models/diagnosis';
 import { DiagnosisHistoryComponent } from './diagnosis-history.component';
 
@@ -17,7 +17,13 @@ describe('DiagnosisHistoryComponent', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  // El chat aparece junto a la explicación y pide la conversación guardada.
+  const flushChat = () => http.match((request) => request.url.endsWith('/messages')).forEach((request) => request.flush(chatHistory()));
+
+  afterEach(() => {
+    flushChat();
+    http.verify();
+  });
 
   const listRequest = () => http.expectOne((request) => request.url === DIAGNOSES && request.method === 'GET');
 
@@ -94,11 +100,24 @@ describe('DiagnosisHistoryComponent', () => {
     expect(dialog.textContent).toContain('Qué NO hacer');
     expect(dialog.textContent).toContain('Cuándo ir al mecánico');
     expect(dialog.querySelector('.diagnosis-disclaimer')?.textContent).toContain('Un mecánico debe confirmar');
-    expect(dialog.textContent).toContain('información actual de la app');
     // Un solo banner, el del resultado, y ya no se ofrece el botón.
     expect(dialog.querySelectorAll('.stop-banner')).toHaveLength(1);
     expect(button(dialog, 'Ver la explicación completa')).toBeUndefined();
     // El afterEach verifica que no hubo ningún POST ni otra carga del historial.
+  });
+
+  it('al reabrir muestra los testigos guardados y la conversación, y el nombre indica cuántos eran', async () => {
+    const { fixture, element } = await render((request) => request.flush(history([historyItem({ telltaleId: null, nombre: 'Frenos', totalTestigos: 3, origen: 'ia', confianza: 0.9 })])));
+    expect(element.querySelector('.history-item')?.textContent).toContain('Frenos y 2 más');
+    element.querySelector<HTMLButtonElement>('.history-item')!.click();
+    await fixture.whenStable();
+    const dialog = element.querySelector('[role="dialog"]')!;
+    button(dialog, 'Ver la explicación completa')!.click();
+    detailRequest().flush(diagnosedRed({ id: ITEM_ID }));
+    await fixture.whenStable();
+    http.expectOne(`${DIAGNOSES}/${ITEM_ID}/messages`).flush(chatHistory([chatMessage('assistant', 'Respuesta guardada.')], 19));
+    await fixture.whenStable();
+    expect(dialog.querySelector('app-diagnosis-chat')?.textContent).toContain('Respuesta guardada.');
   });
 
   it('la explicación de un airbag no ordena detenerse', async () => {

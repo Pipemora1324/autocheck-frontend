@@ -3,15 +3,22 @@ import { Component, computed, DestroyRef, inject, input, output, signal } from '
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
 import { PublicConfigService } from '../../core/http/public-config.service';
 import { IMAGE_ACCEPT, imageFileError } from '../../core/image-file';
-import type { Diagnosed, DiagnosisInput, NeedsBetterInput, TelltaleSummary } from '../../models/diagnosis';
+import type { BetterInputReason, Diagnosed, DiagnosisInput, NeedsBetterInput, NotRecognized, TelltaleSummary } from '../../models/diagnosis';
 import { DiagnosisService } from '../../services/diagnosis.service';
+import { DiagnosisChatComponent } from '../diagnosis-chat/diagnosis-chat.component';
 import { DiagnosisResultComponent } from '../diagnosis-result/diagnosis-result.component';
 import { TelltalePickerComponent } from '../telltale-picker/telltale-picker.component';
 
 export const MAX_DESCRIPTION_LENGTH = 500;
 
 const DEFAULT_NOTICE =
-  'La foto del tablero y tu descripción se envían a un proveedor externo de inteligencia artificial para identificar el testigo. La foto no se guarda en nuestros servidores.';
+  'La foto del tablero y tu descripción se envían a un proveedor externo de inteligencia artificial para identificar los testigos. La foto no se guarda en nuestros servidores.';
+
+/** Pista adicional según por qué no se pudo leer la foto. */
+export const REASON_HINT: Record<BetterInputReason, string> = {
+  no_telltales_found: 'Asegúrate de que el tablero esté encendido y de que los testigos se vean en la foto.',
+  low_confidence: 'Vimos algo, pero no lo suficiente: acércate más al testigo y evita los reflejos.'
+};
 const WHILE_WAITING = 'Mientras tanto: si el testigo es rojo o notas algo raro al manejar, detente en un lugar seguro.';
 
 type Mode = 'photo' | 'list';
@@ -27,7 +34,8 @@ const limitScope = (error: unknown): unknown => (error instanceof HttpErrorRespo
 
 /**
  * Traduce los errores de POST /garage/:plate/diagnoses.
- * 503 DIAGNOSIS_PROVIDER_BUSY: Gemini respondió 429 por su plan gratuito, no por este usuario.
+ * 503 DIAGNOSIS_PROVIDER_BUSY (provider_busy): Gemini respondió 429 por su plan gratuito, no por este usuario.
+ * 503 DIAGNOSIS_UNAVAILABLE (provider_error): falló el servicio, no la foto: nunca se pide repetirla.
  * 429 RATE_LIMITED: el usuario superó uno de nuestros límites por hora.
  */
 export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
@@ -42,7 +50,10 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
   if (code === 'DIAGNOSIS_PROVIDER_BUSY') {
     return { message: 'El cupo gratuito de la IA está ocupado en este momento. Intenta en un minuto o elige el testigo de la lista.', suggestList: true };
   }
-  if (code === 'AI_NOT_CONFIGURED' || code === 'DIAGNOSIS_UNAVAILABLE') {
+  if (code === 'DIAGNOSIS_UNAVAILABLE') {
+    return { message: 'La IA falló por un problema del servicio, no por tu foto. Intenta más tarde. La elección manual sigue funcionando: elige el testigo de la lista.', suggestList: true };
+  }
+  if (code === 'AI_NOT_CONFIGURED') {
     return { message: 'La IA no está disponible en este momento. La elección manual sigue funcionando: elige el testigo de la lista.', suggestList: true };
   }
   return { message: apiErrorMessage(error, 'No pudimos hacer el diagnóstico. Inténtalo de nuevo.'), suggestList: false };
@@ -51,13 +62,14 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
 /** Pantalla principal del vehículo: foto o descripción con IA, o elección manual de la lista. */
 @Component({
   selector: 'app-diagnose-panel',
-  imports: [DiagnosisResultComponent, TelltalePickerComponent],
+  imports: [DiagnosisChatComponent, DiagnosisResultComponent, TelltalePickerComponent],
   template: `
     <section class="panel diagnose-panel" aria-labelledby="diagnose-title">
       <h2 id="diagnose-title">Diagnosticar un testigo</h2>
 
       @if (result(); as diagnosis) {
         <app-diagnosis-result [result]="diagnosis" />
+        <app-diagnosis-chat [plate]="plate()" [diagnosisId]="diagnosis.id" />
         <div class="form-actions">
           <button class="primary-button" type="button" (click)="reset()">Diagnosticar otro testigo</button>
         </div>
@@ -76,6 +88,7 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
         @if (betterInput(); as better) {
           <div class="better-input" role="status">
             <strong>{{ better.pista }}</strong>
+            @if (reasonHint(); as hint) { <span>{{ hint }}</span> }
             <span>{{ better.avisoSeguridad }}</span>
             <div class="form-actions">
               <button class="secondary-button" type="button" (click)="retryPhoto()">Repetir la foto</button>
@@ -123,7 +136,12 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
               <p class="field-hint">{{ description().length }} de {{ maxDescription }} caracteres.</p>
             </div>
 
-            <label class="check-field">
+            <label class="check-field blink-field">
+              <input type="checkbox" [checked]="blinking()" (change)="blinking.set($any($event.target).checked)" />
+              <span>¿El testigo parpadea? Márcalo si alguno parpadea: una foto no lo muestra, y puede ser más urgente.</span>
+            </label>
+
+            <label class="check-field ack-field">
               <input type="checkbox" [checked]="acknowledged()" (change)="acknowledged.set($any($event.target).checked)" />
               <span>Leí el aviso y es el tablero de mi propio vehículo o de uno que estoy autorizado a usar.</span>
             </label>
@@ -168,8 +186,14 @@ export class DiagnosePanelComponent {
   readonly sending = signal(false);
   readonly sendingLabel = signal('');
   readonly result = signal<Diagnosed | null>(null);
-  readonly betterInput = signal<NeedsBetterInput | null>(null);
+  readonly blinking = signal(false);
+  readonly betterInput = signal<NeedsBetterInput | NotRecognized | null>(null);
   readonly errorView = signal<DiagnosisErrorView | null>(null);
+
+  readonly reasonHint = computed(() => {
+    const better = this.betterInput();
+    return better?.status === 'needs_better_input' ? REASON_HINT[better.reason] : null;
+  });
 
   /** Si la configuración no cargó, se ofrece la IA igual: el backend responde 503 y se ofrece la lista. */
   readonly aiEnabled = computed(() => this.publicConfig.config()?.diagnosis?.enabled ?? true);
@@ -223,7 +247,7 @@ export class DiagnosePanelComponent {
     if (!this.canSend()) return;
     const description = this.description().trim();
     const photo = this.photo();
-    this.submit({ ...(photo ? { image: photo } : {}), ...(description ? { description } : {}) }, 'Analizando el testigo…');
+    this.submit({ ...(photo ? { image: photo } : {}), ...(description ? { description } : {}), ...(this.blinking() ? { blinking: true } : {}) }, 'Analizando los testigos…');
   }
 
   choose(telltale: TelltaleSummary): void {
@@ -233,6 +257,7 @@ export class DiagnosePanelComponent {
   reset(): void {
     this.clearPhoto();
     this.description.set('');
+    this.blinking.set(false);
     this.result.set(null);
     this.betterInput.set(null);
     this.errorView.set(null);
@@ -250,6 +275,7 @@ export class DiagnosePanelComponent {
         if (response.status === 'diagnosed') {
           this.clearPhoto();
           this.description.set('');
+          this.blinking.set(false);
           this.result.set(response);
           this.diagnosed.emit(response);
         } else {

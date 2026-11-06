@@ -1,5 +1,6 @@
 // Contrato de /telltales y /garage/:plate/diagnoses (ver docs/API.md del backend).
-// El contenido del diagnóstico siempre lo redacta el servidor desde su catálogo: aquí solo se muestra.
+// Con IA, el modelo redacta la explicación y el servidor aplica su piso de seguridad; con la lista, sale del catálogo.
+// Aquí solo se muestra: la urgencia y la orden de detenerse las decide siempre el servidor.
 
 export type TelltaleSeverity = 'rojo' | 'amarillo' | 'informativo';
 
@@ -29,12 +30,24 @@ export interface TelltaleSummary {
   debeDetenerse: boolean;
 }
 
-export interface Urgency {
-  semaforo: TelltaleSeverity;
-  titulo: string;
-  accion: string;
+export type TelltaleColor = 'rojo' | 'amarillo' | 'verde' | 'azul' | 'blanco' | 'desconocido';
+
+export interface DiagnosedTelltale {
+  nombre: string;
+  descripcionSimbolo: string;
+  color: TelltaleColor;
+  parpadeando: boolean | null;
+  categoria: string;
+  urgencia: TelltaleSeverity;
   debeDetenerse: boolean;
-  esFalla: boolean;
+  accion: string;
+  significado: string;
+  porQuePasa: string[];
+  puedesRevisar: string[];
+  noHagas: string[];
+  cuandoIrAlMecanico: string;
+  notaDelVehiculo: string | null;
+  confianza: number;
 }
 
 export type DiagnosisOrigin = 'ia' | 'manual';
@@ -43,47 +56,55 @@ export interface Diagnosed {
   status: 'diagnosed';
   id: string;
   origen: DiagnosisOrigin;
+  /** La mayor confianza entre los testigos; null si se eligió de la lista. */
   confianza: number | null;
+  descripcion: string | null;
   createdAt: string;
-  telltale: { id: string; nombre: string; descripcionSimbolo: string };
-  severidad: TelltaleSeverity;
-  urgencia: Urgency;
-  significado: string;
-  causasProbables: string[];
-  puedesRevisar: string[];
-  noHagas: string[];
-  cuandoIrAlMecanico: string;
-  notaEspecificaDelVehiculo: string | null;
-  avisoCompatibilidad: string | null;
+  urgenciaGeneral: TelltaleSeverity;
+  debeDetenerse: boolean;
+  accionGeneral: string;
+  mensajeGeneral: string;
+  /** Si la foto se pudo leer pero conviene repetirla, el motivo. */
+  mejorFoto: string | null;
+  testigos: DiagnosedTelltale[];
   aviso: string;
 }
 
-/** GET /garage/:plate/diagnoses/:id: la explicación sale del catálogo vigente, sin crear otra entrada. */
-export interface DiagnosisDetail extends Diagnosed {
-  descripcion: string | null;
-}
+export type BetterInputReason = 'no_telltales_found' | 'low_confidence';
 
 export interface NeedsBetterInput {
   status: 'needs_better_input';
+  reason: BetterInputReason;
   pista: string;
   avisoSeguridad: string;
   puedeElegirDeLaLista: true;
 }
 
-export type DiagnosisResult = Diagnosed | NeedsBetterInput;
+export interface NotRecognized {
+  status: 'not_recognized';
+  pista: string;
+  avisoSeguridad: string;
+  puedeElegirDeLaLista: true;
+}
 
-/** Al menos uno es obligatorio. Con telltaleId el backend no llama a la IA. */
+export type DiagnosisResult = Diagnosed | NeedsBetterInput | NotRecognized;
+
+/** Al menos uno de image, description o telltaleId es obligatorio. Con telltaleId el backend no llama a la IA. */
 export interface DiagnosisInput {
   image?: File;
   description?: string;
   telltaleId?: string;
+  /** Solo se envía si el usuario lo marca: no marcarlo no significa que esté fijo. */
+  blinking?: boolean;
 }
 
 export interface DiagnosisHistoryItem {
   id: string;
-  telltaleId: string;
-  /** null si el testigo ya no está en el catálogo. */
+  /** Solo en la elección manual. */
+  telltaleId: string | null;
+  /** El testigo más grave; null si ya no está en el catálogo. */
   nombre: string | null;
+  totalTestigos: number;
   severidad: TelltaleSeverity;
   debeDetenerse: boolean;
   origen: DiagnosisOrigin;
@@ -98,4 +119,22 @@ export interface DiagnosisHistory {
   limit: number;
   total: number;
   totalPages: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
+export interface ChatHistory {
+  messages: ChatMessage[];
+  restantes: number;
+}
+
+export interface ChatExchange {
+  question: ChatMessage;
+  answer: ChatMessage;
+  restantes: number;
 }

@@ -1,8 +1,9 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { formatDateTime } from '../../core/format-date';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
-import { DIAGNOSIS_DISCLAIMER, ordersStop, type DiagnosisDetail, type DiagnosisHistoryItem } from '../../models/diagnosis';
+import { DIAGNOSIS_DISCLAIMER, ordersStop, type Diagnosed, type DiagnosisHistoryItem } from '../../models/diagnosis';
 import { DiagnosisService } from '../../services/diagnosis.service';
+import { DiagnosisChatComponent } from '../diagnosis-chat/diagnosis-chat.component';
 import { DiagnosisResultComponent } from '../diagnosis-result/diagnosis-result.component';
 import { ModalComponent } from '../modal/modal.component';
 import { SeverityBadgeComponent } from '../severity-badge/severity-badge.component';
@@ -10,7 +11,7 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
 /** Historial del vehículo, con detalle y borrado. La explicación se pide al abrirla, sin crear otra entrada. */
 @Component({
   selector: 'app-diagnosis-history',
-  imports: [DiagnosisResultComponent, ModalComponent, SeverityBadgeComponent],
+  imports: [DiagnosisChatComponent, DiagnosisResultComponent, ModalComponent, SeverityBadgeComponent],
   template: `
     <section class="panel" aria-labelledby="history-title">
       <h2 id="history-title">Historial de diagnósticos</h2>
@@ -71,8 +72,8 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
           @if (item.descripcion) { <div><dt>Tu descripción</dt><dd>{{ item.descripcion }}</dd></div> }
         </dl>
         @if (detail(); as explanation) {
-          <p class="source-note">Explicación según la información actual de la app.</p>
           <app-diagnosis-result [result]="explanation" />
+          <app-diagnosis-chat [plate]="plate()" [diagnosisId]="explanation.id" />
         } @else {
           <p class="source-note">{{ disclaimer }}</p>
         }
@@ -117,7 +118,7 @@ export class DiagnosisHistoryComponent {
   readonly page = signal(1);
   readonly totalPages = signal(0);
   readonly selected = signal<DiagnosisHistoryItem | null>(null);
-  readonly detail = signal<DiagnosisDetail | null>(null);
+  readonly detail = signal<Diagnosed | null>(null);
   readonly detailLoading = signal(false);
   readonly detailError = signal('');
   readonly confirmingDelete = signal(false);
@@ -135,7 +136,9 @@ export class DiagnosisHistoryComponent {
   }
 
   name(item: DiagnosisHistoryItem): string {
-    return item.nombre ?? item.telltaleId;
+    const name = item.nombre ?? item.telltaleId ?? 'Diagnóstico';
+    const others = (item.totalTestigos ?? 1) - 1;
+    return others > 0 ? `${name} y ${others} más` : name;
   }
 
   origin(item: DiagnosisHistoryItem): string {

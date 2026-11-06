@@ -19,7 +19,11 @@ describe('VehicleDetailPage', () => {
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // El chat aparece junto al resultado y pide la conversación guardada.
+    http.match((request) => request.url.endsWith('/messages')).forEach((request) => request.flush({ messages: [], restantes: 20 }));
+    http.verify();
+  });
 
   const render = async () => {
     const fixture = TestBed.createComponent(VehicleDetailPage);
@@ -56,7 +60,7 @@ describe('VehicleDetailPage', () => {
     const area = panel.querySelector<HTMLTextAreaElement>('#dash-description')!;
     area.value = 'luz naranja';
     area.dispatchEvent(new Event('input'));
-    panel.querySelector<HTMLInputElement>('.check-field input')!.click();
+    panel.querySelector<HTMLInputElement>('.ack-field input')!.click();
     await fixture.whenStable();
     [...panel.querySelectorAll('button')].find((item) => item.textContent?.includes('Diagnosticar'))!.click();
     http.expectOne((request) => request.url === `${GARAGE}/ABC-123/diagnoses` && request.method === 'POST').flush(diagnosed(), { status: 201, statusText: 'Created' });

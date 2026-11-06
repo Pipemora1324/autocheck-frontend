@@ -2,7 +2,7 @@ import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
-import { diagnosed, diagnosedRed, needsBetterInput, telltales } from '../../../testing/diagnosis-fixtures';
+import { chatHistory, diagnosed, diagnosedRed, needsBetterInput, notRecognized, telltales } from '../../../testing/diagnosis-fixtures';
 import { publicConfig } from '../../../testing/garage-fixtures';
 import { DiagnosePanelComponent, diagnosisErrorView } from './diagnose-panel.component';
 
@@ -23,6 +23,13 @@ describe('diagnosisErrorView', () => {
     const view = diagnosisErrorView(httpError(503, { code: 'DIAGNOSIS_PROVIDER_BUSY', message: 'x', retryAfterSeconds: 60 }));
     expect(view.message).toContain('cupo gratuito');
     expect(view.message).toContain('elige el testigo de la lista');
+    expect(view.suggestList).toBe(true);
+  });
+
+  it('una falla del servicio no culpa a la foto ni pide repetirla', () => {
+    const view = diagnosisErrorView(httpError(503, { code: 'DIAGNOSIS_UNAVAILABLE', status: 'provider_error', message: 'x' }));
+    expect(view.message).toContain('no por tu foto');
+    expect(view.message).not.toContain('otra foto');
     expect(view.suggestList).toBe(true);
   });
 
@@ -78,9 +85,13 @@ describe('DiagnosePanelComponent', () => {
   });
 
   afterEach(() => {
+    flushChat();
     http.verify();
     vi.unstubAllGlobals();
   });
+
+  // El chat aparece junto a cada resultado y pide la conversación guardada.
+  const flushChat = () => http.match((request) => request.url.endsWith('/messages')).forEach((request) => request.flush(chatHistory()));
 
   const render = async (config = publicConfig({ diagnosis: { enabled: true, provider: 'gemini', manualSelection: true, notice: NOTICE } })) => {
     const fixture = TestBed.createComponent(DiagnosePanelComponent);
@@ -97,7 +108,7 @@ describe('DiagnosePanelComponent', () => {
     input.dispatchEvent(new Event('change'));
   };
   const button = (element: HTMLElement, text: string) => [...element.querySelectorAll('button')].find((item) => item.textContent?.includes(text));
-  const acknowledge = (element: HTMLElement) => element.querySelector<HTMLInputElement>('.check-field input')!.click();
+  const acknowledge = (element: HTMLElement) => element.querySelector<HTMLInputElement>('.ack-field input')!.click();
   const describeTelltale = (element: HTMLElement, text: string) => {
     const area = element.querySelector<HTMLTextAreaElement>('#dash-description')!;
     area.value = text;
@@ -161,7 +172,7 @@ describe('DiagnosePanelComponent', () => {
     await fixture.whenStable();
     button(element, 'Diagnosticar')!.click();
     await fixture.whenStable();
-    expect(element.textContent).toContain('Analizando el testigo');
+    expect(element.textContent).toContain('Analizando los testigos');
 
     const request = http.expectOne(DIAGNOSES);
     const form = request.request.body as FormData;
@@ -215,6 +226,58 @@ describe('DiagnosePanelComponent', () => {
     expect(element.querySelector('.better-input')).toBeNull();
     expect(element.querySelector('.photo-preview')).toBeNull();
     expect(element.querySelector('#dash-camera')).toBeTruthy();
+  });
+
+  it('la pista cambia según el motivo, y not_recognized muestra lo que dijo el servidor', async () => {
+    const { fixture, element } = await render();
+    describeTelltale(element, 'una luz');
+    acknowledge(element);
+    await fixture.whenStable();
+    button(element, 'Diagnosticar')!.click();
+    http.expectOne(DIAGNOSES).flush(needsBetterInput({ reason: 'low_confidence' }));
+    await fixture.whenStable();
+    expect(element.querySelector('.better-input')?.textContent).toContain('acércate más al testigo');
+
+    button(element, 'Diagnosticar')!.click();
+    http.expectOne(DIAGNOSES).flush(notRecognized());
+    await fixture.whenStable();
+    const box = element.querySelector('.better-input')!;
+    expect(box.textContent).toContain('no muestra un tablero');
+    expect(box.textContent).toContain('detente en un lugar seguro');
+    expect(element.querySelector('app-diagnosis-result')).toBeNull();
+  });
+
+  it('solo envía parpadea si el usuario lo marca, y se reinicia al terminar', async () => {
+    const { fixture, element } = await render();
+    describeTelltale(element, 'una luz');
+    acknowledge(element);
+    await fixture.whenStable();
+    button(element, 'Diagnosticar')!.click();
+    const unchecked = http.expectOne(DIAGNOSES);
+    expect((unchecked.request.body as FormData).has('parpadea')).toBe(false);
+    unchecked.flush(needsBetterInput());
+    await fixture.whenStable();
+
+    element.querySelector<HTMLInputElement>('.blink-field input')!.click();
+    await fixture.whenStable();
+    button(element, 'Diagnosticar')!.click();
+    const checked = http.expectOne(DIAGNOSES);
+    expect((checked.request.body as FormData).get('parpadea')).toBe('true');
+    checked.flush(diagnosed(), { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+    expect(fixture.componentInstance.blinking()).toBe(false);
+  });
+
+  it('muestra el chat debajo del resultado', async () => {
+    const { fixture, element } = await render();
+    describeTelltale(element, 'una luz');
+    acknowledge(element);
+    await fixture.whenStable();
+    button(element, 'Diagnosticar')!.click();
+    http.expectOne(DIAGNOSES).flush(diagnosed(), { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+    const chat = element.querySelector('app-diagnosis-chat')!;
+    expect(element.querySelector('app-diagnosis-result')!.compareDocumentPosition(chat) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('desde needs_better_input lleva a la lista', async () => {

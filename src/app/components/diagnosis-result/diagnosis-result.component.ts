@@ -1,68 +1,89 @@
 import { Component, computed, input } from '@angular/core';
-import { DIAGNOSIS_DISCLAIMER, type Diagnosed } from '../../models/diagnosis';
+import { DIAGNOSIS_DISCLAIMER, type Diagnosed, type DiagnosedTelltale } from '../../models/diagnosis';
 import { SeverityBadgeComponent } from '../severity-badge/severity-badge.component';
 
-/** Resultado del diagnóstico. Todo el texto viene del servidor; aquí no se redacta ni se interpreta nada. */
+/** Por debajo de esto se avisa que el símbolo no es seguro. */
+const DOUBTFUL_CONFIDENCE = 0.6;
+
+/** Resultado del diagnóstico: una tarjeta por testigo. Todo el texto y la urgencia vienen del servidor. */
 @Component({
   selector: 'app-diagnosis-result',
   imports: [SeverityBadgeComponent],
   template: `
     @let r = result();
-    <article class="diagnosis-card {{ r.severidad }}" aria-labelledby="diagnosis-title">
-      @if (mustStop()) {
-        <div class="stop-banner" role="alert">
-          <strong>Detente ahora</strong>
-          <span>{{ r.urgencia.accion }}</span>
-        </div>
-      }
+    @if (r.debeDetenerse) {
+      <div class="stop-banner" role="alert">
+        <strong>Detente ahora</strong>
+        <span>{{ r.accionGeneral }}</span>
+      </div>
+    }
 
-      <header class="diagnosis-header">
-        <div>
-          <h3 id="diagnosis-title">{{ r.telltale.nombre }}</h3>
-          <p class="source-note">{{ r.telltale.descripcionSimbolo }}</p>
-        </div>
-        <app-severity-badge [severity]="r.severidad" [stop]="r.urgencia.debeDetenerse" />
-      </header>
-
-      @if (!mustStop()) { <p class="diagnosis-action">{{ r.urgencia.accion }}</p> }
+    <div class="diagnosis-summary {{ r.urgenciaGeneral }}">
+      <div class="diagnosis-summary-head">
+        <strong>Urgencia general</strong>
+        <app-severity-badge [severity]="r.urgenciaGeneral" [stop]="r.debeDetenerse" />
+      </div>
+      @if (!r.debeDetenerse) { <p class="diagnosis-action">{{ r.accionGeneral }}</p> }
+      @if (r.mensajeGeneral) { <p>{{ r.mensajeGeneral }}</p> }
       <p class="source-note">{{ origin() }}</p>
+      @if (r.mejorFoto) { <p class="diagnosis-warning">{{ r.mejorFoto }}</p> }
+    </div>
 
-      @if (r.avisoCompatibilidad) { <p class="diagnosis-warning">{{ r.avisoCompatibilidad }}</p> }
+    @for (t of r.testigos; track $index) {
+      <article class="diagnosis-card {{ t.urgencia }}">
+        <header class="diagnosis-header">
+          <div>
+            <h3>{{ t.nombre }}</h3>
+            @if (t.descripcionSimbolo) { <p class="source-note">{{ t.descripcionSimbolo }}</p> }
+          </div>
+          <app-severity-badge [severity]="t.urgencia" [stop]="t.debeDetenerse" />
+        </header>
 
-      <h4>Qué significa</h4>
-      <p>{{ r.significado }}</p>
+        <p class="diagnosis-action">{{ t.accion }}</p>
+        @if (t.parpadeando) { <p class="diagnosis-warning">Este testigo está parpadeando.</p> }
+        @if (doubtful(t)) { <p class="diagnosis-warning">No estamos seguros de este símbolo. Compáralo con el manual o toma una foto más cercana de este testigo.</p> }
 
-      <h4>Causas probables</h4>
-      <ul>@for (item of r.causasProbables; track item) { <li>{{ item }}</li> }</ul>
+        @if (t.significado) {
+          <h4>Qué significa</h4>
+          <p>{{ t.significado }}</p>
+        }
+        @if (t.porQuePasa.length) {
+          <h4>Por qué pasa</h4>
+          <ul>@for (item of t.porQuePasa; track item) { <li>{{ item }}</li> }</ul>
+        }
+        @if (t.puedesRevisar.length) {
+          <h4>Qué puedes revisar tú</h4>
+          <ul>@for (item of t.puedesRevisar; track item) { <li>{{ item }}</li> }</ul>
+        }
+        @if (t.noHagas.length) {
+          <h4>Qué NO hacer</h4>
+          <ul class="dont-list">@for (item of t.noHagas; track item) { <li>{{ item }}</li> }</ul>
+        }
+        @if (t.cuandoIrAlMecanico) {
+          <h4>Cuándo ir al mecánico</h4>
+          <p>{{ t.cuandoIrAlMecanico }}</p>
+        }
+        @if (t.notaDelVehiculo) {
+          <h4>Sobre tu vehículo</h4>
+          <p>{{ t.notaDelVehiculo }}</p>
+        }
+      </article>
+    }
 
-      <h4>Qué puedes revisar tú</h4>
-      <ul>@for (item of r.puedesRevisar; track item) { <li>{{ item }}</li> }</ul>
-
-      <h4>Qué NO hacer</h4>
-      <ul class="dont-list">@for (item of r.noHagas; track item) { <li>{{ item }}</li> }</ul>
-
-      <h4>Cuándo ir al mecánico</h4>
-      <p>{{ r.cuandoIrAlMecanico }}</p>
-
-      @if (r.notaEspecificaDelVehiculo) {
-        <h4>Sobre tu vehículo</h4>
-        <p>{{ r.notaEspecificaDelVehiculo }}</p>
-      }
-
-      <p class="diagnosis-disclaimer">{{ disclaimer }}</p>
-    </article>
+    <p class="diagnosis-disclaimer">{{ disclaimer }}</p>
   `
 })
 export class DiagnosisResultComponent {
   readonly result = input.required<Diagnosed>();
   protected readonly disclaimer = DIAGNOSIS_DISCLAIMER;
 
-  /** Lo decide el servidor: un rojo como el airbag no ordena detenerse. */
-  readonly mustStop = computed(() => this.result().urgencia.debeDetenerse);
-
   readonly origin = computed(() => {
-    const { origen, confianza } = this.result();
+    const { origen, testigos } = this.result();
     if (origen === 'manual') return 'Elegiste este testigo de la lista.';
-    return confianza === null ? 'Identificado con inteligencia artificial.' : `Identificado con inteligencia artificial (confianza ${Math.round(confianza * 100)} %).`;
+    return testigos.length === 1 ? 'Identificado con inteligencia artificial.' : `La inteligencia artificial identificó ${testigos.length} testigos.`;
   });
+
+  protected doubtful(telltale: DiagnosedTelltale): boolean {
+    return this.result().origen === 'ia' && telltale.confianza < DOUBTFUL_CONFIDENCE;
+  }
 }
