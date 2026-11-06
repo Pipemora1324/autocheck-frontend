@@ -18,7 +18,7 @@ describe('RegisterPage', () => {
     vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   const render = async () => {
     const fixture = TestBed.createComponent(RegisterPage);

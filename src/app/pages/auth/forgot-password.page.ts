@@ -52,7 +52,7 @@ export class ForgotPasswordPage {
     this.submitting.set(true);
     this.auth.forgotPassword(this.form.getRawValue().email.trim()).subscribe({
       // El backend responde lo mismo exista o no el correo; se muestra tal cual.
-      next: ({ message }) => this.sentMessage.set(message),
+      next: ({ message }) => { this.sentMessage.set(message); },
       error: (error: unknown) => {
         this.submitting.set(false);
         this.serverError.set(apiErrorMessage(error, 'No se pudo enviar la solicitud. Inténtalo de nuevo.'));

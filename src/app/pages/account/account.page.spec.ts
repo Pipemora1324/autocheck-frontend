@@ -23,7 +23,7 @@ describe('AccountPage', () => {
     http.expectOne(`${API}/auth/login`).flush(sessionFor('access-1'));
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   const openAndSubmit = async (password: string) => {
     const fixture = TestBed.createComponent(AccountPage);

@@ -30,6 +30,10 @@ const text = (value: string) => value.trim() || null;
 const integer = (value: string) => (value.trim() === '' ? null : Number(value));
 
 /** Formulario de alta y edición. Los campos de baja confianza (lectura de la tarjeta) se resaltan. */
+interface LengthError {
+  requiredLength: number;
+}
+
 @Component({
   selector: 'app-vehicle-form',
   imports: [ReactiveFormsModule, NgTemplateOutlet],
@@ -147,13 +151,13 @@ export class VehicleFormComponent {
   private readonly lowFields = computed(() => {
     const confidence = this.confidence();
     if (!confidence) return new Set<string>();
-    return new Set(Object.entries(confidence).filter(([, value]) => (value ?? 0) < LOW_CONFIDENCE).map(([field]) => field));
+    return new Set(Object.entries(confidence).filter(([, value]) => value < LOW_CONFIDENCE).map(([field]) => field));
   });
 
   constructor() {
     effect(() => {
       const initial = this.initial();
-      const values = Object.fromEntries(Object.entries(initial).map(([key, value]) => [key, value === null || value === undefined ? '' : String(value)]));
+      const values = Object.fromEntries(Object.entries(initial).map(([key, value]) => [key, String(value ?? '')]));
       this.form.reset({ ...this.form.getRawValue(), ...values });
       if (this.mode() === 'edit') this.form.controls.plate.disable();
     });
@@ -168,7 +172,7 @@ export class VehicleFormComponent {
   }
 
   error(field: VehicleFormField): string | null {
-    const server = this.serverFieldErrors()[field];
+    const server = this.serverFieldErrors()[field] as string | undefined;
     const control: AbstractControl = this.form.controls[field];
     if (control.valid || !(control.touched || this.submitted())) return server ?? null;
     const errors = control.errors ?? {};
@@ -178,7 +182,7 @@ export class VehicleFormComponent {
     if (field === 'cylinderCc') return 'El cilindraje va en cc, sin decimales (máximo 20000).';
     if (field === 'mileageKm') return 'El kilometraje va en km, solo números (máximo 9.999.999).';
     if (field === 'chassis') return 'Solo letras, números y guiones (5 a 30 caracteres).';
-    if (errors['maxlength']) return `No puede superar ${errors['maxlength'].requiredLength} caracteres.`;
+    if (errors['maxlength']) return `No puede superar ${(errors['maxlength'] as LengthError).requiredLength} caracteres.`;
     return 'Revisa este campo.';
   }
 

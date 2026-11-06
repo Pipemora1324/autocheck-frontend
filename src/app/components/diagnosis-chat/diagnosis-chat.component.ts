@@ -91,14 +91,14 @@ export class DiagnosisChatComponent {
   readonly error = signal('');
 
   /** Si la configuración no cargó, se ofrece igual: el backend responde 503 y se explica. */
-  readonly aiEnabled = computed(() => this.publicConfig.config()?.diagnosis?.enabled ?? true);
+  readonly aiEnabled = computed(() => this.publicConfig.config()?.diagnosis.enabled ?? true);
   readonly canSend = computed(() => !this.sending() && this.draft().trim() !== '');
 
   constructor() {
     effect(() => {
       this.plate();
       this.diagnosisId();
-      untracked(() => this.load());
+      untracked(() => { this.load(); });
     });
   }
 

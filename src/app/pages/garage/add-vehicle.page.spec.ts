@@ -47,7 +47,7 @@ describe('AddVehiclePage', () => {
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   const render = async (config = publicConfig()) => {
     const fixture = TestBed.createComponent(AddVehiclePage);
@@ -125,7 +125,7 @@ describe('AddVehiclePage', () => {
 
   it('el alta manual muestra el error de placa repetida', async () => {
     const { fixture, element } = await render();
-    element.querySelectorAll<HTMLButtonElement>('.choice-card')[1]!.click();
+    element.querySelectorAll<HTMLButtonElement>('.choice-card')[1].click();
     await fixture.whenStable();
 
     const type = (selector: string, value: string) => {

@@ -46,7 +46,7 @@ export class AuthService {
   verifyEmail(token: string): Observable<MessageResponse> {
     return this.http
       .post<MessageResponse>(`${this.apiUrl}/auth/verify-email`, { token }, { context: skipAuthRefresh() })
-      .pipe(tap(() => this.setEmailVerified(true)));
+      .pipe(tap(() => { this.setEmailVerified(true); }));
   }
 
   /** Responde siempre 202 con el mismo mensaje, exista o no el correo. */
@@ -57,8 +57,8 @@ export class AuthService {
   /** DELETE /auth/me. Una contraseña errada responde 403 INVALID_PASSWORD (no 401), así que la sesión sigue viva. */
   deleteAccount(password: string): Observable<void> {
     return this.http
-      .delete<void>(`${this.apiUrl}/auth/me`, { body: { password } })
-      .pipe(tap(() => this.clearSession()));
+      .delete<undefined>(`${this.apiUrl}/auth/me`, { body: { password } })
+      .pipe(tap(() => { this.clearSession(); }));
   }
 
   /** Lo usa el interceptor cuando el backend responde 403 EMAIL_NOT_VERIFIED, y la pantalla /verify-email al confirmar. */
@@ -100,11 +100,11 @@ export class AuthService {
 
   logout(): Observable<void> {
     return this.http
-      .post<void>(`${this.apiUrl}/auth/logout`, null, { context: skipAuthRefresh(), withCredentials: true })
+      .post<undefined>(`${this.apiUrl}/auth/logout`, null, { context: skipAuthRefresh(), withCredentials: true })
       .pipe(
         catchError(() => of(undefined)),
         map(() => undefined),
-        finalize(() => this.clearSession())
+        finalize(() => { this.clearSession(); })
       );
   }
 

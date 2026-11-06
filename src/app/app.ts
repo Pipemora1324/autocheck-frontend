@@ -30,7 +30,9 @@ export class App {
     const email = this.auth.user()?.email ?? '';
     const name = email.split('@')[0] ?? '';
     const parts = name.split(/[._-]+/).filter(Boolean);
-    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? parts[0]?.[1] ?? '')).toUpperCase() || '?';
+    const first = parts.at(0) ?? '';
+    const second = parts.at(1) ?? '';
+    return (first.charAt(0) + (second.charAt(0) || first.charAt(1))).toUpperCase() || '?';
   });
 
   constructor() {

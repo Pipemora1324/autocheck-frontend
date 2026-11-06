@@ -21,7 +21,7 @@ describe('VehicleDetailPage', () => {
 
   afterEach(() => {
     // El chat aparece junto al resultado y pide la conversación guardada.
-    http.match((request) => request.url.endsWith('/messages')).forEach((request) => request.flush({ messages: [], restantes: 20 }));
+    http.match((request) => request.url.endsWith('/messages')).forEach((request) => { request.flush({ messages: [], restantes: 20 }); });
     http.verify();
   });
 

@@ -32,7 +32,7 @@ describe('authInterceptor', () => {
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   it('agrega Authorization: Bearer y withCredentials a las peticiones de la API', () => {
     signIn('access-1');
@@ -81,7 +81,7 @@ describe('authInterceptor', () => {
 
     const refreshes = http.match(`${API}/auth/refresh`);
     expect(refreshes.length).toBe(1);
-    refreshes[0]!.flush(sessionFor('access-nuevo'));
+    refreshes[0].flush(sessionFor('access-nuevo'));
 
     for (const url of [`${API}/garage`, `${API}/garage/ABC-123`, `${API}/garage/scan-card`]) {
       const retry = http.expectOne(url);

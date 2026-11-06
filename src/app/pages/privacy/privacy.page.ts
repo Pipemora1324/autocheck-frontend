@@ -83,10 +83,10 @@ import { PublicConfigService } from '../../core/http/public-config.service';
 })
 export class PrivacyPage {
   private readonly publicConfig = inject(PublicConfigService);
-  readonly version = computed(() => this.publicConfig.config()?.privacyPolicy.version ?? '2026-11-04.1');
+  readonly version = computed(() => this.publicConfig.config()?.privacyPolicy.version ?? '2026-11-05.1');
   readonly consent = computed(() => this.publicConfig.config()?.privacyPolicy.registrationConsent ?? '');
   readonly scanNotice = computed(() => this.publicConfig.config()?.cardScan.notice ?? '');
-  readonly diagnosisNotice = computed(() => this.publicConfig.config()?.diagnosis?.notice ?? '');
+  readonly diagnosisNotice = computed(() => this.publicConfig.config()?.diagnosis.notice ?? '');
 
   constructor() {
     this.publicConfig.load().subscribe();

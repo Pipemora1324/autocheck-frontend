@@ -29,10 +29,10 @@ describe('DiagnosisResultComponent', () => {
     const element = await render(diagnosedRed({ testigos: [redTelltale(), telltale(), telltale({ nombre: 'Cinturón', urgencia: 'informativo', accion: 'Es un aviso.' })] }));
     const cards = element.querySelectorAll('.diagnosis-card');
     expect(cards).toHaveLength(3);
-    expect(cards[0]!.querySelector('h3')?.textContent).toBe('Presión de aceite');
-    expect(cards[0]!.querySelector('.severity-badge')?.textContent).toContain('Detente');
-    expect(cards[1]!.querySelector('.severity-badge')?.textContent).toContain('Revísalo pronto');
-    expect(cards[2]!.querySelector('.severity-badge')?.textContent).toContain('No es una falla');
+    expect(cards[0].querySelector('h3')?.textContent).toBe('Presión de aceite');
+    expect(cards[0].querySelector('.severity-badge')?.textContent).toContain('Detente');
+    expect(cards[1].querySelector('.severity-badge')?.textContent).toContain('Revísalo pronto');
+    expect(cards[2].querySelector('.severity-badge')?.textContent).toContain('No es una falla');
     expect(element.querySelector('.diagnosis-summary')?.textContent).toContain('Urgencia general');
     expect(element.querySelector('.diagnosis-summary .severity-badge')?.classList).toContain('rojo');
     expect(element.querySelector('.diagnosis-summary')?.textContent).toContain('identificó 3 testigos');

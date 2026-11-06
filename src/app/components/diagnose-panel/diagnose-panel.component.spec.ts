@@ -91,7 +91,7 @@ describe('DiagnosePanelComponent', () => {
   });
 
   // El chat aparece junto a cada resultado y pide la conversación guardada.
-  const flushChat = () => http.match((request) => request.url.endsWith('/messages')).forEach((request) => request.flush(chatHistory()));
+  const flushChat = () => { http.match((request) => request.url.endsWith('/messages')).forEach((request) => { request.flush(chatHistory()); }); };
 
   const render = async (config = publicConfig({ diagnosis: { enabled: true, provider: 'gemini', manualSelection: true, notice: NOTICE } })) => {
     const fixture = TestBed.createComponent(DiagnosePanelComponent);
@@ -108,7 +108,7 @@ describe('DiagnosePanelComponent', () => {
     input.dispatchEvent(new Event('change'));
   };
   const button = (element: HTMLElement, text: string) => [...element.querySelectorAll('button')].find((item) => item.textContent?.includes(text));
-  const acknowledge = (element: HTMLElement) => element.querySelector<HTMLInputElement>('.ack-field input')!.click();
+  const acknowledge = (element: HTMLElement) => { element.querySelector<HTMLInputElement>('.ack-field input')!.click(); };
   const describeTelltale = (element: HTMLElement, text: string) => {
     const area = element.querySelector<HTMLTextAreaElement>('#dash-description')!;
     area.value = text;

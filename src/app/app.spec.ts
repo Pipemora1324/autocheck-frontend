@@ -31,7 +31,7 @@ describe('App', () => {
 
   it('muestra "API conectada" solo si /health responde', async () => {
     const fixture = await render();
-    const status = () => (fixture.nativeElement as HTMLElement).querySelector('.system-status')!.textContent!.trim();
+    const status = () => (fixture.nativeElement as HTMLElement).querySelector('.system-status')!.textContent.trim();
     expect(status()).toBe('Comprobando API…');
 
     http.expectOne(`${API}/health`).flush({ status: 'ok', service: 'AutoCheck-CO' });

@@ -60,7 +60,7 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
     </section>
 
     @if (selected(); as item) {
-      <app-modal heading="Detalle del diagnóstico" (close)="closeDetail()">
+      <app-modal heading="Detalle del diagnóstico" (closed)="closeDetail()">
         @if (item.severidad === 'rojo' && stops(item) && !detail()) {
           <div class="stop-banner" role="alert"><strong>Si sigue encendido: detente en un lugar seguro y llama a un taller o a una grúa.</strong></div>
         }
@@ -131,13 +131,13 @@ export class DiagnosisHistoryComponent {
     effect(() => {
       this.plate();
       this.refreshKey();
-      untracked(() => this.load(1));
+      untracked(() => { this.load(1); });
     });
   }
 
   name(item: DiagnosisHistoryItem): string {
     const name = item.nombre ?? item.telltaleId ?? 'Diagnóstico';
-    const others = (item.totalTestigos ?? 1) - 1;
+    const others = item.totalTestigos - 1;
     return others > 0 ? `${name} y ${others} más` : name;
   }
 

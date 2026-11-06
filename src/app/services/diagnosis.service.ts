@@ -57,6 +57,6 @@ export class DiagnosisService {
   }
 
   remove(plate: string, id: string): Observable<void> {
-    return this.http.delete<void>(`${this.url(plate)}/${encodeURIComponent(id)}`);
+    return this.http.delete<undefined>(`${this.url(plate)}/${encodeURIComponent(id)}`);
   }
 }

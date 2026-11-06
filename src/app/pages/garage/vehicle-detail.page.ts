@@ -102,7 +102,7 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
           }
 
           @if (confirmingDelete()) {
-            <app-modal heading="¿Eliminar este vehículo?" (close)="confirmingDelete.set(false)">
+            <app-modal heading="¿Eliminar este vehículo?" (closed)="confirmingDelete.set(false)">
               <p>Se borrará {{ v.plate }} ({{ v.brand }} {{ v.model }}) de tu garaje, junto con su historial de diagnósticos. Esta acción no se puede deshacer.</p>
               @if (deleteError()) { <p class="form-error" role="alert">{{ deleteError() }}</p> }
               <div class="form-actions">
@@ -139,15 +139,21 @@ export class VehicleDetailPage {
   readonly deleting = signal(false);
   readonly deleteError = signal('');
 
-  readonly sourceLabel = computed(() => (this.vehicle() ? SOURCE_LABEL[this.vehicle()!.source] : ''));
+  readonly sourceLabel = computed(() => {
+    const vehicle = this.vehicle();
+    return vehicle ? SOURCE_LABEL[vehicle.source] : '';
+  });
   readonly mileage = computed(() => {
     const km = this.vehicle()?.mileageKm;
     return km === null || km === undefined ? '—' : `${km.toLocaleString('es-CO')} km`;
   });
-  readonly updatedOn = computed(() => (this.vehicle() ? formatDate(this.vehicle()!.updatedAt) : ''));
+  readonly updatedOn = computed(() => {
+    const vehicle = this.vehicle();
+    return vehicle ? formatDate(vehicle.updatedAt) : '';
+  });
 
   constructor() {
-    toObservable(this.placa).subscribe(() => this.load());
+    toObservable(this.placa).subscribe(() => { this.load(); });
   }
 
   load(): void {

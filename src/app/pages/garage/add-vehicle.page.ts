@@ -174,7 +174,7 @@ export class AddVehiclePage {
         const { initial, confidence } = prefillFromScan(scan);
         this.initial.set(initial);
         this.confidence.set(confidence);
-        this.warnings.set(scan.warnings ?? []);
+        this.warnings.set(scan.warnings);
         this.resetSaveState();
         this.step.set('review');
       },

@@ -20,7 +20,7 @@ describe('AuthService', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   it('empieza sin sesión conocida', () => {
     expect(auth.status()).toBe('unknown');
@@ -117,8 +117,8 @@ describe('AuthService', () => {
     const second = firstValueFrom(auth.refresh());
     const requests = http.match(`${API}/auth/refresh`);
     expect(requests.length).toBe(1);
-    expect(requests[0]!.request.withCredentials).toBe(true);
-    requests[0]!.flush(sessionFor('access-nuevo'));
+    expect(requests[0].request.withCredentials).toBe(true);
+    requests[0].flush(sessionFor('access-nuevo'));
 
     expect(await first).toBe('access-nuevo');
     expect(await second).toBe('access-nuevo');

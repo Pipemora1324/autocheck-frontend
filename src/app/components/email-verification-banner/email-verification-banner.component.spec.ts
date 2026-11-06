@@ -18,7 +18,7 @@ describe('EmailVerificationBannerComponent', () => {
     auth = TestBed.inject(AuthService);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   const signIn = (emailVerified: boolean) => {
     auth.login('ana@example.com', 'x').subscribe();

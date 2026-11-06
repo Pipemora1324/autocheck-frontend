@@ -27,7 +27,7 @@ describe('DiagnosisService', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   it('telltales pide el catálogo una sola vez', async () => {
     const first = firstValueFrom(service.telltales());

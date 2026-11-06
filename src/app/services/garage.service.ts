@@ -36,7 +36,7 @@ export class GarageService {
   }
 
   remove(plate: string): Observable<void> {
-    return this.http.delete<void>(this.plateUrl(plate));
+    return this.http.delete<undefined>(this.plateUrl(plate));
   }
 
   /** multipart/form-data con un único archivo en el campo "image". */

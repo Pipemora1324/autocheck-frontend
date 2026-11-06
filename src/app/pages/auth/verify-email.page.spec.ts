@@ -28,7 +28,7 @@ describe('VerifyEmailPage', () => {
     return fixture;
   };
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   it('lee el token, lo borra de la URL y confirma el correo', async () => {
     const enlace = 'token-123';

@@ -38,7 +38,7 @@ import { PASSWORD_MAX } from '../auth/auth-forms';
     </section>
 
     @if (confirming()) {
-      <app-modal heading="¿Eliminar tu cuenta?" (close)="confirming.set(false)">
+      <app-modal heading="¿Eliminar tu cuenta?" (closed)="confirming.set(false)">
         <p>Escribe tu contraseña para confirmar. Se borrarán tu cuenta, todos tus vehículos y sus diagnósticos.</p>
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="form-field">

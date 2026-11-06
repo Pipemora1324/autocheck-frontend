@@ -196,16 +196,16 @@ export class DiagnosePanelComponent {
   });
 
   /** Si la configuración no cargó, se ofrece la IA igual: el backend responde 503 y se ofrece la lista. */
-  readonly aiEnabled = computed(() => this.publicConfig.config()?.diagnosis?.enabled ?? true);
-  readonly notice = computed(() => this.publicConfig.config()?.diagnosis?.notice ?? DEFAULT_NOTICE);
+  readonly aiEnabled = computed(() => this.publicConfig.config()?.diagnosis.enabled ?? true);
+  readonly notice = computed(() => this.publicConfig.config()?.diagnosis.notice ?? DEFAULT_NOTICE);
   readonly hasInput = computed(() => this.photo() !== null || this.description().trim() !== '');
   readonly canSend = computed(() => this.hasInput() && this.acknowledged());
 
   constructor() {
     this.publicConfig.load().subscribe((config) => {
-      if (config && !config.diagnosis?.enabled) this.mode.set('list');
+      if (config && !config.diagnosis.enabled) this.mode.set('list');
     });
-    inject(DestroyRef).onDestroy(() => this.revokePreview());
+    inject(DestroyRef).onDestroy(() => { this.revokePreview(); });
   }
 
   setMode(mode: Mode): void {

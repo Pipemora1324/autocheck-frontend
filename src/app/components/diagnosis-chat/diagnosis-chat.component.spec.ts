@@ -26,7 +26,7 @@ describe('DiagnosisChatComponent', () => {
     TestBed.configureTestingModule({ imports: [DiagnosisChatComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
     http = TestBed.inject(HttpTestingController);
   });
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   const render = async (history = chatHistory()) => {
     const fixture = TestBed.createComponent(DiagnosisChatComponent);
@@ -49,10 +49,10 @@ describe('DiagnosisChatComponent', () => {
     const { element } = await render(chatHistory([chatMessage('user', '<img src=x>'), chatMessage('assistant', 'Respuesta guardada.')], 19));
     const bubbles = element.querySelectorAll('.chat-bubble');
     expect(bubbles).toHaveLength(2);
-    expect(bubbles[0]!.classList).toContain('user');
-    expect(bubbles[0]!.textContent).toContain('<img src=x>');
+    expect(bubbles[0].classList).toContain('user');
+    expect(bubbles[0].textContent).toContain('<img src=x>');
     expect(element.querySelector('.chat-bubble img')).toBeNull();
-    expect(bubbles[1]!.classList).toContain('assistant');
+    expect(bubbles[1].classList).toContain('assistant');
   });
 
   it('envía el mensaje, muestra "escribiendo" y agrega la respuesta', async () => {

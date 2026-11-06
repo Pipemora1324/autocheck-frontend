@@ -17,7 +17,7 @@ describe('groupTelltales', () => {
   it('el airbag queda en su propio grupo rojo, fuera de los que ordenan detenerse', () => {
     const airbag = { id: 'airbag', nombre: 'Airbag', alias: ['bolsa de aire'], severidad: 'rojo' as const, debeDetenerse: false };
     const groups = groupTelltales([...telltales(), airbag], '');
-    expect(groups.map((group) => [group.severity, group.stop, group.items[0]!.id])).toEqual([
+    expect(groups.map((group) => [group.severity, group.stop, group.items[0].id])).toEqual([
       ['rojo', true, 'presion_aceite'],
       ['rojo', false, 'airbag'],
       ['amarillo', false, 'check_engine'],
@@ -53,7 +53,7 @@ describe('TelltalePickerComponent', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); });
 
   const render = () => {
     const fixture = TestBed.createComponent(TelltalePickerComponent);
@@ -69,10 +69,10 @@ describe('TelltalePickerComponent', () => {
 
     const groups = element.querySelectorAll('.telltale-group');
     expect(groups).toHaveLength(3);
-    expect(groups[0]!.textContent).toContain('Detente');
-    expect(groups[0]!.textContent).toContain('Presión de aceite');
-    expect(groups[1]!.textContent).toContain('Revísalo pronto');
-    expect(groups[2]!.textContent).toContain('No es una falla');
+    expect(groups[0].textContent).toContain('Detente');
+    expect(groups[0].textContent).toContain('Presión de aceite');
+    expect(groups[1].textContent).toContain('Revísalo pronto');
+    expect(groups[2].textContent).toContain('No es una falla');
   });
 
   it('filtra al escribir, avisa si no hay resultados y emite el testigo elegido', async () => {
@@ -93,7 +93,7 @@ describe('TelltalePickerComponent', () => {
     await fixture.whenStable();
     const options = element.querySelectorAll<HTMLButtonElement>('.telltale-option');
     expect(options).toHaveLength(1);
-    options[0]!.click();
+    options[0].click();
     expect(picked.map((item) => item.id)).toEqual(['tpms']);
   });
 
