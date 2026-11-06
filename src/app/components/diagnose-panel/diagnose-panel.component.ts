@@ -1,8 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
 import { PublicConfigService } from '../../core/http/public-config.service';
 import { IMAGE_ACCEPT, imageFileError } from '../../core/image-file';
+import { RealtimeService, type DiagnosisStage } from '../../core/realtime/realtime.service';
 import type {
   BetterInputReason,
   Diagnosed,
@@ -20,6 +22,13 @@ export const MAX_DESCRIPTION_LENGTH = 500;
 
 const DEFAULT_NOTICE =
   'La foto del tablero y tu descripción se envían a un proveedor externo de inteligencia artificial para identificar los testigos. La foto no se guarda en nuestros servidores.';
+
+/** Progreso en vivo, si hay socket. Sin él, se queda el texto inicial y el resultado llega igual. */
+const STAGE_LABEL: Partial<Record<DiagnosisStage, string>> = {
+  queued: 'En cola…',
+  analyzing: 'Analizando la imagen…',
+  drafting: 'Redactando la explicación…',
+};
 
 /** Pista adicional según por qué no se pudo leer la foto. */
 export const REASON_HINT: Record<BetterInputReason, string> = {
@@ -292,6 +301,8 @@ export class DiagnosePanelComponent {
   protected readonly maxDescription = MAX_DESCRIPTION_LENGTH;
   protected readonly whileWaiting = WHILE_WAITING;
 
+  private activeRequest: string | null = null;
+
   readonly mode = signal<Mode>('photo');
   readonly photo = signal<File | null>(null);
   readonly previewUrl = signal<string | null>(null);
@@ -317,6 +328,14 @@ export class DiagnosePanelComponent {
   readonly canSend = computed(() => this.hasInput() && this.acknowledged());
 
   constructor() {
+    inject(RealtimeService)
+      .on('diagnosis:progress')
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ requestId, stage }) => {
+        const label = STAGE_LABEL[stage];
+        if (requestId === this.activeRequest && this.sending() && label)
+          this.sendingLabel.set(label);
+      });
     this.publicConfig.load().subscribe((config) => {
       if (config && !config.diagnosis.enabled) this.mode.set('list');
     });
@@ -393,7 +412,10 @@ export class DiagnosePanelComponent {
     this.result.set(null);
     this.betterInput.set(null);
     this.errorView.set(null);
-    this.diagnosis.diagnose(this.plate(), input).subscribe({
+    // La elección manual no pasa por la IA: no hay progreso que mostrar.
+    const requestId = input.telltaleId ? undefined : crypto.randomUUID();
+    this.activeRequest = requestId ?? null;
+    this.diagnosis.diagnose(this.plate(), input, requestId).subscribe({
       next: (response) => {
         this.sending.set(false);
         if (response.status === 'diagnosed') {

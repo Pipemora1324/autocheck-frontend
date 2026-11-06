@@ -292,6 +292,29 @@
   margin-top: 0.9rem;
 }
 
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #607488;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa8b5;
+}
+.connection-status.connected .connection-dot {
+  background: #1a8f4b;
+}
+.connection-status.connecting .connection-dot,
+.connection-status.reconnecting .connection-dot {
+  background: #e0a100;
+}
+
 .diagnosis-chat {
   margin-top: 1.4rem;
   padding-top: 1.2rem;

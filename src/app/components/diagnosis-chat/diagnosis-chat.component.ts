@@ -1,7 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { apiErrorCode, apiErrorMessage } from '../../core/http/api-error';
 import { PublicConfigService } from '../../core/http/public-config.service';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import type { ChatMessage } from '../../models/diagnosis';
 import { DiagnosisService } from '../../services/diagnosis.service';
 
@@ -133,6 +135,21 @@ export class DiagnosisChatComponent {
         this.load();
       });
     });
+    inject(RealtimeService)
+      .on('chat:message')
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ diagnosisId, question, answer, restantes }) => {
+        if (diagnosisId === this.diagnosisId()) this.addExchange(question, answer, restantes);
+      });
+  }
+
+  /** La misma respuesta puede llegar por HTTP y por el socket: cada mensaje se muestra una vez. */
+  private addExchange(question: ChatMessage, answer: ChatMessage, restantes: number): void {
+    this.messages.update((current) => {
+      const known = new Set(current.map((message) => message.id));
+      return [...current, ...[question, answer].filter((message) => !known.has(message.id))];
+    });
+    this.remaining.set(restantes);
   }
 
   load(): void {
@@ -165,8 +182,7 @@ export class DiagnosisChatComponent {
       next: ({ question, answer, restantes }) => {
         this.sending.set(false);
         if (id !== this.diagnosisId()) return;
-        this.messages.update((current) => [...current, question, answer]);
-        this.remaining.set(restantes);
+        this.addExchange(question, answer, restantes);
         this.draft.set('');
       },
       error: (error: unknown) => {

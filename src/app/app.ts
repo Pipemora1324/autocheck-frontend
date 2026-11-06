@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ConnectionStatusComponent } from './components/connection-status/connection-status.component';
 import { EmailVerificationBannerComponent } from './components/email-verification-banner/email-verification-banner.component';
 import { AuthService } from './core/auth/auth.service';
 import { HealthService } from './core/http/health.service';
@@ -12,6 +13,7 @@ import { ServerStatusBannerComponent } from './components/server-status-banner/s
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+    ConnectionStatusComponent,
     EmailVerificationBannerComponent,
     ServerStatusBannerComponent,
   ],

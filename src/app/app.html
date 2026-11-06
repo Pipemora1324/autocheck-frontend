@@ -15,6 +15,7 @@
       <span class="system-status {{ health.status() }}" role="status" aria-live="polite"
         ><i aria-hidden="true"></i> {{ healthLabel() }}</span
       >
+      <app-connection-status />
       @if (auth.user(); as user) {
         <span class="user-info">
           <span class="user-avatar" aria-hidden="true">{{ initials() }}</span>

@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { DiagnosePanelComponent } from '../../components/diagnose-panel/diagnose-panel.component';
 import { DiagnosisHistoryComponent } from '../../components/diagnosis-history/diagnosis-history.component';
@@ -16,6 +16,7 @@ import {
   apiFieldErrors,
   EMAIL_NOT_VERIFIED,
 } from '../../core/http/api-error';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import type { GarageVehicle } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
 
@@ -238,10 +239,20 @@ export class VehicleDetailPage {
     toObservable(this.placa).subscribe(() => {
       this.load();
     });
+    inject(RealtimeService)
+      .on('garage:changed')
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ action, plate }) => {
+        if (plate !== this.placa() || this.deleting()) return;
+        if (action === 'deleted') void this.router.navigate(['/']);
+        // No se pisa lo que el usuario está escribiendo.
+        else if (!this.editing()) this.load(true);
+      });
   }
 
-  load(): void {
-    this.state.set('loading');
+  /** silent: actualiza desde otro cliente sin mostrar el estado de carga. */
+  load(silent = false): void {
+    if (!silent) this.state.set('loading');
     this.garage.get(this.placa()).subscribe({
       next: (vehicle) => {
         this.vehicle.set(vehicle);

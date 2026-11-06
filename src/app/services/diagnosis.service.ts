@@ -42,13 +42,16 @@ export class DiagnosisService {
   diagnose(
     plate: string,
     { image, description, telltaleId, blinking }: DiagnosisInput,
+    requestId?: string,
   ): Observable<DiagnosisResult> {
     const form = new FormData();
     if (telltaleId) form.append('telltaleId', telltaleId);
     if (description) form.append('description', description);
     if (blinking !== undefined) form.append('parpadea', String(blinking));
     if (image) form.append('image', image, image.name);
-    return this.http.post<DiagnosisResult>(this.url(plate), form);
+    // Opcional: con este id el socket informa el progreso. Sin socket, la respuesta llega igual por HTTP.
+    const headers: Record<string, string> = requestId ? { 'x-diagnosis-request': requestId } : {};
+    return this.http.post<DiagnosisResult>(this.url(plate), form, { headers });
   }
 
   history(plate: string, page = 1, limit = HISTORY_PAGE_SIZE): Observable<DiagnosisHistory> {

@@ -1,6 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import type { GarageVehicle } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
 
@@ -91,10 +93,17 @@ export class GaragePage {
 
   constructor() {
     this.load();
+    inject(RealtimeService)
+      .on('garage:changed')
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        this.load(true);
+      });
   }
 
-  load(): void {
-    this.state.set('loading');
+  /** silent: actualiza desde otro cliente sin mostrar el estado de carga. */
+  load(silent = false): void {
+    if (!silent) this.state.set('loading');
     this.garage.list().subscribe({
       next: (vehicles) => {
         this.vehicles.set(vehicles);

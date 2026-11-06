@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { formatDateTime } from '../../core/format-date';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
 import {
@@ -7,6 +8,7 @@ import {
   type Diagnosed,
   type DiagnosisHistoryItem,
 } from '../../models/diagnosis';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import { DiagnosisService } from '../../services/diagnosis.service';
 import { DiagnosisChatComponent } from '../diagnosis-chat/diagnosis-chat.component';
 import { DiagnosisResultComponent } from '../diagnosis-result/diagnosis-result.component';
@@ -209,6 +211,16 @@ export class DiagnosisHistoryComponent {
         this.load(1);
       });
     });
+    inject(RealtimeService)
+      .on('diagnosis:changed')
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ action, plate, id }) => {
+        if (plate !== this.plate()) return;
+        // Se borró desde otro cliente lo que aquí está abierto.
+        if (action === 'deleted' && this.selected()?.id === id && !this.deleting())
+          this.closeDetail();
+        if (!this.deleting()) this.load(this.page(), true);
+      });
   }
 
   name(item: DiagnosisHistoryItem): string {
@@ -224,8 +236,9 @@ export class DiagnosisHistoryComponent {
       : `Inteligencia artificial (confianza ${Math.round(item.confianza * 100)} %)`;
   }
 
-  load(page: number): void {
-    this.state.set('loading');
+  /** silent: actualiza desde otro cliente sin mostrar el estado de carga. */
+  load(page: number, silent = false): void {
+    if (!silent) this.state.set('loading');
     this.diagnosis.history(this.plate(), page).subscribe({
       next: ({ items, page: current, totalPages }) => {
         // Si se borró lo último de una página, se muestra la anterior.
