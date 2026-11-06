@@ -122,16 +122,14 @@ describe('AddVehiclePage', () => {
     await fixture.whenStable();
 
     choose(element, imageFile('image/png', 2048));
-    http
-      .expectOne(`${API}/garage/scan-card`)
-      .flush(
-        {
-          message:
-            'El servicio gratuito de lectura está ocupado. Intenta en un minuto o ingresa los datos a mano.',
-          code: 'SCAN_PROVIDER_BUSY',
-        },
-        { status: 503, statusText: 'Service Unavailable' },
-      );
+    http.expectOne(`${API}/garage/scan-card`).flush(
+      {
+        message:
+          'El servicio gratuito de lectura está ocupado. Intenta en un minuto o ingresa los datos a mano.',
+        code: 'SCAN_PROVIDER_BUSY',
+      },
+      { status: 503, statusText: 'Service Unavailable' },
+    );
     await fixture.whenStable();
     expect(element.querySelector('.form-error')?.textContent).toContain('ingresa los datos a mano');
     expect(element.textContent).toContain('Prefiero llenarlo a mano');

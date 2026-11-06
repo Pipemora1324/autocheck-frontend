@@ -158,15 +158,13 @@ describe('DiagnosisChatComponent', () => {
     type(element, 'hola');
     await fixture.whenStable();
     button(element, 'Enviar').click();
-    http
-      .expectOne(MESSAGES)
-      .flush(
-        {
-          code: 'CHAT_LIMIT_REACHED',
-          message: 'Alcanzaste el máximo de 20 mensajes de este diagnóstico.',
-        },
-        { status: 429, statusText: 'Too Many Requests' },
-      );
+    http.expectOne(MESSAGES).flush(
+      {
+        code: 'CHAT_LIMIT_REACHED',
+        message: 'Alcanzaste el máximo de 20 mensajes de este diagnóstico.',
+      },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
     await fixture.whenStable();
     expect(element.querySelector('#chat-message')).toBeNull();
     expect(element.querySelector('.form-error')?.textContent).toContain('20 mensajes');

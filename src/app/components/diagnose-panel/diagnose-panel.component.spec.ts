@@ -427,16 +427,14 @@ describe('DiagnosePanelComponent', () => {
     acknowledge(element);
     await fixture.whenStable();
     button(element, 'Diagnosticar')!.click();
-    http
-      .expectOne(DIAGNOSES)
-      .flush(
-        {
-          message: 'Alcanzaste el máximo de 15 diagnósticos con IA por hora.',
-          code: 'RATE_LIMITED',
-          limite: 'ia',
-        },
-        { status: 429, statusText: 'Too Many Requests' },
-      );
+    http.expectOne(DIAGNOSES).flush(
+      {
+        message: 'Alcanzaste el máximo de 15 diagnósticos con IA por hora.',
+        code: 'RATE_LIMITED',
+        limite: 'ia',
+      },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
     await fixture.whenStable();
     const box = element.querySelector('.diagnose-error')!;
     expect(box.textContent).toContain('15 diagnósticos con IA por hora');
