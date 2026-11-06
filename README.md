@@ -12,12 +12,12 @@ Cliente Angular 21 (sin zone.js, con signals) de AutoCheck-CO: un **garaje perso
 | Registro con autorización de tratamiento de datos, login, sesión con refresh rotativo, recuperación de contraseña | **Real** |
 | Confirmación de correo (`/verify-email`), aviso y botón "Reenviar correo" | **Real**. El envío depende del **proveedor de correo** del backend (Brevo) |
 | Mi garaje: lista, alta manual, detalle, edición y borrado de vehículos, con kilometraje opcional | **Real**, guardado en Postgres |
-| Elegir el testigo de la lista (`GET /telltales`) y ver su explicación | **Real**, sin IA y sin enviar nada a terceros. Funciona aunque la IA esté apagada |
-| Explicación del testigo: significado, causas, qué revisar, qué no hacer, cuándo ir al mecánico | **Real**: viene del catálogo del backend, que aún debe revisar una persona con conocimiento mecánico. El frontend no redacta nada |
+| Elegir el testigo de la lista (`GET /telltales`) y ver su explicación | **Real**, sin IA y sin enviar nada a terceros. Sale del catálogo del backend, que aún debe revisar una persona con conocimiento mecánico. Funciona aunque la IA esté apagada |
 | Semáforo y banner de "Detente" | **Real**: los decide el servidor, no el modelo. El airbag es rojo, pero no ordena detenerse: dice "Revísalo hoy" |
-| Diagnóstico con foto o descripción | **IA (Google Gemini, desde el backend), solo para identificar el testigo.** Si está apagada u ocupada, la app lo explica y ofrece la lista. La precisión con fotos reales aún no está medida |
+| Diagnóstico con foto o descripción | **IA (Google Gemini, desde el backend):** lee varios testigos y redacta la explicación de cada uno. Si está apagada u ocupada, la app lo explica y ofrece la lista. Con fotos pequeñas o borrosas el resultado varía: ver el README del backend |
+| Chat sobre el diagnóstico | **IA (Google Gemini, desde el backend).** La conversación se guarda y se vuelve a mostrar al reabrir el diagnóstico |
 | Alta con foto de la tarjeta de propiedad | **IA, opcional** (Google Gemini o Anthropic, según el backend). Si está apagada u ocupada, la app lo explica y deja seguir a mano |
-| Historial por vehículo: fecha, testigo, semáforo, detalle y borrado | **Real**, sin la imagen. La explicación completa se pide con `GET /garage/:plate/diagnoses/:id`: no crea otra entrada ni cuenta para los límites, y sale de la información actual del catálogo |
+| Historial por vehículo: fecha, testigos, semáforo, detalle, conversación y borrado | **Real**, sin la imagen. La explicación guardada se pide con `GET /garage/:plate/diagnoses/:id`: no crea otra entrada, no llama a la IA ni cuenta para los límites |
 | Eliminar mi cuenta (con contraseña) y página de privacidad | **Real** |
 
 **Es orientación general:** no lee los códigos de falla del vehículo ni reemplaza a un mecánico, y cada resultado lo dice.
@@ -102,13 +102,17 @@ Render se duerme sin tráfico y tarda 30–60 s en despertar. `serverStatusInter
 - **Con foto o descripción:** en móvil, "Tomar foto" abre la cámara (`capture="environment"`); también se puede subir un archivo. El cliente valida JPEG, PNG o WEBP de máximo 5 MB y muestra una vista previa. El backend vuelve a validar la firma real.
 - **Antes de enviar** se muestra `diagnosis.notice` de `GET /config/public` y el usuario debe confirmar que leyó el aviso y que es su propio tablero. Sin esa casilla no se envía nada.
 - **Con la lista:** búsqueda por nombre y alias, agrupada por severidad. Si se elige de la lista, una foto ya seleccionada no se envía.
-- **Resultado:** semáforo con color, forma y texto (Detente, Revísalo hoy, Revísalo pronto, No es una falla) y las secciones que devuelve el servidor. Si el servidor ordena detenerse, aparece un banner para hacerlo en un lugar seguro y llamar a un taller o grúa.
-- **`needs_better_input`:** muestra la pista del servidor y ofrece repetir la foto o elegir de la lista, sin inventar un resultado.
+- **Parpadeo:** la casilla "¿El testigo parpadea?" solo se envía si se marca, porque una foto no lo demuestra.
+- **Resultado:** urgencia general arriba y una tarjeta por testigo, con semáforo en color, forma y texto (Detente, Revísalo hoy, Revísalo pronto, No es una falla). Si el servidor ordena detenerse, aparece un banner para hacerlo en un lugar seguro y llamar a un taller o grúa. Si la IA duda de un símbolo, la tarjeta lo dice.
+- **Chat:** debajo del resultado y al reabrir un diagnóstico del historial, con preguntas sugeridas, máximo 500 caracteres y estado "escribiendo". Si falla, conserva lo escrito.
+- **`needs_better_input` y `not_recognized`:** muestra la pista del servidor y ofrece repetir la foto o elegir de la lista, sin inventar un resultado.
 
 | Respuesta del backend | Qué muestra la app |
 | --- | --- |
 | `503 DIAGNOSIS_PROVIDER_BUSY` (el 429 de Gemini, por su plan gratuito) | Cupo gratuito de la IA ocupado; sugiere intentar en un minuto o elegir de la lista |
-| `503 AI_NOT_CONFIGURED`, `503 DIAGNOSIS_UNAVAILABLE` | La IA no está disponible y la elección manual sigue funcionando |
+| `503 DIAGNOSIS_UNAVAILABLE` (`provider_error`) | Falló el servicio, no la foto: no pide repetirla y ofrece la lista |
+| `503 AI_NOT_CONFIGURED` | La IA no está disponible y la elección manual sigue funcionando |
+| `503 CHAT_PROVIDER_BUSY`, `503 CHAT_UNAVAILABLE`, `429 CHAT_LIMIT_REACHED` | El chat lo explica en español. Al llegar al máximo, deja leer pero no escribir |
 | `429 RATE_LIMITED` (nuestro límite por hora: 15 con IA y 60 de la lista) | El mensaje del límite. Sugiere la lista solo con `limite: "ia"`, porque tiene otro contador |
 | `403 EMAIL_NOT_VERIFIED` | Pide confirmar el correo, con el aviso "Reenviar correo" |
 | Sin respuesta, 502, 503 o 504 sin código | "Conectando con el servidor, puede tardar un minuto" |
