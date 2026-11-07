@@ -5,6 +5,8 @@ import {
   type DiagnosedTelltale,
 } from '../../models/diagnosis';
 import { SeverityBadgeComponent } from '../severity-badge/severity-badge.component';
+import { TelltaleIconComponent } from '../telltale-icon/telltale-icon.component';
+import { UrgencyGaugeComponent } from '../urgency-gauge/urgency-gauge.component';
 
 /** Por debajo de esto se avisa que el símbolo no es seguro. */
 const DOUBTFUL_CONFIDENCE = 0.6;
@@ -12,17 +14,31 @@ const DOUBTFUL_CONFIDENCE = 0.6;
 /** Resultado del diagnóstico: una tarjeta por testigo. Todo el texto y la urgencia vienen del servidor. */
 @Component({
   selector: 'app-diagnosis-result',
-  imports: [SeverityBadgeComponent],
+  imports: [SeverityBadgeComponent, TelltaleIconComponent, UrgencyGaugeComponent],
   template: `
     @let r = result();
     @if (r.debeDetenerse) {
       <div class="stop-banner" role="alert">
-        <strong>Detente ahora</strong>
-        <span>{{ r.accionGeneral }}</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 3.500 22 20.500H2zM12 10v5M12 17.800v.1" />
+        </svg>
+        <div>
+          <strong>Detente ahora</strong>
+          <span>{{ r.accionGeneral }}</span>
+        </div>
       </div>
     }
 
     <div class="diagnosis-summary {{ r.urgenciaGeneral }}">
+      <app-urgency-gauge [severity]="r.urgenciaGeneral" [stop]="r.debeDetenerse" />
       <div class="diagnosis-summary-head">
         <strong>Urgencia general</strong>
         <app-severity-badge [severity]="r.urgenciaGeneral" [stop]="r.debeDetenerse" />
@@ -42,13 +58,14 @@ const DOUBTFUL_CONFIDENCE = 0.6;
     @for (t of r.testigos; track $index) {
       <article class="diagnosis-card {{ t.urgencia }}">
         <header class="diagnosis-header">
+          <app-telltale-icon [category]="t.categoria" />
           <div>
             <h3>{{ t.nombre }}</h3>
             @if (t.descripcionSimbolo) {
               <p class="source-note">{{ t.descripcionSimbolo }}</p>
             }
+            <app-severity-badge [severity]="t.urgencia" [stop]="t.debeDetenerse" />
           </div>
-          <app-severity-badge [severity]="t.urgencia" [stop]="t.debeDetenerse" />
         </header>
 
         <p class="diagnosis-action">{{ t.accion }}</p>
@@ -63,40 +80,52 @@ const DOUBTFUL_CONFIDENCE = 0.6;
         }
 
         @if (t.significado) {
-          <h4>Qué significa</h4>
-          <p>{{ t.significado }}</p>
+          <div class="diagnosis-meaning">
+            <h4>Qué significa</h4>
+            <p>{{ t.significado }}</p>
+          </div>
         }
         @if (t.porQuePasa.length) {
-          <h4>Por qué pasa</h4>
-          <ul>
-            @for (item of t.porQuePasa; track item) {
-              <li>{{ item }}</li>
-            }
-          </ul>
+          <details class="diagnosis-section" [open]="openByDefault(t)">
+            <summary><h4>Por qué pasa</h4></summary>
+            <ul>
+              @for (item of t.porQuePasa; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </details>
         }
         @if (t.puedesRevisar.length) {
-          <h4>Qué puedes revisar tú</h4>
-          <ul>
-            @for (item of t.puedesRevisar; track item) {
-              <li>{{ item }}</li>
-            }
-          </ul>
+          <details class="diagnosis-section" [open]="openByDefault(t)">
+            <summary><h4>Qué puedes revisar tú</h4></summary>
+            <ul>
+              @for (item of t.puedesRevisar; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </details>
         }
         @if (t.noHagas.length) {
-          <h4>Qué NO hacer</h4>
-          <ul class="dont-list">
-            @for (item of t.noHagas; track item) {
-              <li>{{ item }}</li>
-            }
-          </ul>
+          <details class="diagnosis-section" [open]="openByDefault(t)">
+            <summary><h4>Qué NO hacer</h4></summary>
+            <ul class="dont-list">
+              @for (item of t.noHagas; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </details>
         }
         @if (t.cuandoIrAlMecanico) {
-          <h4>Cuándo ir al mecánico</h4>
-          <p>{{ t.cuandoIrAlMecanico }}</p>
+          <details class="diagnosis-section" [open]="openByDefault(t)">
+            <summary><h4>Cuándo ir al mecánico</h4></summary>
+            <p>{{ t.cuandoIrAlMecanico }}</p>
+          </details>
         }
         @if (t.notaDelVehiculo) {
-          <h4>Sobre tu vehículo</h4>
-          <p>{{ t.notaDelVehiculo }}</p>
+          <div class="diagnosis-meaning">
+            <h4>Sobre tu vehículo</h4>
+            <p>{{ t.notaDelVehiculo }}</p>
+          </div>
         }
       </article>
     }
@@ -115,6 +144,11 @@ export class DiagnosisResultComponent {
       ? 'Identificado con inteligencia artificial.'
       : `La inteligencia artificial identificó ${testigos.length} testigos.`;
   });
+
+  /** En un testigo rojo no se esconde nada: qué no hacer tiene que verse sin abrir nada. */
+  protected openByDefault(telltale: DiagnosedTelltale): boolean {
+    return telltale.urgencia === 'rojo';
+  }
 
   protected doubtful(telltale: DiagnosedTelltale): boolean {
     return this.result().origen === 'ia' && telltale.confianza < DOUBTFUL_CONFIDENCE;

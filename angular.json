@@ -30,7 +30,12 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"]
+            "styles": [
+              "node_modules/@fontsource-variable/space-grotesk/wght.css",
+              "node_modules/@fontsource-variable/dm-sans/wght.css",
+              "node_modules/@fontsource-variable/jetbrains-mono/wght.css",
+              "src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {

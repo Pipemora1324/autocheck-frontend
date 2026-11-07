@@ -9,7 +9,21 @@
     />
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <meta name="theme-color" content="#0b0e11" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="favicon.ico" />
+    <script>
+      // Antes de pintar, para que el tema no parpadee. ThemeService aplica el mismo criterio.
+      (function () {
+        var theme = 'dark';
+        try {
+          var stored = localStorage.getItem('autocheck-theme');
+          if (stored === 'dark' || stored === 'light') theme = stored;
+          else if (matchMedia('(prefers-color-scheme: light)').matches) theme = 'light';
+        } catch (e) {}
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>
