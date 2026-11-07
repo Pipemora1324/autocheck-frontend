@@ -1,4 +1,7 @@
 /* Portada: el tablero que se enciende al poner el contacto. */
+:root[data-shell='app'] .shell-portada {
+  display: none;
+}
 .landing {
   display: grid;
   gap: var(--space-6);
@@ -38,10 +41,14 @@
   background: radial-gradient(70% 60% at 50% 40%, var(--bg-glow), transparent 75%), var(--surface);
   box-shadow: var(--shadow), var(--bezel);
 }
-.speedometer {
-  display: block;
+.speedometer-wrap {
+  position: relative;
   width: min(100%, 25rem);
   margin: 0 auto;
+}
+.speedometer {
+  display: block;
+  width: 100%;
 }
 .speedometer-track {
   fill: none;
@@ -54,15 +61,7 @@
   stroke-width: 10;
   stroke-linecap: round;
   stroke-dasharray: 100;
-  animation: arc-in 1.9s var(--ease-out) 0.25s both;
-}
-@keyframes arc-in {
-  from {
-    stroke-dashoffset: 100;
-  }
-  to {
-    stroke-dashoffset: 26;
-  }
+  stroke-dashoffset: 26;
 }
 .speedometer-redline {
   fill: none;
@@ -85,9 +84,16 @@
   text-anchor: middle;
   dominant-baseline: central;
 }
+/* Una capa propia: al animar solo su transform, el navegador no repinta el tablero en cada cuadro. */
 .speedometer-needle {
-  transform-box: view-box;
-  transform-origin: 160px 160px;
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* El centro del tacómetro: 160 de 320 y 160 de 300 en el viewBox. */
+  transform-origin: 50% 53.333%;
+  transform: rotate(62deg);
   animation: needle-sweep 2.3s var(--ease-needle) 0.25s both;
 }
 /* Al poner el contacto, la aguja barre toda la escala y vuelve a su lectura. */
@@ -101,6 +107,10 @@
   100% {
     transform: rotate(62deg);
   }
+}
+.speedometer-cap {
+  transform: none;
+  animation: none;
 }
 .speedometer-hand {
   fill: var(--needle);
@@ -156,13 +166,17 @@
 }
 @keyframes lamp-on {
   0% {
-    color: var(--line-strong);
-    opacity: 0.45;
+    opacity: 0.18;
   }
   45% {
     opacity: 1;
     transform: scale(1.12);
   }
+}
+
+/* El brillo de los testigos cuesta pintarlo: en la fila animada no se usa. */
+.telltale-row .telltale-icon svg {
+  filter: none;
 }
 
 .landing-steps {

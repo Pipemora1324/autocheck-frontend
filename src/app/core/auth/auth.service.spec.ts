@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { sessionFor } from '../../../testing/auth-fixtures';
-import { AuthService } from './auth.service';
+import { AuthService, SESSION_HINT_KEY } from './auth.service';
 
 const API = environment.apiUrl;
 
@@ -44,8 +44,34 @@ describe('AuthService', () => {
     expect((await result).email).toBe('ana@example.com');
     expect(auth.isAuthenticated()).toBe(true);
     expect(auth.getAccessToken()).toBe('access-1');
-    expect(localStorage.length).toBe(0);
+    // Solo la pista de que hubo sesión: el token nunca sale de la memoria.
+    expect(localStorage.length).toBe(1);
+    expect(localStorage.getItem(SESSION_HINT_KEY)).toBe('1');
+    expect(localStorage.getItem(SESSION_HINT_KEY)).not.toContain('access-1');
     expect(sessionStorage.length).toBe(0);
+  });
+
+  it('un visitante sin sesión previa no hace ninguna petición: no recibe un 401 en cada visita', async () => {
+    await firstValueFrom(auth.restoreSession());
+    http.expectNone(`${API}/auth/refresh`);
+    expect(auth.status()).toBe('anonymous');
+  });
+
+  it('sin almacenamiento disponible se intenta recuperar la sesión, como antes', async () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('bloqueado');
+    });
+    const restore = firstValueFrom(auth.restoreSession());
+    http.expectOne(`${API}/auth/refresh`).flush(sessionFor('access-restaurado'));
+    await restore;
+    expect(auth.isAuthenticated()).toBe(true);
+    vi.restoreAllMocks();
+  });
+
+  it('cerrar la sesión borra la pista', () => {
+    localStorage.setItem(SESSION_HINT_KEY, '1');
+    auth.clearSession();
+    expect(localStorage.getItem(SESSION_HINT_KEY)).toBeNull();
   });
 
   it('register envía acceptedTerms, inicia sesión y propaga el 409 si el correo existe', async () => {
@@ -172,6 +198,7 @@ describe('AuthService', () => {
   });
 
   it('restoreSession hace un solo intento y nunca falla', async () => {
+    localStorage.setItem(SESSION_HINT_KEY, '1');
     const restore = firstValueFrom(auth.restoreSession());
     const again = firstValueFrom(auth.restoreSession());
     http.expectOne(`${API}/auth/refresh`).flush(null, { status: 401, statusText: 'Unauthorized' });
@@ -184,6 +211,7 @@ describe('AuthService', () => {
   });
 
   it('restoreSession recupera la sesión con la cookie', async () => {
+    localStorage.setItem(SESSION_HINT_KEY, '1');
     const restore = firstValueFrom(auth.restoreSession());
     http.expectOne(`${API}/auth/refresh`).flush(sessionFor('access-restaurado'));
     await restore;

@@ -11,7 +11,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0b0e11" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="alternate icon" type="image/x-icon" href="favicon.ico" />
     <script>
       // Antes de pintar, para que el tema no parpadee. ThemeService aplica el mismo criterio.
       (function () {
@@ -22,10 +21,50 @@
           else if (matchMedia('(prefers-color-scheme: light)').matches) theme = 'light';
         } catch (e) {}
         document.documentElement.dataset.theme = theme;
+        // La portada solo se adelanta a quien no tiene sesión y va a verla.
+        var visitor = false;
+        try {
+          visitor = !localStorage.getItem('autocheck-session');
+        } catch (e) {}
+        var path = location.pathname;
+        document.documentElement.dataset.shell =
+          visitor && (path === '/' || path === '/inicio') ? 'portada' : 'app';
       })();
     </script>
   </head>
   <body>
-    <app-root></app-root>
+    <app-root>
+      <div class="app-shell">
+        <header class="topbar">
+          <span class="brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <path
+                  d="M6.5 23a11.5 11.5 0 1 1 19 0"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+            <span><strong>AutoCheck</strong><small>CO</small></span>
+          </span>
+        </header>
+        <main class="anonymous">
+          <div class="shell-portada landing-hero">
+            <div>
+              <span class="eyebrow">Tu garaje con diagnóstico de testigos</span>
+              <h1>¿Se prendió una luz en el tablero? <em>Entiende qué es y qué hacer.</em></h1>
+              <p class="landing-lead">
+                Antes de asustarte o de ignorarla, tómale una foto. AutoCheck te explica qué
+                significa, qué tan urgente es, qué puedes revisar tú con seguridad y cuándo ir al
+                mecánico, con el motivo concreto.
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+      <noscript>AutoCheck-CO necesita JavaScript para funcionar.</noscript>
+    </app-root>
   </body>
 </html>

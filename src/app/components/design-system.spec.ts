@@ -94,7 +94,7 @@ describe('SpeedometerComponent', () => {
     expect(element.querySelectorAll('.speedometer-number')).toHaveLength(9);
     expect(element.querySelectorAll('.speedometer-tick.major')).toHaveLength(9);
     expect(element.querySelectorAll('.speedometer-tick')).toHaveLength(41);
-    expect(element.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true');
+    expect(element.querySelector('.speedometer-wrap')!.getAttribute('aria-hidden')).toBe('true');
     expect(element.querySelector('.speedometer-track')!.getAttribute('d')).toMatch(/^M[\d.-]+ /);
   });
 });
@@ -141,7 +141,7 @@ describe('CountUpComponent', () => {
     expect(element.querySelector('[aria-hidden="true"]')!.textContent).toBe('100');
   });
 
-  it('con movimiento cuenta hasta el valor, y el lector de pantalla oye solo el final', async () => {
+  it('con movimiento cuenta hasta el valor, y el lector de pantalla oye solo el final', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: false }));
     // Angular también programa cuadros: se ejecutan todos los que haya en cola.
     const frames: FrameRequestCallback[] = [];

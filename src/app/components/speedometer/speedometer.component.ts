@@ -35,32 +35,36 @@ const numbers = Array.from({ length: STEPS + 1 }, (_, index) => ({
 @Component({
   selector: 'app-speedometer',
   template: `
-    <svg class="speedometer" viewBox="0 0 320 300" aria-hidden="true">
-      <path class="speedometer-track" [attr.d]="track" />
-      <path class="speedometer-arc" [attr.d]="track" pathLength="100" />
-      <path class="speedometer-redline" [attr.d]="redline" />
-      @for (tick of ticks; track $index) {
-        <line
-          class="speedometer-tick"
-          [class.major]="tick.major"
-          [attr.x1]="tick.x1"
-          [attr.y1]="tick.y1"
-          [attr.x2]="tick.x2"
-          [attr.y2]="tick.y2"
-        />
-      }
-      @for (number of numbers; track number.value) {
-        <text class="speedometer-number" [attr.x]="number.x" [attr.y]="number.y">
-          {{ number.value }}
-        </text>
-      }
-      <text class="speedometer-unit" x="160" y="214">X1000 RPM</text>
-      <text class="speedometer-odometer" x="160" y="246">000 000</text>
-      <g class="speedometer-needle">
+    <div class="speedometer-wrap" aria-hidden="true">
+      <svg class="speedometer" viewBox="0 0 320 300">
+        <path class="speedometer-track" [attr.d]="track" />
+        <path class="speedometer-arc" [attr.d]="track" pathLength="100" />
+        <path class="speedometer-redline" [attr.d]="redline" />
+        @for (tick of ticks; track $index) {
+          <line
+            class="speedometer-tick"
+            [class.major]="tick.major"
+            [attr.x1]="tick.x1"
+            [attr.y1]="tick.y1"
+            [attr.x2]="tick.x2"
+            [attr.y2]="tick.y2"
+          />
+        }
+        @for (number of numbers; track number.value) {
+          <text class="speedometer-number" [attr.x]="number.x" [attr.y]="number.y">
+            {{ number.value }}
+          </text>
+        }
+        <text class="speedometer-unit" x="160" y="214">X1000 RPM</text>
+        <text class="speedometer-odometer" x="160" y="246">000 000</text>
+      </svg>
+      <svg class="speedometer-needle" viewBox="0 0 320 300">
         <path class="speedometer-hand" d="M155 168 160 44l5 124z" />
-      </g>
-      <circle class="speedometer-hub" cx="160" cy="160" r="15" />
-    </svg>
+      </svg>
+      <svg class="speedometer-needle speedometer-cap" viewBox="0 0 320 300">
+        <circle class="speedometer-hub" cx="160" cy="160" r="15" />
+      </svg>
+    </div>
   `,
 })
 export class SpeedometerComponent {

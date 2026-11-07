@@ -15,8 +15,7 @@
   min-height: 60px;
   padding: var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(10px);
+  background: var(--bg);
 }
 
 .brand {
@@ -167,6 +166,8 @@
 
 main {
   flex: 1;
+  /* El pie no sube y baja mientras carga la ruta: evita un salto de contenido. */
+  min-height: calc(100dvh - 60px);
   width: 100%;
   max-width: var(--content);
   margin: 0 auto;
