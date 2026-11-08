@@ -25,8 +25,8 @@
       </nav>
     }
     <div class="topbar-meta">
-      <span class="system-status {{ health.status() }}" role="status" aria-live="polite"
-        ><i aria-hidden="true"></i> {{ healthLabel() }}</span
+      <output class="system-status {{ health.status() }}" aria-live="polite"
+        ><i aria-hidden="true"></i> {{ healthLabel() }}</output
       >
       <app-connection-status />
       @if (auth.user(); as user) {
@@ -43,9 +43,9 @@
   </header>
   <main id="contenido" tabindex="-1" [class.anonymous]="!auth.user()">
     @if (auth.status() === 'unknown') {
-      <div class="session-loading" role="status">
+      <output class="session-loading">
         <span class="spinner" aria-hidden="true"></span>Restaurando sesión…
-      </div>
+      </output>
     }
     <app-server-status-banner />
     <app-email-verification-banner />

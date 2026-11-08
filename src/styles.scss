@@ -1,4 +1,5 @@
 /* Estilos globales. Cada color, medida y curva sale de los tokens: ver styles/_tokens.scss. */
+@use 'styles/fonts';
 @use 'styles/tokens';
 @use 'styles/base';
 @use 'styles/shell';
