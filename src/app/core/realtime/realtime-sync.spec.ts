@@ -129,6 +129,7 @@ describe('Sincronización en vivo', () => {
       fixture.componentInstance.startEditing();
       realtime.fire('garage:changed', { action: 'updated', plate: 'ABC-123' });
       http.expectNone(`${GARAGE}/ABC-123`);
+      expect(fixture.componentInstance.editing()).toBe(true);
     });
   });
 

@@ -10,14 +10,6 @@ const API = environment.apiUrl;
 const DIAGNOSES = `${API}/garage/ABC-123/diagnoses`;
 
 describe('DiagnosisService', () => {
-  it('detail pide la entrada con GET', () => {
-    TestBed.inject(DiagnosisService).detail('ABC-123', 'id-1').subscribe();
-    const controller = TestBed.inject(HttpTestingController);
-    const request = controller.expectOne(`${DIAGNOSES}/id-1`);
-    expect(request.request.method).toBe('GET');
-    request.flush({});
-  });
-
   let service: DiagnosisService;
   let http: HttpTestingController;
 
@@ -31,6 +23,14 @@ describe('DiagnosisService', () => {
 
   afterEach(() => {
     http.verify();
+  });
+
+  it('detail pide la entrada con GET', () => {
+    TestBed.inject(DiagnosisService).detail('ABC-123', 'id-1').subscribe();
+    const controller = TestBed.inject(HttpTestingController);
+    const request = controller.expectOne(`${DIAGNOSES}/id-1`);
+    expect(request.request.method).toBe('GET');
+    request.flush({});
   });
 
   it('telltales pide el catálogo una sola vez', async () => {
