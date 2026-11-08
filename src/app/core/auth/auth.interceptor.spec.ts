@@ -24,7 +24,11 @@ describe('authInterceptor', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([authInterceptor])), provideHttpClientTesting(), provideRouter([])]
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+      ],
     });
     client = TestBed.inject(HttpClient);
     http = TestBed.inject(HttpTestingController);
@@ -32,7 +36,9 @@ describe('authInterceptor', () => {
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+  });
 
   it('agrega Authorization: Bearer y withCredentials a las peticiones de la API', () => {
     signIn('access-1');
@@ -81,7 +87,7 @@ describe('authInterceptor', () => {
 
     const refreshes = http.match(`${API}/auth/refresh`);
     expect(refreshes.length).toBe(1);
-    refreshes[0]!.flush(sessionFor('access-nuevo'));
+    refreshes[0].flush(sessionFor('access-nuevo'));
 
     for (const url of [`${API}/garage`, `${API}/garage/ABC-123`, `${API}/garage/scan-card`]) {
       const retry = http.expectOne(url);
@@ -101,7 +107,9 @@ describe('authInterceptor', () => {
 
     await expect(result).rejects.toMatchObject({ status: 401 });
     expect(auth.status()).toBe('anonymous');
-    expect(navigate).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/', sesion: 'expirada' } });
+    expect(navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/', sesion: 'expirada' },
+    });
   });
 
   it('no entra en bucle si la petición reintentada vuelve a dar 401', async () => {
@@ -132,7 +140,10 @@ describe('authInterceptor', () => {
     const result = firstValueFrom(client.get(`${API}/garage`));
     http
       .expectOne(`${API}/garage`)
-      .flush({ message: 'Confirma tu correo para usar esta función.', code: 'EMAIL_NOT_VERIFIED' }, { status: 403, statusText: 'Forbidden' });
+      .flush(
+        { message: 'Confirma tu correo para usar esta función.', code: 'EMAIL_NOT_VERIFIED' },
+        { status: 403, statusText: 'Forbidden' },
+      );
     http.expectNone(`${API}/auth/refresh`);
     await expect(result).rejects.toMatchObject({ status: 403 });
     expect(auth.user()?.emailVerified).toBe(false);
@@ -143,7 +154,9 @@ describe('authInterceptor', () => {
   it('no refresca ante un 403 (sin permisos)', async () => {
     signIn('access-1');
     const result = firstValueFrom(client.get(`${API}/garage/ABC-123`));
-    http.expectOne(`${API}/garage/ABC-123`).flush({ message: 'No tienes permisos.' }, { status: 403, statusText: 'Forbidden' });
+    http
+      .expectOne(`${API}/garage/ABC-123`)
+      .flush({ message: 'No tienes permisos.' }, { status: 403, statusText: 'Forbidden' });
     http.expectNone(`${API}/auth/refresh`);
     await expect(result).rejects.toMatchObject({ status: 403 });
     expect(auth.isAuthenticated()).toBe(true);

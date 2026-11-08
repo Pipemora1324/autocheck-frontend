@@ -1,27 +1,53 @@
-import { HttpClient, HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  provideHttpClient,
+  withInterceptors,
+} from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from './api-error';
-import { serverStatusInterceptor, skipWakeRetry, WAKE_RETRIES, WAKE_RETRY_DELAY_MS } from './server-status.interceptor';
-import { isServerWakingError, SERVER_WAKING_MESSAGE, ServerStatusService, SLOW_REQUEST_MS, UNREACHABLE_GIVE_UP_MS } from './server-status.service';
+import {
+  serverStatusInterceptor,
+  skipWakeRetry,
+  WAKE_RETRIES,
+  WAKE_RETRY_DELAY_MS,
+} from './server-status.interceptor';
+import {
+  isServerWakingError,
+  SERVER_WAKING_MESSAGE,
+  ServerStatusService,
+  SLOW_REQUEST_MS,
+  UNREACHABLE_GIVE_UP_MS,
+} from './server-status.service';
 
 const API = environment.apiUrl;
 const badGateway = { status: 502, statusText: 'Bad Gateway' };
 
 describe('isServerWakingError', () => {
   it('reconoce 0, 502, 503 y 504 sin código', () => {
-    for (const status of [0, 502, 503, 504]) expect(isServerWakingError(new HttpErrorResponse({ status }))).toBe(true);
+    for (const status of [0, 502, 503, 504])
+      expect(isServerWakingError(new HttpErrorResponse({ status }))).toBe(true);
   });
 
   it('no confunde un servicio opcional apagado (503 con code) ni otros errores', () => {
-    expect(isServerWakingError(new HttpErrorResponse({ status: 503, error: { message: 'x', code: 'VISION_NOT_CONFIGURED' } }))).toBe(false);
+    expect(
+      isServerWakingError(
+        new HttpErrorResponse({
+          status: 503,
+          error: { message: 'x', code: 'VISION_NOT_CONFIGURED' },
+        }),
+      ),
+    ).toBe(false);
     expect(isServerWakingError(new HttpErrorResponse({ status: 500 }))).toBe(false);
     expect(isServerWakingError(new HttpErrorResponse({ status: 404 }))).toBe(false);
   });
 
   it('apiErrorMessage explica que el servidor está despertando', () => {
-    expect(apiErrorMessage(new HttpErrorResponse({ status: 504 }), 'x')).toBe(SERVER_WAKING_MESSAGE);
+    expect(apiErrorMessage(new HttpErrorResponse({ status: 504 }), 'x')).toBe(
+      SERVER_WAKING_MESSAGE,
+    );
     expect(SERVER_WAKING_MESSAGE).toContain('Conectando con el servidor, puede tardar un minuto');
   });
 });
@@ -34,7 +60,10 @@ describe('serverStatusInterceptor', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([serverStatusInterceptor])), provideHttpClientTesting()]
+      providers: [
+        provideHttpClient(withInterceptors([serverStatusInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     client = TestBed.inject(HttpClient);
     http = TestBed.inject(HttpTestingController);
@@ -96,7 +125,9 @@ describe('serverStatusInterceptor', () => {
 
   it('no reintenta errores de la aplicación ni peticiones marcadas con skipWakeRetry', () => {
     client.get(`${API}/garage/ABC-123`).subscribe({ error: () => undefined });
-    http.expectOne(`${API}/garage/ABC-123`).flush({ message: 'No encontrado.' }, { status: 404, statusText: 'Not Found' });
+    http
+      .expectOne(`${API}/garage/ABC-123`)
+      .flush({ message: 'No encontrado.' }, { status: 404, statusText: 'Not Found' });
 
     client.get(`${API}/health`, { context: skipWakeRetry() }).subscribe({ error: () => undefined });
     http.expectOne(`${API}/health`).flush(null, badGateway);
@@ -107,7 +138,12 @@ describe('serverStatusInterceptor', () => {
   it('una respuesta de error de la aplicación demuestra que el servidor ya despertó', () => {
     status.markUnreachable();
     client.get(`${API}/garage`).subscribe({ error: () => undefined });
-    http.expectOne(`${API}/garage`).flush({ message: 'Confirma tu correo.', code: 'EMAIL_NOT_VERIFIED' }, { status: 403, statusText: 'Forbidden' });
+    http
+      .expectOne(`${API}/garage`)
+      .flush(
+        { message: 'Confirma tu correo.', code: 'EMAIL_NOT_VERIFIED' },
+        { status: 403, statusText: 'Forbidden' },
+      );
     expect(status.state()).toBe('ok');
   });
 

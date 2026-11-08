@@ -1,5 +1,7 @@
 # AutoCheck-CO Frontend
 
+[![CI](https://github.com/Pipemora1324/autocheck-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/Pipemora1324/autocheck-frontend/actions/workflows/ci.yml)
+
 Cliente Angular 21 (sin zone.js, con signals) de AutoCheck-CO: un **garaje personal con diagnóstico de testigos del tablero con IA**. Registras tus carros y motos, fotografías un testigo encendido (o lo describes o lo eliges de una lista) y la app te explica qué es, qué tan urgente es, qué puedes revisar tú con seguridad y cuándo ir al mecánico. Funciona contra el backend [autocheck-backend](https://github.com/Pipemora1324/autocheck-backend).
 
 - Producción: <https://autocheck-frontend-phi.vercel.app>
@@ -19,6 +21,7 @@ Cliente Angular 21 (sin zone.js, con signals) de AutoCheck-CO: un **garaje perso
 | Alta con foto de la tarjeta de propiedad | **IA, opcional** (Google Gemini o Anthropic, según el backend). Si está apagada u ocupada, la app lo explica y deja seguir a mano |
 | Historial por vehículo: fecha, testigos, semáforo, detalle, conversación y borrado | **Real**, sin la imagen. La explicación guardada se pide con `GET /garage/:plate/diagnoses/:id`: no crea otra entrada, no llama a la IA ni cuenta para los límites |
 | Eliminar mi cuenta (con contraseña) y página de privacidad | **Real** |
+| Tiempo real: progreso del diagnóstico, chat y sincronización entre pestañas | **Real**, con Socket.IO directo a Render. Si no conecta, la app sigue por HTTP e indica "Sin conexión en vivo" |
 
 **Es orientación general:** no lee los códigos de falla del vehículo ni reemplaza a un mecánico, y cada resultado lo dice.
 
@@ -122,6 +125,29 @@ Render se duerme sin tráfico y tarda 30–60 s en despertar. `serverStatusInter
 - Es opcional: el alta manual siempre está disponible.
 - Antes de subir se muestra el aviso del proveedor activo (`cardScan.notice`).
 - La respuesta precarga un formulario editable. Los campos con confianza menor a 0,8 se resaltan, y los que no se leyeron se piden a mano. Nada se guarda hasta que el usuario confirma.
+
+### Tiempo real
+
+`RealtimeService` conecta a `environment.wsUrl` solo con una sesión de correo verificado, y descarga el cliente de socket en ese momento, para no pesar en la portada.
+
+- **Autenticación:** con el access token, en cada intento. Si se rechaza o vence, lo renueva una vez y reconecta.
+- **Reconexión:** con backoff de hasta 30 s, para el servidor dormido de Render.
+- **Cierre:** al cerrar sesión.
+- **Respaldo:** nada depende del socket. El progreso es solo un texto mejor mientras se espera la respuesta HTTP.
+
+## Calidad
+
+```bash
+npm run lint           # ESLint estricto, con reglas de accesibilidad para las plantillas
+npm run lint:fix
+npm run format:check   # Prettier
+npm run typecheck
+npm run test:coverage  # pruebas con cobertura (coverage/)
+```
+
+El CI corre todo esto en cada push y en cada PR hacia `main`, sin ningún secreto.
+
+**Idioma por capa:** el código va en inglés; los campos del contrato con el backend y todo lo que lee una persona, en español.
 
 ## Despliegue en Vercel
 

@@ -20,17 +20,27 @@ import { PASSWORD_MAX } from '../auth/auth-forms';
     <section class="panel">
       <h2>Datos</h2>
       <dl class="data-list">
-        <div><dt>Correo</dt><dd>{{ auth.user()?.email }}</dd></div>
-        <div><dt>Correo confirmado</dt><dd>{{ auth.user()?.emailVerified ? 'Sí' : 'No' }}</dd></div>
+        <div>
+          <dt>Correo</dt>
+          <dd>{{ auth.user()?.email }}</dd>
+        </div>
+        <div>
+          <dt>Correo confirmado</dt>
+          <dd>{{ auth.user()?.emailVerified ? 'Sí' : 'No' }}</dd>
+        </div>
       </dl>
-      <p class="source-note">Consulta cómo tratamos tus datos en la <a routerLink="/privacidad">política de privacidad</a>.</p>
+      <p class="source-note">
+        Consulta cómo tratamos tus datos en la
+        <a routerLink="/privacidad">política de privacidad</a>.
+      </p>
     </section>
 
     <section class="panel">
       <h2>Eliminar mi cuenta</h2>
       <p class="source-note">
-        Se borran tu cuenta, tus sesiones, todos los vehículos de tu garaje y sus diagnósticos. Con esto también revocas la autorización de tratamiento de datos.
-        Esta acción no se puede deshacer.
+        Se borran tu cuenta, tus sesiones, todos los vehículos de tu garaje y sus diagnósticos. Con
+        esto también revocas la autorización de tratamiento de datos. Esta acción no se puede
+        deshacer.
       </p>
       <div class="form-actions">
         <button class="danger-button" type="button" (click)="open()">Eliminar mi cuenta</button>
@@ -38,28 +48,45 @@ import { PASSWORD_MAX } from '../auth/auth-forms';
     </section>
 
     @if (confirming()) {
-      <app-modal heading="¿Eliminar tu cuenta?" (close)="confirming.set(false)">
-        <p>Escribe tu contraseña para confirmar. Se borrarán tu cuenta, todos tus vehículos y sus diagnósticos.</p>
+      <app-modal heading="¿Eliminar tu cuenta?" (closed)="confirming.set(false)">
+        <p>
+          Escribe tu contraseña para confirmar. Se borrarán tu cuenta, todos tus vehículos y sus
+          diagnósticos.
+        </p>
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="form-field">
             <label for="delete-password">Contraseña</label>
-            <input id="delete-password" type="password" formControlName="password" autocomplete="current-password" [attr.aria-invalid]="!!error()" />
+            <input
+              id="delete-password"
+              type="password"
+              formControlName="password"
+              autocomplete="current-password"
+              [attr.aria-invalid]="!!error()"
+            />
           </div>
-          @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+          @if (error()) {
+            <p class="form-error" role="alert">{{ error() }}</p>
+          }
           <div class="form-actions">
-            <button class="danger-button" type="submit" [disabled]="deleting()">{{ deleting() ? 'Eliminando…' : 'Eliminar definitivamente' }}</button>
-            <button class="secondary-button" type="button" (click)="confirming.set(false)">Cancelar</button>
+            <button class="danger-button" type="submit" [disabled]="deleting()">
+              {{ deleting() ? 'Eliminando…' : 'Eliminar definitivamente' }}
+            </button>
+            <button class="secondary-button" type="button" (click)="confirming.set(false)">
+              Cancelar
+            </button>
           </div>
         </form>
       </app-modal>
     }
-  `
+  `,
 })
 export class AccountPage {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  readonly form = inject(NonNullableFormBuilder).group({ password: ['', [Validators.required, Validators.maxLength(PASSWORD_MAX)]] });
+  readonly form = inject(NonNullableFormBuilder).group({
+    password: ['', [Validators.required, Validators.maxLength(PASSWORD_MAX)]],
+  });
   readonly confirming = signal(false);
   readonly deleting = signal(false);
   readonly error = signal('');
@@ -85,9 +112,9 @@ export class AccountPage {
         this.error.set(
           apiErrorCode(error) === 'INVALID_PASSWORD'
             ? 'La contraseña no es correcta.'
-            : apiErrorMessage(error, 'No se pudo eliminar la cuenta. Inténtalo de nuevo.')
+            : apiErrorMessage(error, 'No se pudo eliminar la cuenta. Inténtalo de nuevo.'),
         );
-      }
+      },
     });
   }
 }

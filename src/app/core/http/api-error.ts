@@ -25,13 +25,18 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
   if (isServerWakingError(error)) return SERVER_WAKING_MESSAGE;
   const { message, errors, code } = body(error);
   // Los 5xx con código (servicio opcional apagado u ocupado) traen un mensaje pensado para el usuario.
-  if (error.status >= 500) return code && message ? message : 'El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.';
-  if (error.status === 400 && errors?.length) return errors[0]!.message;
+  if (error.status >= 500)
+    return code && message
+      ? message
+      : 'El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.';
+  if (error.status === 400 && errors?.length) return errors[0].message;
   return message ?? fallback;
 }
 
 /** Errores de validación del backend agrupados por campo. */
 export function apiFieldErrors(error: unknown): Record<string, string> {
   if (!(error instanceof HttpErrorResponse) || error.status !== 400) return {};
-  return Object.fromEntries((body(error).errors ?? []).map(({ field, message }) => [field, message]));
+  return Object.fromEntries(
+    (body(error).errors ?? []).map(({ field, message }) => [field, message]),
+  );
 }

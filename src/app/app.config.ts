@@ -1,4 +1,9 @@
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 
@@ -16,6 +21,6 @@ export const appConfig: ApplicationConfig = {
     // Arranca la restauración de sesión sin bloquear el render: los guards esperan su resultado.
     provideAppInitializer(() => {
       inject(AuthService).restoreSession().subscribe();
-    })
-  ]
+    }),
+  ],
 };

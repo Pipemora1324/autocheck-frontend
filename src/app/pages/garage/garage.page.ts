@@ -1,6 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import type { GarageVehicle } from '../../models/garage';
 import { GarageService } from '../../services/garage.service';
 
@@ -23,12 +25,17 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
 
     @switch (state()) {
       @case ('loading') {
-        <div class="state-box" role="status"><span class="spinner" aria-hidden="true"></span> Cargando tu garaje…</div>
+        <div class="state-box" role="status">
+          <span class="spinner" aria-hidden="true"></span> Cargando tu garaje…
+        </div>
       }
       @case ('unverified') {
         <div class="state-box">
           <strong>Confirma tu correo para ver tu garaje.</strong>
-          <p>Abre el enlace que te enviamos. Si no te llegó, usa el botón "Reenviar correo" del aviso de arriba.</p>
+          <p>
+            Abre el enlace que te enviamos. Si no te llegó, usa el botón "Reenviar correo" del aviso
+            de arriba.
+          </p>
         </div>
       }
       @case ('error') {
@@ -43,7 +50,10 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
           <div class="state-box empty">
             <span class="empty-icon" aria-hidden="true">🚗</span>
             <strong>Aún no tienes vehículos en tu garaje.</strong>
-            <p>Agrega tu carro o moto con una foto de la tarjeta de propiedad o llenando los datos a mano.</p>
+            <p>
+              Agrega tu carro o moto con una foto de la tarjeta de propiedad o llenando los datos a
+              mano.
+            </p>
             <a class="primary-button link-button" routerLink="/garaje/nuevo">Agregar vehículo</a>
           </div>
         } @else {
@@ -54,7 +64,15 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
                   <span class="plate-tag">{{ vehicle.plate }}</span>
                   <span class="vehicle-name">
                     <strong>{{ vehicle.brand }} {{ vehicle.model }}</strong>
-                    <small>{{ vehicle.kind === 'moto' ? 'Moto' : 'Carro' }}@if (vehicle.year) { · {{ vehicle.year }} }@if (vehicle.mileageKm !== null) { · {{ vehicle.mileageKm.toLocaleString('es-CO') }} km }</small>
+                    <small
+                      >{{ vehicle.kind === 'moto' ? 'Moto' : 'Carro' }}
+                      @if (vehicle.year) {
+                        · {{ vehicle.year }}
+                      }
+                      @if (vehicle.mileageKm !== null) {
+                        · {{ vehicle.mileageKm.toLocaleString('es-CO') }} km
+                      }
+                    </small>
                   </span>
                   <span class="vehicle-cta">Diagnosticar un testigo →</span>
                 </a>
@@ -64,7 +82,7 @@ type LoadState = 'loading' | 'ready' | 'unverified' | 'error';
         }
       }
     }
-  `
+  `,
 })
 export class GaragePage {
   private readonly garage = inject(GarageService);
@@ -75,10 +93,17 @@ export class GaragePage {
 
   constructor() {
     this.load();
+    inject(RealtimeService)
+      .on('garage:changed')
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        this.load(true);
+      });
   }
 
-  load(): void {
-    this.state.set('loading');
+  /** silent: actualiza desde otro cliente sin mostrar el estado de carga. */
+  load(silent = false): void {
+    if (!silent) this.state.set('loading');
     this.garage.list().subscribe({
       next: (vehicles) => {
         this.vehicles.set(vehicles);
@@ -91,7 +116,7 @@ export class GaragePage {
         }
         this.error.set(apiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'));
         this.state.set('error');
-      }
+      },
     });
   }
 }

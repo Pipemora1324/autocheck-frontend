@@ -1,7 +1,20 @@
-import type { ChatExchange, ChatHistory, ChatMessage, Diagnosed, DiagnosedTelltale, DiagnosisHistory, DiagnosisHistoryItem, NeedsBetterInput, NotRecognized, TelltaleSummary } from '../app/models/diagnosis';
+import type {
+  ChatExchange,
+  ChatHistory,
+  ChatMessage,
+  Diagnosed,
+  DiagnosedTelltale,
+  DiagnosisHistory,
+  DiagnosisHistoryItem,
+  NeedsBetterInput,
+  NotRecognized,
+  TelltaleSummary,
+} from '../app/models/diagnosis';
 
-const STOP_ACTION = 'Detente en un lugar seguro en cuanto puedas, apaga el motor y llama a un taller o a una grúa. No sigas manejando.';
-const AIRBAG_ACTION = 'El vehículo puede moverse, pero esta protección puede no funcionar en un choque. No dependas de ella y llévalo a revisión hoy.';
+const STOP_ACTION =
+  'Detente en un lugar seguro en cuanto puedas, apaga el motor y llama a un taller o a una grúa. No sigas manejando.';
+const AIRBAG_ACTION =
+  'El vehículo puede moverse, pero esta protección puede no funcionar en un choque. No dependas de ella y llévalo a revisión hoy.';
 
 export const telltale = (overrides: Partial<DiagnosedTelltale> = {}): DiagnosedTelltale => ({
   nombre: 'Check engine',
@@ -19,11 +32,20 @@ export const telltale = (overrides: Partial<DiagnosedTelltale> = {}): DiagnosedT
   cuandoIrAlMecanico: 'En los próximos días. Si se ignora, se puede dañar el catalizador.',
   notaDelVehiculo: null,
   confianza: 0.93,
-  ...overrides
+  ...overrides,
 });
 
 export const redTelltale = (overrides: Partial<DiagnosedTelltale> = {}): DiagnosedTelltale =>
-  telltale({ nombre: 'Presión de aceite', descripcionSimbolo: 'Aceitera roja.', color: 'rojo', categoria: 'aceite', urgencia: 'rojo', debeDetenerse: true, accion: STOP_ACTION, ...overrides });
+  telltale({
+    nombre: 'Presión de aceite',
+    descripcionSimbolo: 'Aceitera roja.',
+    color: 'rojo',
+    categoria: 'aceite',
+    urgencia: 'rojo',
+    debeDetenerse: true,
+    accion: STOP_ACTION,
+    ...overrides,
+  });
 
 export const diagnosed = (overrides: Partial<Diagnosed> = {}): Diagnosed => ({
   status: 'diagnosed',
@@ -39,45 +61,89 @@ export const diagnosed = (overrides: Partial<Diagnosed> = {}): Diagnosed => ({
   mejorFoto: null,
   testigos: [telltale()],
   aviso: 'Orientación general. Un mecánico debe confirmar el diagnóstico.',
-  ...overrides
+  ...overrides,
 });
 
 export const diagnosedRed = (overrides: Partial<Diagnosed> = {}): Diagnosed =>
-  diagnosed({ urgenciaGeneral: 'rojo', debeDetenerse: true, accionGeneral: STOP_ACTION, testigos: [redTelltale()], ...overrides });
+  diagnosed({
+    urgenciaGeneral: 'rojo',
+    debeDetenerse: true,
+    accionGeneral: STOP_ACTION,
+    testigos: [redTelltale()],
+    ...overrides,
+  });
 
 export const diagnosedAirbag = (overrides: Partial<Diagnosed> = {}): Diagnosed =>
   diagnosed({
     urgenciaGeneral: 'rojo',
     debeDetenerse: false,
     accionGeneral: AIRBAG_ACTION,
-    testigos: [telltale({ nombre: 'Airbag', descripcionSimbolo: 'Persona con un círculo delante del pecho.', color: 'rojo', categoria: 'airbag', urgencia: 'rojo', accion: AIRBAG_ACTION })],
-    ...overrides
+    testigos: [
+      telltale({
+        nombre: 'Airbag',
+        descripcionSimbolo: 'Persona con un círculo delante del pecho.',
+        color: 'rojo',
+        categoria: 'airbag',
+        urgencia: 'rojo',
+        accion: AIRBAG_ACTION,
+      }),
+    ],
+    ...overrides,
   });
 
 export const needsBetterInput = (overrides: Partial<NeedsBetterInput> = {}): NeedsBetterInput => ({
   status: 'needs_better_input',
   reason: 'no_telltales_found',
-  pista: 'La foto está muy oscura. Toma otra foto más cercana, sin reflejos y con el tablero encendido, o elígelo de la lista.',
-  avisoSeguridad: 'Mientras lo identificas: si el testigo es rojo o notas algo raro al manejar, detente en un lugar seguro.',
+  pista:
+    'La foto está muy oscura. Toma otra foto más cercana, sin reflejos y con el tablero encendido, o elígelo de la lista.',
+  avisoSeguridad:
+    'Mientras lo identificas: si el testigo es rojo o notas algo raro al manejar, detente en un lugar seguro.',
   puedeElegirDeLaLista: true,
-  ...overrides
+  ...overrides,
 });
 
 export const notRecognized = (): NotRecognized => ({
   status: 'not_recognized',
   pista: 'La imagen no muestra un tablero.',
-  avisoSeguridad: 'Mientras lo identificas: si el testigo es rojo o notas algo raro al manejar, detente en un lugar seguro.',
-  puedeElegirDeLaLista: true
+  avisoSeguridad:
+    'Mientras lo identificas: si el testigo es rojo o notas algo raro al manejar, detente en un lugar seguro.',
+  puedeElegirDeLaLista: true,
 });
 
 export const telltales = (): TelltaleSummary[] => [
-  { id: 'presion_aceite', nombre: 'Presión de aceite', alias: ['aceitera', 'lámpara de aceite'], severidad: 'rojo', debeDetenerse: true },
-  { id: 'check_engine', nombre: 'Check engine', alias: ['motor', 'luz del motor'], severidad: 'amarillo', debeDetenerse: false },
-  { id: 'tpms', nombre: 'Presión de llantas (TPMS)', alias: ['herradura'], severidad: 'amarillo', debeDetenerse: false },
-  { id: 'cinturon', nombre: 'Cinturón sin abrochar', alias: ['cinturón'], severidad: 'informativo', debeDetenerse: false }
+  {
+    id: 'presion_aceite',
+    nombre: 'Presión de aceite',
+    alias: ['aceitera', 'lámpara de aceite'],
+    severidad: 'rojo',
+    debeDetenerse: true,
+  },
+  {
+    id: 'check_engine',
+    nombre: 'Check engine',
+    alias: ['motor', 'luz del motor'],
+    severidad: 'amarillo',
+    debeDetenerse: false,
+  },
+  {
+    id: 'tpms',
+    nombre: 'Presión de llantas (TPMS)',
+    alias: ['herradura'],
+    severidad: 'amarillo',
+    debeDetenerse: false,
+  },
+  {
+    id: 'cinturon',
+    nombre: 'Cinturón sin abrochar',
+    alias: ['cinturón'],
+    severidad: 'informativo',
+    debeDetenerse: false,
+  },
 ];
 
-export const historyItem = (overrides: Partial<DiagnosisHistoryItem> = {}): DiagnosisHistoryItem => ({
+export const historyItem = (
+  overrides: Partial<DiagnosisHistoryItem> = {},
+): DiagnosisHistoryItem => ({
   id: '22222222-2222-4222-8222-222222222222',
   telltaleId: 'tpms',
   nombre: 'Presión de llantas (TPMS)',
@@ -88,20 +154,34 @@ export const historyItem = (overrides: Partial<DiagnosisHistoryItem> = {}): Diag
   confianza: null,
   descripcion: 'una llanta baja',
   createdAt: '2026-11-04T17:00:00.000Z',
-  ...overrides
+  ...overrides,
 });
 
-export const history = (items: DiagnosisHistoryItem[] = [], overrides: Partial<DiagnosisHistory> = {}): DiagnosisHistory => ({
+export const history = (
+  items: DiagnosisHistoryItem[] = [],
+  overrides: Partial<DiagnosisHistory> = {},
+): DiagnosisHistory => ({
   items,
   page: 1,
   limit: 10,
   total: items.length,
   totalPages: items.length ? 1 : 0,
-  ...overrides
+  ...overrides,
 });
 
-export const chatMessage = (role: ChatMessage['role'], content: string, id = `${role}-${content}`): ChatMessage => ({ id, role, content, createdAt: '2026-11-04T17:00:00.000Z' });
+export const chatMessage = (
+  role: ChatMessage['role'],
+  content: string,
+  id = `${role}-${content}`,
+): ChatMessage => ({ id, role, content, createdAt: '2026-11-04T17:00:00.000Z' });
 
-export const chatHistory = (messages: ChatMessage[] = [], restantes = 20): ChatHistory => ({ messages, restantes });
+export const chatHistory = (messages: ChatMessage[] = [], restantes = 20): ChatHistory => ({
+  messages,
+  restantes,
+});
 
-export const chatExchange = (question: string, answer: string, restantes = 19): ChatExchange => ({ question: chatMessage('user', question), answer: chatMessage('assistant', answer), restantes });
+export const chatExchange = (question: string, answer: string, restantes = 19): ChatExchange => ({
+  question: chatMessage('user', question),
+  answer: chatMessage('assistant', answer),
+  restantes,
+});

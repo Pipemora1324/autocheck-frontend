@@ -12,7 +12,7 @@ import { Component, input } from '@angular/core';
       }
       <ng-content />
     </section>
-  `
+  `,
 })
 export class AuthCardComponent {
   readonly eyebrow = input('Cuenta AutoCheck-CO');

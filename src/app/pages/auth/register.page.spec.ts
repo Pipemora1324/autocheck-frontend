@@ -13,12 +13,17 @@ describe('RegisterPage', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [RegisterPage], providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    TestBed.configureTestingModule({
+      imports: [RegisterPage],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
     http = TestBed.inject(HttpTestingController);
     vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+  });
 
   const render = async () => {
     const fixture = TestBed.createComponent(RegisterPage);
@@ -57,7 +62,11 @@ describe('RegisterPage', () => {
     element.querySelector<HTMLInputElement>('#register-terms')!.click();
     element.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     const request = http.expectOne(`${API}/auth/register`);
-    expect(request.request.body).toEqual({ email: 'ana@example.com', password: clave, acceptedTerms: true });
+    expect(request.request.body).toEqual({
+      email: 'ana@example.com',
+      password: clave,
+      acceptedTerms: true,
+    });
     request.flush(sessionFor('access-1', 'user', false), { status: 201, statusText: 'Created' });
   });
 });

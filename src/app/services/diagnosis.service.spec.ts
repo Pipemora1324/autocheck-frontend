@@ -10,6 +10,21 @@ const API = environment.apiUrl;
 const DIAGNOSES = `${API}/garage/ABC-123/diagnoses`;
 
 describe('DiagnosisService', () => {
+  let service: DiagnosisService;
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(DiagnosisService);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    http.verify();
+  });
+
   it('detail pide la entrada con GET', () => {
     TestBed.inject(DiagnosisService).detail('ABC-123', 'id-1').subscribe();
     const controller = TestBed.inject(HttpTestingController);
@@ -17,17 +32,6 @@ describe('DiagnosisService', () => {
     expect(request.request.method).toBe('GET');
     request.flush({});
   });
-
-  let service: DiagnosisService;
-  let http: HttpTestingController;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
-    service = TestBed.inject(DiagnosisService);
-    http = TestBed.inject(HttpTestingController);
-  });
-
-  afterEach(() => http.verify());
 
   it('telltales pide el catálogo una sola vez', async () => {
     const first = firstValueFrom(service.telltales());
@@ -70,7 +74,10 @@ describe('DiagnosisService', () => {
     expect(form.get('telltaleId')).toBe('tpms');
     expect(form.has('image')).toBe(false);
     expect(form.has('description')).toBe(false);
-    request.flush(diagnosed({ origen: 'manual', confianza: null }), { status: 201, statusText: 'Created' });
+    request.flush(diagnosed({ origen: 'manual', confianza: null }), {
+      status: 201,
+      statusText: 'Created',
+    });
   });
 
   it('diagnose solo envía parpadea si se indica', () => {
@@ -104,7 +111,9 @@ describe('DiagnosisService', () => {
 
   it('remove borra por id y codifica la placa', () => {
     service.remove('ABC-12D', '22222222-2222-4222-8222-222222222222').subscribe();
-    const request = http.expectOne(`${API}/garage/ABC-12D/diagnoses/22222222-2222-4222-8222-222222222222`);
+    const request = http.expectOne(
+      `${API}/garage/ABC-12D/diagnoses/22222222-2222-4222-8222-222222222222`,
+    );
     expect(request.request.method).toBe('DELETE');
     request.flush(null, { status: 204, statusText: 'No Content' });
   });

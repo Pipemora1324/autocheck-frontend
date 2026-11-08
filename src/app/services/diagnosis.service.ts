@@ -2,7 +2,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, shareReplay, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import type { ChatExchange, ChatHistory, Diagnosed, DiagnosisHistory, DiagnosisInput, DiagnosisResult, TelltaleSummary } from '../models/diagnosis';
+import type {
+  ChatExchange,
+  ChatHistory,
+  Diagnosed,
+  DiagnosisHistory,
+  DiagnosisInput,
+  DiagnosisResult,
+  TelltaleSummary,
+} from '../models/diagnosis';
 
 export const HISTORY_PAGE_SIZE = 10;
 
@@ -17,25 +25,33 @@ export class DiagnosisService {
 
   /** El catálogo no cambia durante la sesión: se pide una vez, y si falla se permite reintentar. */
   telltales(): Observable<TelltaleSummary[]> {
-    this.telltales$ ??= this.http.get<{ telltales: TelltaleSummary[] }>(`${environment.apiUrl}/telltales`).pipe(
-      map(({ telltales }) => telltales),
-      catchError((error: unknown) => {
-        this.telltales$ = null;
-        return throwError(() => error);
-      }),
-      shareReplay({ bufferSize: 1, refCount: false })
-    );
+    this.telltales$ ??= this.http
+      .get<{ telltales: TelltaleSummary[] }>(`${environment.apiUrl}/telltales`)
+      .pipe(
+        map(({ telltales }) => telltales),
+        catchError((error: unknown) => {
+          this.telltales$ = null;
+          return throwError(() => error);
+        }),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
     return this.telltales$;
   }
 
   /** multipart/form-data con image, description, telltaleId y/o parpadea. */
-  diagnose(plate: string, { image, description, telltaleId, blinking }: DiagnosisInput): Observable<DiagnosisResult> {
+  diagnose(
+    plate: string,
+    { image, description, telltaleId, blinking }: DiagnosisInput,
+    requestId?: string,
+  ): Observable<DiagnosisResult> {
     const form = new FormData();
     if (telltaleId) form.append('telltaleId', telltaleId);
     if (description) form.append('description', description);
     if (blinking !== undefined) form.append('parpadea', String(blinking));
     if (image) form.append('image', image, image.name);
-    return this.http.post<DiagnosisResult>(this.url(plate), form);
+    // Opcional: con este id el socket informa el progreso. Sin socket, la respuesta llega igual por HTTP.
+    const headers: Record<string, string> = requestId ? { 'x-diagnosis-request': requestId } : {};
+    return this.http.post<DiagnosisResult>(this.url(plate), form, { headers });
   }
 
   history(plate: string, page = 1, limit = HISTORY_PAGE_SIZE): Observable<DiagnosisHistory> {
@@ -53,10 +69,12 @@ export class DiagnosisService {
   }
 
   sendMessage(plate: string, id: string, message: string): Observable<ChatExchange> {
-    return this.http.post<ChatExchange>(`${this.url(plate)}/${encodeURIComponent(id)}/messages`, { message });
+    return this.http.post<ChatExchange>(`${this.url(plate)}/${encodeURIComponent(id)}/messages`, {
+      message,
+    });
   }
 
   remove(plate: string, id: string): Observable<void> {
-    return this.http.delete<void>(`${this.url(plate)}/${encodeURIComponent(id)}`);
+    return this.http.delete<undefined>(`${this.url(plate)}/${encodeURIComponent(id)}`);
   }
 }

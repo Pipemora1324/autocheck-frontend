@@ -1,6 +1,11 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators, type AbstractControl } from '@angular/forms';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+  type AbstractControl,
+} from '@angular/forms';
 import { FUEL_TYPES, SERVICE_TYPES, type GarageVehicleFields } from '../../models/garage';
 
 /** Confianza por debajo de la cual un dato leído de la tarjeta se resalta para que el usuario lo revise. */
@@ -23,13 +28,17 @@ const LABELS: Record<VehicleFormField, string> = {
   chassis: 'Número de chasis',
   fuelType: 'Combustible',
   serviceType: 'Servicio',
-  mileageKm: 'Kilometraje'
+  mileageKm: 'Kilometraje',
 };
 
 const text = (value: string) => value.trim() || null;
 const integer = (value: string) => (value.trim() === '' ? null : Number(value));
 
 /** Formulario de alta y edición. Los campos de baja confianza (lectura de la tarjeta) se resaltan. */
+interface LengthError {
+  requiredLength: number;
+}
+
 @Component({
   selector: 'app-vehicle-form',
   imports: [ReactiveFormsModule, NgTemplateOutlet],
@@ -39,60 +48,139 @@ const integer = (value: string) => (value.trim() === '' ? null : Number(value));
         @if (mode() === 'create') {
           <div class="form-field" [class.low-confidence]="isLow('plate')">
             <label for="vehicle-plate">{{ labels.plate }} *</label>
-            <input id="vehicle-plate" formControlName="plate" autocomplete="off" placeholder="ABC-123 o ABC-12D" [attr.aria-invalid]="!!error('plate')" />
-            <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'plate' }" />
+            <input
+              id="vehicle-plate"
+              formControlName="plate"
+              autocomplete="off"
+              placeholder="ABC-123 o ABC-12D"
+              [attr.aria-invalid]="!!error('plate')"
+            />
+            <ng-container
+              [ngTemplateOutlet]="hints"
+              [ngTemplateOutletContext]="{ $implicit: 'plate' }"
+            />
           </div>
         }
         <div class="form-field" [class.low-confidence]="isLow('brand')">
           <label for="vehicle-brand">{{ labels.brand }} *</label>
-          <input id="vehicle-brand" formControlName="brand" maxlength="60" [attr.aria-invalid]="!!error('brand')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'brand' }" />
+          <input
+            id="vehicle-brand"
+            formControlName="brand"
+            maxlength="60"
+            [attr.aria-invalid]="!!error('brand')"
+          />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'brand' }"
+          />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('model')">
           <label for="vehicle-model">{{ labels.model }} *</label>
-          <input id="vehicle-model" formControlName="model" maxlength="80" placeholder="Por ejemplo, Sandero" [attr.aria-invalid]="!!error('model')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'model' }" />
+          <input
+            id="vehicle-model"
+            formControlName="model"
+            maxlength="80"
+            placeholder="Por ejemplo, Sandero"
+            [attr.aria-invalid]="!!error('model')"
+          />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'model' }"
+          />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('year')">
           <label for="vehicle-year">{{ labels.year }}</label>
-          <input id="vehicle-year" formControlName="year" inputmode="numeric" placeholder="Por ejemplo, 2019" [attr.aria-invalid]="!!error('year')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'year' }" />
+          <input
+            id="vehicle-year"
+            formControlName="year"
+            inputmode="numeric"
+            placeholder="Por ejemplo, 2019"
+            [attr.aria-invalid]="!!error('year')"
+          />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'year' }"
+          />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('color')">
           <label for="vehicle-color">{{ labels.color }}</label>
-          <input id="vehicle-color" formControlName="color" maxlength="40" [attr.aria-invalid]="!!error('color')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'color' }" />
+          <input
+            id="vehicle-color"
+            formControlName="color"
+            maxlength="40"
+            [attr.aria-invalid]="!!error('color')"
+          />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'color' }"
+          />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('cylinderCc')">
           <label for="vehicle-cc">{{ labels.cylinderCc }}</label>
-          <input id="vehicle-cc" formControlName="cylinderCc" inputmode="numeric" [attr.aria-invalid]="!!error('cylinderCc')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'cylinderCc' }" />
+          <input
+            id="vehicle-cc"
+            formControlName="cylinderCc"
+            inputmode="numeric"
+            [attr.aria-invalid]="!!error('cylinderCc')"
+          />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'cylinderCc' }"
+          />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('chassis')">
           <label for="vehicle-chassis">{{ labels.chassis }}</label>
-          <input id="vehicle-chassis" formControlName="chassis" maxlength="30" autocomplete="off" [attr.aria-invalid]="!!error('chassis')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'chassis' }" />
+          <input
+            id="vehicle-chassis"
+            formControlName="chassis"
+            maxlength="30"
+            autocomplete="off"
+            [attr.aria-invalid]="!!error('chassis')"
+          />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'chassis' }"
+          />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('fuelType')">
           <label for="vehicle-fuel">{{ labels.fuelType }}</label>
           <select id="vehicle-fuel" formControlName="fuelType">
             <option value="">Sin especificar</option>
-            @for (fuel of fuelTypes; track fuel) { <option [value]="fuel">{{ fuel }}</option> }
+            @for (fuel of fuelTypes; track fuel) {
+              <option [value]="fuel">{{ fuel }}</option>
+            }
           </select>
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'fuelType' }" />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'fuelType' }"
+          />
         </div>
         <div class="form-field" [class.low-confidence]="isLow('serviceType')">
           <label for="vehicle-service">{{ labels.serviceType }}</label>
           <select id="vehicle-service" formControlName="serviceType">
             <option value="">Sin especificar</option>
-            @for (service of serviceTypes; track service) { <option [value]="service">{{ service }}</option> }
+            @for (service of serviceTypes; track service) {
+              <option [value]="service">{{ service }}</option>
+            }
           </select>
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'serviceType' }" />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'serviceType' }"
+          />
         </div>
         <div class="form-field">
           <label for="vehicle-mileage">{{ labels.mileageKm }} (opcional)</label>
-          <input id="vehicle-mileage" formControlName="mileageKm" inputmode="numeric" placeholder="Solo números, en km" [attr.aria-invalid]="!!error('mileageKm')" />
-          <ng-container [ngTemplateOutlet]="hints" [ngTemplateOutletContext]="{ $implicit: 'mileageKm' }" />
+          <input
+            id="vehicle-mileage"
+            formControlName="mileageKm"
+            inputmode="numeric"
+            placeholder="Solo números, en km"
+            [attr.aria-invalid]="!!error('mileageKm')"
+          />
+          <ng-container
+            [ngTemplateOutlet]="hints"
+            [ngTemplateOutletContext]="{ $implicit: 'mileageKm' }"
+          />
         </div>
       </div>
 
@@ -106,14 +194,18 @@ const integer = (value: string) => (value.trim() === '' ? null : Number(value));
         }
       </ng-template>
 
-      @if (serverError()) { <p class="form-error" role="alert">{{ serverError() }}</p> }
+      @if (serverError()) {
+        <p class="form-error" role="alert">{{ serverError() }}</p>
+      }
 
       <div class="form-actions">
-        <button class="primary-button" type="submit" [disabled]="submitting()">{{ submitting() ? 'Guardando…' : submitLabel() }}</button>
+        <button class="primary-button" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Guardando…' : submitLabel() }}
+        </button>
         <ng-content />
       </div>
     </form>
-  `
+  `,
 })
 export class VehicleFormComponent {
   readonly mode = input<'create' | 'edit'>('create');
@@ -135,25 +227,38 @@ export class VehicleFormComponent {
     plate: ['', [Validators.required, Validators.pattern(PLATE_PATTERN)]],
     brand: ['', [Validators.required, Validators.maxLength(60)]],
     model: ['', [Validators.required, Validators.maxLength(80)]],
-    year: ['', [Validators.pattern(/^\d{4}$/), Validators.min(1950), Validators.max(new Date().getFullYear() + 1)]],
+    year: [
+      '',
+      [
+        Validators.pattern(/^\d{4}$/),
+        Validators.min(1950),
+        Validators.max(new Date().getFullYear() + 1),
+      ],
+    ],
     color: ['', [Validators.maxLength(40)]],
     cylinderCc: ['', [Validators.pattern(/^\d+$/), Validators.min(1), Validators.max(20000)]],
     chassis: ['', [Validators.pattern(CHASSIS_PATTERN)]],
     fuelType: [''],
     serviceType: [''],
-    mileageKm: ['', [Validators.pattern(/^\d+$/), Validators.max(9_999_999)]]
+    mileageKm: ['', [Validators.pattern(/^\d+$/), Validators.max(9_999_999)]],
   });
 
   private readonly lowFields = computed(() => {
     const confidence = this.confidence();
     if (!confidence) return new Set<string>();
-    return new Set(Object.entries(confidence).filter(([, value]) => (value ?? 0) < LOW_CONFIDENCE).map(([field]) => field));
+    return new Set(
+      Object.entries(confidence)
+        .filter(([, value]) => value < LOW_CONFIDENCE)
+        .map(([field]) => field),
+    );
   });
 
   constructor() {
     effect(() => {
       const initial = this.initial();
-      const values = Object.fromEntries(Object.entries(initial).map(([key, value]) => [key, value === null || value === undefined ? '' : String(value)]));
+      const values = Object.fromEntries(
+        Object.entries(initial).map(([key, value]) => [key, String(value ?? '')]),
+      );
       this.form.reset({ ...this.form.getRawValue(), ...values });
       if (this.mode() === 'edit') this.form.controls.plate.disable();
     });
@@ -168,17 +273,19 @@ export class VehicleFormComponent {
   }
 
   error(field: VehicleFormField): string | null {
-    const server = this.serverFieldErrors()[field];
+    const server = this.serverFieldErrors()[field] as string | undefined;
     const control: AbstractControl = this.form.controls[field];
     if (control.valid || !(control.touched || this.submitted())) return server ?? null;
     const errors = control.errors ?? {};
     if (errors['required']) return `${LABELS[field]} es obligatorio.`;
-    if (field === 'plate') return 'Ingresa una placa colombiana válida: ABC-123 (carro) o ABC-12D (moto).';
+    if (field === 'plate')
+      return 'Ingresa una placa colombiana válida: ABC-123 (carro) o ABC-12D (moto).';
     if (field === 'year') return `Ingresa un año entre 1950 y ${new Date().getFullYear() + 1}.`;
     if (field === 'cylinderCc') return 'El cilindraje va en cc, sin decimales (máximo 20000).';
     if (field === 'mileageKm') return 'El kilometraje va en km, solo números (máximo 9.999.999).';
     if (field === 'chassis') return 'Solo letras, números y guiones (5 a 30 caracteres).';
-    if (errors['maxlength']) return `No puede superar ${errors['maxlength'].requiredLength} caracteres.`;
+    if (errors['maxlength'])
+      return `No puede superar ${(errors['maxlength'] as LengthError).requiredLength} caracteres.`;
     return 'Revisa este campo.';
   }
 
@@ -197,7 +304,7 @@ export class VehicleFormComponent {
       chassis: text(raw.chassis)?.toUpperCase() ?? null,
       fuelType: (raw.fuelType || null) as VehicleFormValue['fuelType'],
       serviceType: (raw.serviceType || null) as VehicleFormValue['serviceType'],
-      mileageKm: integer(raw.mileageKm)
+      mileageKm: integer(raw.mileageKm),
     });
   }
 }

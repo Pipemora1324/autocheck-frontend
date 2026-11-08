@@ -2,7 +2,14 @@ import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
-import { chatHistory, diagnosed, diagnosedRed, needsBetterInput, notRecognized, telltales } from '../../../testing/diagnosis-fixtures';
+import {
+  chatHistory,
+  diagnosed,
+  diagnosedRed,
+  needsBetterInput,
+  notRecognized,
+  telltales,
+} from '../../../testing/diagnosis-fixtures';
 import { publicConfig } from '../../../testing/garage-fixtures';
 import { DiagnosePanelComponent, diagnosisErrorView } from './diagnose-panel.component';
 
@@ -16,18 +23,23 @@ const imageFile = (type: string, bytes: number) => {
   return file;
 };
 
-const httpError = (status: number, body: object | null) => new HttpErrorResponse({ status, error: body });
+const httpError = (status: number, body: object | null) =>
+  new HttpErrorResponse({ status, error: body });
 
 describe('diagnosisErrorView', () => {
   it('el proveedor ocupado sugiere elegir a mano', () => {
-    const view = diagnosisErrorView(httpError(503, { code: 'DIAGNOSIS_PROVIDER_BUSY', message: 'x', retryAfterSeconds: 60 }));
+    const view = diagnosisErrorView(
+      httpError(503, { code: 'DIAGNOSIS_PROVIDER_BUSY', message: 'x', retryAfterSeconds: 60 }),
+    );
     expect(view.message).toContain('cupo gratuito');
     expect(view.message).toContain('elige el testigo de la lista');
     expect(view.suggestList).toBe(true);
   });
 
   it('una falla del servicio no culpa a la foto ni pide repetirla', () => {
-    const view = diagnosisErrorView(httpError(503, { code: 'DIAGNOSIS_UNAVAILABLE', status: 'provider_error', message: 'x' }));
+    const view = diagnosisErrorView(
+      httpError(503, { code: 'DIAGNOSIS_UNAVAILABLE', status: 'provider_error', message: 'x' }),
+    );
     expect(view.message).toContain('no por tu foto');
     expect(view.message).not.toContain('otra foto');
     expect(view.suggestList).toBe(true);
@@ -42,8 +54,11 @@ describe('diagnosisErrorView', () => {
   });
 
   it('el límite por hora de la IA muestra el mensaje del servidor y ofrece la lista, que tiene otro contador', () => {
-    const message = 'Alcanzaste el máximo de 15 diagnósticos con IA por hora. Intenta más tarde o elige el testigo de la lista, que no cuenta para este límite.';
-    const view = diagnosisErrorView(httpError(429, { code: 'RATE_LIMITED', limite: 'ia', message }));
+    const message =
+      'Alcanzaste el máximo de 15 diagnósticos con IA por hora. Intenta más tarde o elige el testigo de la lista, que no cuenta para este límite.';
+    const view = diagnosisErrorView(
+      httpError(429, { code: 'RATE_LIMITED', limite: 'ia', message }),
+    );
     expect(view.message).toBe(message);
     expect(view.message).not.toContain('cupo gratuito');
     expect(view.suggestList).toBe(true);
@@ -51,7 +66,9 @@ describe('diagnosisErrorView', () => {
 
   it('agotar el límite de la lista o el tope total no ofrece la lista, porque fallaría', () => {
     for (const limite of ['manual', 'total']) {
-      const view = diagnosisErrorView(httpError(429, { code: 'RATE_LIMITED', limite, message: 'Alcanzaste el máximo por hora.' }));
+      const view = diagnosisErrorView(
+        httpError(429, { code: 'RATE_LIMITED', limite, message: 'Alcanzaste el máximo por hora.' }),
+      );
       expect(view.message).toBe('Alcanzaste el máximo por hora.');
       expect(view.suggestList).toBe(false);
     }
@@ -71,7 +88,9 @@ describe('diagnosisErrorView', () => {
   });
 
   it('el servidor dormido avisa que está conectando', () => {
-    expect(diagnosisErrorView(httpError(502, null)).message).toContain('Conectando con el servidor');
+    expect(diagnosisErrorView(httpError(502, null)).message).toContain(
+      'Conectando con el servidor',
+    );
   });
 });
 
@@ -79,8 +98,17 @@ describe('DiagnosePanelComponent', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    vi.stubGlobal('URL', Object.assign(globalThis.URL, { createObjectURL: vi.fn(() => 'blob:vista-previa'), revokeObjectURL: vi.fn() }));
-    TestBed.configureTestingModule({ imports: [DiagnosePanelComponent], providers: [provideHttpClient(), provideHttpClientTesting()] });
+    vi.stubGlobal(
+      'URL',
+      Object.assign(globalThis.URL, {
+        createObjectURL: vi.fn(() => 'blob:vista-previa'),
+        revokeObjectURL: vi.fn(),
+      }),
+    );
+    TestBed.configureTestingModule({
+      imports: [DiagnosePanelComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     http = TestBed.inject(HttpTestingController);
   });
 
@@ -91,9 +119,19 @@ describe('DiagnosePanelComponent', () => {
   });
 
   // El chat aparece junto a cada resultado y pide la conversación guardada.
-  const flushChat = () => http.match((request) => request.url.endsWith('/messages')).forEach((request) => request.flush(chatHistory()));
+  const flushChat = () => {
+    http
+      .match((request) => request.url.endsWith('/messages'))
+      .forEach((request) => {
+        request.flush(chatHistory());
+      });
+  };
 
-  const render = async (config = publicConfig({ diagnosis: { enabled: true, provider: 'gemini', manualSelection: true, notice: NOTICE } })) => {
+  const render = async (
+    config = publicConfig({
+      diagnosis: { enabled: true, provider: 'gemini', manualSelection: true, notice: NOTICE },
+    }),
+  ) => {
     const fixture = TestBed.createComponent(DiagnosePanelComponent);
     fixture.componentRef.setInput('plate', 'ABC-123');
     fixture.detectChanges();
@@ -107,8 +145,11 @@ describe('DiagnosePanelComponent', () => {
     Object.defineProperty(input, 'files', { value: [file], configurable: true });
     input.dispatchEvent(new Event('change'));
   };
-  const button = (element: HTMLElement, text: string) => [...element.querySelectorAll('button')].find((item) => item.textContent?.includes(text));
-  const acknowledge = (element: HTMLElement) => element.querySelector<HTMLInputElement>('.ack-field input')!.click();
+  const button = (element: HTMLElement, text: string) =>
+    [...element.querySelectorAll('button')].find((item) => item.textContent?.includes(text));
+  const acknowledge = (element: HTMLElement) => {
+    element.querySelector<HTMLInputElement>('.ack-field input')!.click();
+  };
   const describeTelltale = (element: HTMLElement, text: string) => {
     const area = element.querySelector<HTMLTextAreaElement>('#dash-description')!;
     area.value = text;
@@ -117,12 +158,17 @@ describe('DiagnosePanelComponent', () => {
 
   it('muestra el aviso de privacidad y pide que sea el tablero propio antes de poder enviar', async () => {
     const { fixture, element } = await render();
-    const notices = [...element.querySelectorAll('.provider-notice')].map((item) => item.textContent);
+    const notices = [...element.querySelectorAll('.provider-notice')].map(
+      (item) => item.textContent,
+    );
     expect(notices.join(' ')).toContain(NOTICE);
     expect(notices.join(' ')).toContain('tu propio vehículo');
     // El aviso aparece antes de los controles para elegir la foto.
     const notice = element.querySelector('.provider-notice')!;
-    expect(notice.compareDocumentPosition(element.querySelector('#dash-camera')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      notice.compareDocumentPosition(element.querySelector('#dash-camera')!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     const send = button(element, 'Diagnosticar')!;
     expect(send.disabled).toBe(true);
@@ -139,7 +185,9 @@ describe('DiagnosePanelComponent', () => {
   it('ofrece la cámara en móvil, valida tipo y tamaño, y muestra la vista previa', async () => {
     const { fixture, element } = await render();
     expect(element.querySelector('#dash-camera')?.getAttribute('capture')).toBe('environment');
-    expect(element.querySelector('#dash-camera')?.getAttribute('accept')).toBe('image/jpeg,image/png,image/webp');
+    expect(element.querySelector('#dash-camera')?.getAttribute('accept')).toBe(
+      'image/jpeg,image/png,image/webp',
+    );
 
     choose(element, imageFile('image/gif', 1024));
     await fixture.whenStable();
@@ -153,7 +201,9 @@ describe('DiagnosePanelComponent', () => {
     choose(element, imageFile('image/webp', 1024), '#dash-camera');
     await fixture.whenStable();
     expect(element.querySelector('.form-error')).toBeNull();
-    expect(element.querySelector('.photo-preview img')?.getAttribute('src')).toBe('blob:vista-previa');
+    expect(element.querySelector('.photo-preview img')?.getAttribute('src')).toBe(
+      'blob:vista-previa',
+    );
 
     button(element, 'Quitar foto')!.click();
     await fixture.whenStable();
@@ -221,7 +271,9 @@ describe('DiagnosePanelComponent', () => {
     expect(element.querySelector('app-diagnosis-result')).toBeNull();
     expect(emitted).toHaveLength(0);
 
-    [...box.querySelectorAll('button')].find((item) => item.textContent?.includes('Repetir la foto'))!.click();
+    [...box.querySelectorAll('button')]
+      .find((item) => item.textContent?.includes('Repetir la foto'))!
+      .click();
     await fixture.whenStable();
     expect(element.querySelector('.better-input')).toBeNull();
     expect(element.querySelector('.photo-preview')).toBeNull();
@@ -236,7 +288,9 @@ describe('DiagnosePanelComponent', () => {
     button(element, 'Diagnosticar')!.click();
     http.expectOne(DIAGNOSES).flush(needsBetterInput({ reason: 'low_confidence' }));
     await fixture.whenStable();
-    expect(element.querySelector('.better-input')?.textContent).toContain('acércate más al testigo');
+    expect(element.querySelector('.better-input')?.textContent).toContain(
+      'acércate más al testigo',
+    );
 
     button(element, 'Diagnosticar')!.click();
     http.expectOne(DIAGNOSES).flush(notRecognized());
@@ -277,7 +331,10 @@ describe('DiagnosePanelComponent', () => {
     http.expectOne(DIAGNOSES).flush(diagnosed(), { status: 201, statusText: 'Created' });
     await fixture.whenStable();
     const chat = element.querySelector('app-diagnosis-chat')!;
-    expect(element.querySelector('app-diagnosis-result')!.compareDocumentPosition(chat) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      element.querySelector('app-diagnosis-result')!.compareDocumentPosition(chat) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('desde needs_better_input lleva a la lista', async () => {
@@ -289,7 +346,9 @@ describe('DiagnosePanelComponent', () => {
     http.expectOne(DIAGNOSES).flush(needsBetterInput());
     await fixture.whenStable();
 
-    [...element.querySelector('.better-input')!.querySelectorAll('button')].find((item) => item.textContent?.includes('Elegir de la lista'))!.click();
+    [...element.querySelector('.better-input')!.querySelectorAll('button')]
+      .find((item) => item.textContent?.includes('Elegir de la lista'))!
+      .click();
     await fixture.whenStable();
     http.expectOne(`${API}/telltales`).flush({ telltales: telltales() });
     await fixture.whenStable();
@@ -310,10 +369,15 @@ describe('DiagnosePanelComponent', () => {
     const form = request.request.body as FormData;
     expect(form.get('telltaleId')).toBe('presion_aceite');
     expect(form.has('image')).toBe(false);
-    request.flush(diagnosedRed({ origen: 'manual', confianza: null }), { status: 201, statusText: 'Created' });
+    request.flush(diagnosedRed({ origen: 'manual', confianza: null }), {
+      status: 201,
+      statusText: 'Created',
+    });
     await fixture.whenStable();
 
-    expect(element.querySelector('.stop-banner')?.textContent).toContain('llama a un taller o a una grúa');
+    expect(element.querySelector('.stop-banner')?.textContent).toContain(
+      'llama a un taller o a una grúa',
+    );
   });
 
   it('una foto ya elegida no se envía si el usuario elige de la lista', async () => {
@@ -327,7 +391,10 @@ describe('DiagnosePanelComponent', () => {
     button(element, 'Check engine')!.click();
     const request = http.expectOne(DIAGNOSES);
     expect((request.request.body as FormData).has('image')).toBe(false);
-    request.flush(diagnosed({ origen: 'manual', confianza: null }), { status: 201, statusText: 'Created' });
+    request.flush(diagnosed({ origen: 'manual', confianza: null }), {
+      status: 201,
+      statusText: 'Created',
+    });
   });
 
   it('si el cupo de la IA está ocupado lo explica y lleva a la lista, y da el aviso de seguridad', async () => {
@@ -336,13 +403,20 @@ describe('DiagnosePanelComponent', () => {
     acknowledge(element);
     await fixture.whenStable();
     button(element, 'Diagnosticar')!.click();
-    http.expectOne(DIAGNOSES).flush({ message: 'x', code: 'DIAGNOSIS_PROVIDER_BUSY', retryAfterSeconds: 60 }, { status: 503, statusText: 'Service Unavailable' });
+    http
+      .expectOne(DIAGNOSES)
+      .flush(
+        { message: 'x', code: 'DIAGNOSIS_PROVIDER_BUSY', retryAfterSeconds: 60 },
+        { status: 503, statusText: 'Service Unavailable' },
+      );
     await fixture.whenStable();
 
     const box = element.querySelector('.diagnose-error')!;
     expect(box.textContent).toContain('cupo gratuito');
     expect(box.textContent).toContain('detente en un lugar seguro');
-    [...box.querySelectorAll('button')].find((item) => item.textContent?.includes('Elegir de la lista'))!.click();
+    [...box.querySelectorAll('button')]
+      .find((item) => item.textContent?.includes('Elegir de la lista'))!
+      .click();
     await fixture.whenStable();
     http.expectOne(`${API}/telltales`).flush({ telltales: telltales() });
   });
@@ -354,23 +428,42 @@ describe('DiagnosePanelComponent', () => {
     await fixture.whenStable();
     button(element, 'Diagnosticar')!.click();
     http.expectOne(DIAGNOSES).flush(
-      { message: 'Alcanzaste el máximo de 15 diagnósticos con IA por hora.', code: 'RATE_LIMITED', limite: 'ia' },
-      { status: 429, statusText: 'Too Many Requests' }
+      {
+        message: 'Alcanzaste el máximo de 15 diagnósticos con IA por hora.',
+        code: 'RATE_LIMITED',
+        limite: 'ia',
+      },
+      { status: 429, statusText: 'Too Many Requests' },
     );
     await fixture.whenStable();
     const box = element.querySelector('.diagnose-error')!;
     expect(box.textContent).toContain('15 diagnósticos con IA por hora');
     expect(box.textContent).not.toContain('cupo gratuito');
-    expect([...box.querySelectorAll('button')].some((item) => item.textContent?.includes('Elegir de la lista'))).toBe(true);
+    expect(
+      [...box.querySelectorAll('button')].some((item) =>
+        item.textContent?.includes('Elegir de la lista'),
+      ),
+    ).toBe(true);
 
     button(element, 'Diagnosticar')!.click();
-    http.expectOne(DIAGNOSES).flush({ message: 'Alcanzaste el máximo por hora.', code: 'RATE_LIMITED', limite: 'total' }, { status: 429, statusText: 'Too Many Requests' });
+    http
+      .expectOne(DIAGNOSES)
+      .flush(
+        { message: 'Alcanzaste el máximo por hora.', code: 'RATE_LIMITED', limite: 'total' },
+        { status: 429, statusText: 'Too Many Requests' },
+      );
     await fixture.whenStable();
-    expect([...element.querySelector('.diagnose-error')!.querySelectorAll('button')]).toHaveLength(0);
+    expect([...element.querySelector('.diagnose-error')!.querySelectorAll('button')]).toHaveLength(
+      0,
+    );
   });
 
   it('con la IA apagada abre la lista y lo explica en la pestaña de foto, sin ofrecer subir nada', async () => {
-    const { fixture, element } = await render(publicConfig({ diagnosis: { enabled: false, provider: 'none', manualSelection: true, notice: null } }));
+    const { fixture, element } = await render(
+      publicConfig({
+        diagnosis: { enabled: false, provider: 'none', manualSelection: true, notice: null },
+      }),
+    );
     http.expectOne(`${API}/telltales`).flush({ telltales: telltales() });
     await fixture.whenStable();
     expect(element.querySelector('#telltale-search')).toBeTruthy();

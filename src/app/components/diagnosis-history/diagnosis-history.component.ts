@@ -1,7 +1,14 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { formatDateTime } from '../../core/format-date';
 import { apiErrorCode, apiErrorMessage, EMAIL_NOT_VERIFIED } from '../../core/http/api-error';
-import { DIAGNOSIS_DISCLAIMER, ordersStop, type Diagnosed, type DiagnosisHistoryItem } from '../../models/diagnosis';
+import {
+  DIAGNOSIS_DISCLAIMER,
+  ordersStop,
+  type Diagnosed,
+  type DiagnosisHistoryItem,
+} from '../../models/diagnosis';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import { DiagnosisService } from '../../services/diagnosis.service';
 import { DiagnosisChatComponent } from '../diagnosis-chat/diagnosis-chat.component';
 import { DiagnosisResultComponent } from '../diagnosis-result/diagnosis-result.component';
@@ -11,14 +18,21 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
 /** Historial del vehículo, con detalle y borrado. La explicación se pide al abrirla, sin crear otra entrada. */
 @Component({
   selector: 'app-diagnosis-history',
-  imports: [DiagnosisChatComponent, DiagnosisResultComponent, ModalComponent, SeverityBadgeComponent],
+  imports: [
+    DiagnosisChatComponent,
+    DiagnosisResultComponent,
+    ModalComponent,
+    SeverityBadgeComponent,
+  ],
   template: `
     <section class="panel" aria-labelledby="history-title">
       <h2 id="history-title">Historial de diagnósticos</h2>
 
       @switch (state()) {
         @case ('loading') {
-          <div class="state-box" role="status"><span class="spinner" aria-hidden="true"></span> Cargando el historial…</div>
+          <div class="state-box" role="status">
+            <span class="spinner" aria-hidden="true"></span> Cargando el historial…
+          </div>
         }
         @case ('unverified') {
           <div class="state-box"><strong>Confirma tu correo para ver tu historial.</strong></div>
@@ -27,7 +41,9 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
           <div class="state-box error" role="alert">
             <strong>No pudimos cargar el historial.</strong>
             <p>{{ error() }}</p>
-            <button class="secondary-button" type="button" (click)="load(page())">Reintentar</button>
+            <button class="secondary-button" type="button" (click)="load(page())">
+              Reintentar
+            </button>
           </div>
         }
         @case ('ready') {
@@ -49,9 +65,23 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
             </ul>
             @if (totalPages() > 1) {
               <nav class="pagination" aria-label="Páginas del historial">
-                <button class="secondary-button" type="button" [disabled]="page() <= 1" (click)="load(page() - 1)">Anterior</button>
+                <button
+                  class="secondary-button"
+                  type="button"
+                  [disabled]="page() <= 1"
+                  (click)="load(page() - 1)"
+                >
+                  Anterior
+                </button>
                 <span>Página {{ page() }} de {{ totalPages() }}</span>
-                <button class="secondary-button" type="button" [disabled]="page() >= totalPages()" (click)="load(page() + 1)">Siguiente</button>
+                <button
+                  class="secondary-button"
+                  type="button"
+                  [disabled]="page() >= totalPages()"
+                  (click)="load(page() + 1)"
+                >
+                  Siguiente
+                </button>
               </nav>
             }
           }
@@ -60,16 +90,38 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
     </section>
 
     @if (selected(); as item) {
-      <app-modal heading="Detalle del diagnóstico" (close)="closeDetail()">
+      <app-modal heading="Detalle del diagnóstico" (closed)="closeDetail()">
         @if (item.severidad === 'rojo' && stops(item) && !detail()) {
-          <div class="stop-banner" role="alert"><strong>Si sigue encendido: detente en un lugar seguro y llama a un taller o a una grúa.</strong></div>
+          <div class="stop-banner" role="alert">
+            <strong
+              >Si sigue encendido: detente en un lugar seguro y llama a un taller o a una
+              grúa.</strong
+            >
+          </div>
         }
         <dl class="data-list">
-          <div><dt>Testigo</dt><dd>{{ name(item) }}</dd></div>
-          <div><dt>Fecha</dt><dd>{{ date(item.createdAt) }}</dd></div>
-          <div><dt>Semáforo</dt><dd><app-severity-badge [severity]="item.severidad" [stop]="stops(item)" /></dd></div>
-          <div><dt>Cómo se identificó</dt><dd>{{ origin(item) }}</dd></div>
-          @if (item.descripcion) { <div><dt>Tu descripción</dt><dd>{{ item.descripcion }}</dd></div> }
+          <div>
+            <dt>Testigo</dt>
+            <dd>{{ name(item) }}</dd>
+          </div>
+          <div>
+            <dt>Fecha</dt>
+            <dd>{{ date(item.createdAt) }}</dd>
+          </div>
+          <div>
+            <dt>Semáforo</dt>
+            <dd><app-severity-badge [severity]="item.severidad" [stop]="stops(item)" /></dd>
+          </div>
+          <div>
+            <dt>Cómo se identificó</dt>
+            <dd>{{ origin(item) }}</dd>
+          </div>
+          @if (item.descripcion) {
+            <div>
+              <dt>Tu descripción</dt>
+              <dd>{{ item.descripcion }}</dd>
+            </div>
+          }
         </dl>
         @if (detail(); as explanation) {
           <app-diagnosis-result [result]="explanation" />
@@ -78,28 +130,52 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
           <p class="source-note">{{ disclaimer }}</p>
         }
         @if (detailLoading()) {
-          <div class="state-box" role="status"><span class="spinner" aria-hidden="true"></span> Cargando la explicación…</div>
+          <div class="state-box" role="status">
+            <span class="spinner" aria-hidden="true"></span> Cargando la explicación…
+          </div>
         }
-        @if (detailError()) { <p class="form-error" role="alert">{{ detailError() }}</p> }
-        @if (deleteError()) { <p class="form-error" role="alert">{{ deleteError() }}</p> }
+        @if (detailError()) {
+          <p class="form-error" role="alert">{{ detailError() }}</p>
+        }
+        @if (deleteError()) {
+          <p class="form-error" role="alert">{{ deleteError() }}</p>
+        }
         @if (confirmingDelete()) {
           <p><strong>¿Eliminar este diagnóstico? Esta acción no se puede deshacer.</strong></p>
           <div class="form-actions">
-            <button class="danger-button" type="button" [disabled]="deleting()" (click)="remove(item)">{{ deleting() ? 'Eliminando…' : 'Sí, eliminar' }}</button>
-            <button class="secondary-button" type="button" (click)="confirmingDelete.set(false)">Cancelar</button>
+            <button
+              class="danger-button"
+              type="button"
+              [disabled]="deleting()"
+              (click)="remove(item)"
+            >
+              {{ deleting() ? 'Eliminando…' : 'Sí, eliminar' }}
+            </button>
+            <button class="secondary-button" type="button" (click)="confirmingDelete.set(false)">
+              Cancelar
+            </button>
           </div>
         } @else {
           <div class="form-actions">
             @if (!detail()) {
-              <button class="secondary-button" type="button" [disabled]="detailLoading()" (click)="loadDetail(item)">Ver la explicación completa</button>
+              <button
+                class="secondary-button"
+                type="button"
+                [disabled]="detailLoading()"
+                (click)="loadDetail(item)"
+              >
+                Ver la explicación completa
+              </button>
             }
-            <button class="danger-button" type="button" (click)="confirmingDelete.set(true)">Eliminar</button>
+            <button class="danger-button" type="button" (click)="confirmingDelete.set(true)">
+              Eliminar
+            </button>
             <button class="secondary-button" type="button" (click)="closeDetail()">Cerrar</button>
           </div>
         }
       </app-modal>
     }
-  `
+  `,
 })
 export class DiagnosisHistoryComponent {
   private readonly diagnosis = inject(DiagnosisService);
@@ -131,23 +207,38 @@ export class DiagnosisHistoryComponent {
     effect(() => {
       this.plate();
       this.refreshKey();
-      untracked(() => this.load(1));
+      untracked(() => {
+        this.load(1);
+      });
     });
+    inject(RealtimeService)
+      .on('diagnosis:changed')
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ action, plate, id }) => {
+        if (plate !== this.plate()) return;
+        // Se borró desde otro cliente lo que aquí está abierto.
+        if (action === 'deleted' && this.selected()?.id === id && !this.deleting())
+          this.closeDetail();
+        if (!this.deleting()) this.load(this.page(), true);
+      });
   }
 
   name(item: DiagnosisHistoryItem): string {
     const name = item.nombre ?? item.telltaleId ?? 'Diagnóstico';
-    const others = (item.totalTestigos ?? 1) - 1;
+    const others = item.totalTestigos - 1;
     return others > 0 ? `${name} y ${others} más` : name;
   }
 
   origin(item: DiagnosisHistoryItem): string {
     if (item.origen === 'manual') return 'Elegido por ti de la lista';
-    return item.confianza === null ? 'Inteligencia artificial' : `Inteligencia artificial (confianza ${Math.round(item.confianza * 100)} %)`;
+    return item.confianza === null
+      ? 'Inteligencia artificial'
+      : `Inteligencia artificial (confianza ${Math.round(item.confianza * 100)} %)`;
   }
 
-  load(page: number): void {
-    this.state.set('loading');
+  /** silent: actualiza desde otro cliente sin mostrar el estado de carga. */
+  load(page: number, silent = false): void {
+    if (!silent) this.state.set('loading');
     this.diagnosis.history(this.plate(), page).subscribe({
       next: ({ items, page: current, totalPages }) => {
         // Si se borró lo último de una página, se muestra la anterior.
@@ -167,7 +258,7 @@ export class DiagnosisHistoryComponent {
         }
         this.error.set(apiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'));
         this.state.set('error');
-      }
+      },
     });
   }
 
@@ -196,8 +287,10 @@ export class DiagnosisHistoryComponent {
       error: (error: unknown) => {
         if (this.selected()?.id !== item.id) return;
         this.detailLoading.set(false);
-        this.detailError.set(apiErrorMessage(error, 'No pudimos cargar la explicación. Inténtalo de nuevo.'));
-      }
+        this.detailError.set(
+          apiErrorMessage(error, 'No pudimos cargar la explicación. Inténtalo de nuevo.'),
+        );
+      },
     });
   }
 
@@ -219,7 +312,7 @@ export class DiagnosisHistoryComponent {
       error: (error: unknown) => {
         this.deleting.set(false);
         this.deleteError.set(apiErrorMessage(error, 'No se pudo eliminar el diagnóstico.'));
-      }
+      },
     });
   }
 }
