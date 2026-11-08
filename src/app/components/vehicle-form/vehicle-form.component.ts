@@ -257,10 +257,7 @@ export class VehicleFormComponent {
     effect(() => {
       const initial = this.initial();
       const values = Object.fromEntries(
-        Object.entries(initial).map(([key, value]) => [
-          key,
-          String((value) ?? ''),
-        ]),
+        Object.entries(initial).map(([key, value]) => [key, String(value ?? '')]),
       );
       this.form.reset({ ...this.form.getRawValue(), ...values });
       if (this.mode() === 'edit') this.form.controls.plate.disable();
