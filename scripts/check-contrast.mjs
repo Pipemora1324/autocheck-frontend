@@ -8,10 +8,8 @@ const read = (selector) => {
   const start = source.indexOf(selector);
   const body = source.slice(source.indexOf('{', start) + 1, source.indexOf('\n}', start));
   return Object.fromEntries(
-    [...body.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})\s*;/gi)].map(([, name, value]) => [
-      name,
-      value,
-    ]),
+    // Prettier deja un solo espacio tras los dos puntos: la expresión no necesita retroceder.
+    [...body.matchAll(/--([\w-]+): (#[0-9a-f]{6});/gi)].map(([, name, value]) => [name, value]),
   );
 };
 const dark = read(":root[data-theme='dark']");
@@ -22,7 +20,7 @@ const channel = (value) => {
   return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
 };
 const luminance = (hex) => {
-  const [r, g, b] = [1, 3, 5].map((at) => channel(parseInt(hex.slice(at, at + 2), 16)));
+  const [r, g, b] = [1, 3, 5].map((at) => channel(Number.parseInt(hex.slice(at, at + 2), 16)));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 const ratio = (a, b) => {
@@ -56,7 +54,10 @@ for (const [name, tokens] of Object.entries(themes)) {
   }));
   const failed = results.filter((item) => item.value < item.minimum);
   failures += failed.length;
-  const lowest = results.reduce((a, b) => (a.value / a.minimum < b.value / b.minimum ? a : b));
+  const lowest = results.reduce(
+    (a, b) => (a.value / a.minimum < b.value / b.minimum ? a : b),
+    results[0],
+  );
   console.log(
     `${name}: ${results.length - failed.length}/${results.length} pares cumplen. El más justo: ${lowest.front} sobre ${lowest.back}, ${lowest.value.toFixed(2)}:1`,
   );

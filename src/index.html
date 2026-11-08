@@ -33,13 +33,17 @@
           var stored = localStorage.getItem('autocheck-theme');
           if (stored === 'dark' || stored === 'light') theme = stored;
           else if (matchMedia('(prefers-color-scheme: light)').matches) theme = 'light';
-        } catch (e) {}
+        } catch (e) {
+          // Sin almacenamiento (modo privado): queda el tema oscuro por defecto.
+        }
         document.documentElement.dataset.theme = theme;
         // La portada solo se adelanta a quien no tiene sesión y va a verla.
         var visitor = false;
         try {
           visitor = !localStorage.getItem('autocheck-session');
-        } catch (e) {}
+        } catch (e) {
+          // Sin almacenamiento no se sabe si hubo sesión: se pinta el shell genérico.
+        }
         var path = location.pathname;
         document.documentElement.dataset.shell =
           visitor && (path === '/' || path === '/inicio') ? 'portada' : 'app';
