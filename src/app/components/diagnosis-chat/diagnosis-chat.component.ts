@@ -1,13 +1,27 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { apiErrorCode, apiErrorMessage } from '../../core/http/api-error';
 import { PublicConfigService } from '../../core/http/public-config.service';
+import { motionAllowed } from '../../core/motion';
 import { RealtimeService } from '../../core/realtime/realtime.service';
+import { SkeletonComponent } from '../skeleton/skeleton.component';
 import type { ChatMessage } from '../../models/diagnosis';
 import { DiagnosisService } from '../../services/diagnosis.service';
 
 export const MAX_CHAT_MESSAGE_LENGTH = 500;
+const TYPING_CHARS_PER_MS = 0.12;
 export const CHAT_SUGGESTIONS: readonly string[] = [
   '¿Por qué está en rojo?',
   '¿Puedo seguir manejando?',
@@ -30,14 +44,13 @@ export function chatErrorMessage(error: unknown): string {
 /** Conversación con la IA sobre un diagnóstico. Lo guardado se puede leer aunque la IA esté apagada. */
 @Component({
   selector: 'app-diagnosis-chat',
+  imports: [SkeletonComponent],
   template: `
     <section class="diagnosis-chat" aria-labelledby="chat-title">
       <h3 id="chat-title">Pregúntale a la IA sobre este diagnóstico</h3>
 
       @if (loading()) {
-        <div class="state-box" role="status">
-          <span class="spinner" aria-hidden="true"></span> Cargando la conversación…
-        </div>
+        <app-skeleton label="Cargando la conversación…" [lines]="2" />
       } @else if (loadError()) {
         <div class="form-error" role="alert">
           <p>{{ loadError() }}</p>
@@ -45,16 +58,32 @@ export function chatErrorMessage(error: unknown): string {
         </div>
       } @else {
         @if (messages().length || sending()) {
-          <div class="chat-log" role="log" aria-live="polite" aria-label="Conversación">
+          <div
+            #log
+            class="chat-log"
+            role="log"
+            aria-live="polite"
+            aria-label="Conversación"
+            tabindex="0"
+            (scroll)="onScroll()"
+          >
             @for (message of messages(); track message.id) {
               <div class="chat-bubble {{ message.role }}">
                 <span class="visually-hidden">{{ message.role === 'user' ? 'Tú:' : 'IA:' }}</span>
-                {{ message.content }}
+                @if (message.id === typingId()) {
+                  <span class="visually-hidden">{{ message.content }}</span>
+                  <span aria-hidden="true">{{ typedText() }}</span>
+                } @else {
+                  {{ message.content }}
+                }
               </div>
             }
             @if (sending()) {
               <div class="chat-bubble user pending">{{ pending() }}</div>
-              <div class="chat-bubble assistant typing" role="status">La IA está escribiendo…</div>
+              <div class="chat-bubble assistant typing" role="status">
+                <span class="visually-hidden">La IA está escribiendo…</span>
+                <span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              </div>
             }
           </div>
         }
@@ -123,6 +152,14 @@ export class DiagnosisChatComponent {
   readonly sending = signal(false);
   readonly error = signal('');
 
+  /** Solo se anima la respuesta que acaba de llegar: la validación ya ocurrió, esto es presentación. */
+  readonly typingId = signal<string | null>(null);
+  readonly typedText = signal('');
+  private typingFrame = 0;
+  private readonly log = viewChild<ElementRef<HTMLElement>>('log');
+  /** Se deja de bajar solo si la persona subió a leer. */
+  private stuckToBottom = true;
+
   /** Si la configuración no cargó, se ofrece igual: el backend responde 503 y se explica. */
   readonly aiEnabled = computed(() => this.publicConfig.config()?.diagnosis.enabled ?? true);
   readonly canSend = computed(() => !this.sending() && this.draft().trim() !== '');
@@ -135,6 +172,16 @@ export class DiagnosisChatComponent {
         this.load();
       });
     });
+    effect(() => {
+      this.messages();
+      this.sending();
+      this.typedText();
+      const log = this.log()?.nativeElement;
+      if (log && this.stuckToBottom) log.scrollTop = log.scrollHeight;
+    });
+    inject(DestroyRef).onDestroy(() => {
+      cancelAnimationFrame(this.typingFrame);
+    });
     inject(RealtimeService)
       .on('chat:message')
       .pipe(takeUntilDestroyed())
@@ -145,11 +192,33 @@ export class DiagnosisChatComponent {
 
   /** La misma respuesta puede llegar por HTTP y por el socket: cada mensaje se muestra una vez. */
   private addExchange(question: ChatMessage, answer: ChatMessage, restantes: number): void {
+    const isNew = !this.messages().some((message) => message.id === answer.id);
     this.messages.update((current) => {
       const known = new Set(current.map((message) => message.id));
       return [...current, ...[question, answer].filter((message) => !known.has(message.id))];
     });
     this.remaining.set(restantes);
+    if (isNew) this.animate(answer);
+  }
+
+  protected onScroll(): void {
+    const log = this.log()?.nativeElement;
+    if (log) this.stuckToBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
+  }
+
+  private animate({ id, content }: ChatMessage): void {
+    cancelAnimationFrame(this.typingFrame);
+    this.stuckToBottom = true;
+    if (!motionAllowed()) return;
+    this.typingId.set(id);
+    const start = performance.now();
+    const tick = (now: number) => {
+      const shown = Math.floor((now - start) * TYPING_CHARS_PER_MS);
+      this.typedText.set(content.slice(0, shown));
+      if (shown < content.length) this.typingFrame = requestAnimationFrame(tick);
+      else this.typingId.set(null);
+    };
+    this.typingFrame = requestAnimationFrame(tick);
   }
 
   load(): void {

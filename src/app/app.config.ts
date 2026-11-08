@@ -5,7 +5,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
@@ -17,7 +17,11 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     // serverStatusInterceptor va primero para que sus reintentos vuelvan a pasar por authInterceptor (token vigente).
     provideHttpClient(withInterceptors([serverStatusInterceptor, authInterceptor])),
-    provideRouter(routes, withComponentInputBinding()),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      withViewTransitions({ skipInitialTransition: true }),
+    ),
     // Arranca la restauración de sesión sin bloquear el render: los guards esperan su resultado.
     provideAppInitializer(() => {
       inject(AuthService).restoreSession().subscribe();

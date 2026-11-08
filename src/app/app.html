@@ -1,8 +1,21 @@
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div class="app-shell">
   <header class="topbar">
-    <a class="brand" routerLink="/" aria-label="AutoCheck-CO, ir a mi garaje"
-      ><span class="brand-mark">A</span><span><strong>AutoCheck</strong><small>CO</small></span></a
-    >
+    <a class="brand" routerLink="/" aria-label="AutoCheck-CO, ir a mi garaje">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path
+            d="M6.5 23a11.500 11.500 0 1 1 19 0"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
+          <path d="M16 17.200 23 9.500l-5.200 9.200z" fill="var(--needle)" />
+          <circle cx="16" cy="17.500" r="2.400" fill="var(--text)" />
+        </svg>
+      </span>
+      <span><strong>AutoCheck</strong><small>CO</small></span>
+    </a>
     @if (auth.user()) {
       <nav class="main-nav" aria-label="Principal">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
@@ -12,8 +25,8 @@
       </nav>
     }
     <div class="topbar-meta">
-      <span class="system-status {{ health.status() }}" role="status" aria-live="polite"
-        ><i aria-hidden="true"></i> {{ healthLabel() }}</span
+      <output class="system-status {{ health.status() }}" aria-live="polite"
+        ><i aria-hidden="true"></i> {{ healthLabel() }}</output
       >
       <app-connection-status />
       @if (auth.user(); as user) {
@@ -25,23 +38,76 @@
         </span>
         <button class="logout-button" type="button" (click)="logout()">Cerrar sesión</button>
       }
+      <app-theme-toggle />
     </div>
   </header>
-  <main id="top">
+  <main id="contenido" tabindex="-1" [class.anonymous]="!auth.user()">
     @if (auth.status() === 'unknown') {
-      <div class="session-loading" role="status">
+      <output class="session-loading">
         <span class="spinner" aria-hidden="true"></span>Restaurando sesión…
-      </div>
+      </output>
     }
     <app-server-status-banner />
     <app-email-verification-banner />
     <router-outlet />
   </main>
-  <footer>
+  <footer [class.with-bottom-nav]="auth.user()">
     <span>AutoCheck-CO</span
     ><span
       >Orientación general: un mecánico debe confirmar el diagnóstico ·
       <a routerLink="/privacidad">Privacidad</a></span
     >
   </footer>
+  @if (auth.user()) {
+    <nav class="bottom-nav" aria-label="Navegación inferior">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M3 11 12 4l9 7v9H3zM8 20v-6h8v6" />
+        </svg>
+        Mi garaje
+      </a>
+      <a routerLink="/garaje/nuevo" routerLinkActive="active">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM12 8v8M8 12h8" />
+        </svg>
+        Agregar
+      </a>
+      <a routerLink="/cuenta" routerLinkActive="active">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 21c1-4.500 4-6.500 8-6.500s7 2 8 6.500" />
+        </svg>
+        Mi cuenta
+      </a>
+      <button type="button" aria-label="Cerrar sesión" (click)="logout()">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M10 4H4v16h6M15 8l4 4-4 4M9 12h10" />
+        </svg>
+        Salir
+      </button>
+    </nav>
+  }
 </div>

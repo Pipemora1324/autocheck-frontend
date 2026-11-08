@@ -1,415 +1,226 @@
-/* Garaje: lista, formularios, detalle y diálogos. Global porque lo comparten varias páginas. */
+/* Garaje: placa, tarjetas de vehículo, detalle y alta. */
 .page-header {
-  margin-bottom: 1.6rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 .page-header h1 {
-  margin: 0.45rem 0 0.3rem;
-  color: #102a41;
-  font-size: clamp(1.7rem, 3.4vw, 2.5rem);
-  letter-spacing: -0.04em;
-  line-height: 1.1;
+  margin-top: var(--space-2);
 }
 .page-header p {
-  margin: 0;
-  color: #6d7e90;
-  font-size: 0.9rem;
+  margin-top: var(--space-2);
+  color: var(--text-soft);
+}
+.page-header .form-actions {
+  margin-top: 0;
 }
 .back-link {
-  display: inline-block;
-  margin-bottom: 1rem;
-  color: #0b78c9;
-  font-size: 0.8rem;
-  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  margin-bottom: var(--space-2);
+  font-weight: 600;
   text-decoration: none;
 }
-.back-link:hover {
-  text-decoration: underline;
-}
 
-.primary-button.link-button {
+/* Placa colombiana particular: fondo amarillo y letras negras, sin logos. */
+.plate-tag {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 0;
-  text-decoration: none;
+  align-self: flex-start;
+  width: fit-content;
+  min-width: 7.2em;
+  padding: 0.28em 1.1em 0.32em;
+  border: 2px solid var(--plate-edge);
+  border-radius: 6px;
+  color: var(--plate-ink);
+  background: linear-gradient(180deg, #ffdc4d, var(--plate-bg) 45%);
+  box-shadow:
+    inset 0 0 0 2px var(--plate-bg),
+    inset 0 0 0 3px rgb(0 0 0 / 55%),
+    0 2px 6px rgb(0 0 0 / 35%);
+  font-family: var(--font-mono);
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.2;
   white-space: nowrap;
 }
-.secondary-button,
-.danger-button {
-  min-height: 40px;
-  padding: 0.55rem 0.95rem;
-  border: 1px solid #cfe1ed;
-  border-radius: 10px;
-  color: #0876c7;
-  background: #f3f9fd;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
-  cursor: pointer;
-  text-decoration: none;
+/* Los tornillos de la placa. */
+.plate-tag::before,
+.plate-tag::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 55%);
 }
-.secondary-button:hover {
-  background: #e7f4fc;
+.plate-tag::before {
+  left: 6px;
 }
-.danger-button {
-  border-color: #f4c7c3;
-  color: #b42318;
-  background: #fff5f4;
+.plate-tag::after {
+  right: 6px;
 }
-.danger-button:hover {
-  background: #ffebea;
-}
-.secondary-button:disabled,
-.danger-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.panel {
-  padding: 1.5rem;
-  border: 1px solid #dce5ec;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 14px 36px rgba(24, 54, 78, 0.06);
-}
-.panel + .panel {
-  margin-top: 1.2rem;
-}
-.panel h2 {
-  margin: 0 0 1rem;
-  color: #173b5d;
-  font-size: 1.05rem;
-}
-
-.state-box {
-  padding: 2.5rem 1.2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.55rem;
-  border: 1px dashed #cbd8e2;
-  border-radius: 18px;
-  color: #64758a;
-  background: #f8fafc;
-  font-size: 0.88rem;
-  text-align: center;
-}
-.state-box strong {
-  color: #29465e;
-  font-size: 1rem;
-}
-.state-box p {
-  max-width: 460px;
-  margin: 0;
-  line-height: 1.5;
-}
-.state-box.error {
-  border-color: #f4c7c3;
-  background: #fffafa;
-}
-.state-box .primary-button {
-  margin-top: 0.8rem;
-}
-.empty-icon {
-  font-size: 2.2rem;
+.plate-tag.large {
+  font-size: 1.32rem;
 }
 
 .vehicle-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 0.8rem;
   list-style: none;
 }
 .vehicle-card {
-  padding: 1rem 1.2rem;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 1rem;
-  border: 1px solid #dce5ec;
-  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
   color: inherit;
-  background: #fff;
+  background: var(--surface);
+  box-shadow: var(--shadow), var(--bezel);
   text-decoration: none;
   transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+    transform var(--normal) var(--ease-out),
+    border-color var(--fast);
 }
-.vehicle-card:hover,
-.vehicle-card:focus-visible {
-  border-color: #9ccbec;
-  box-shadow: 0 10px 26px rgba(24, 54, 78, 0.08);
-}
-.plate-tag {
-  padding: 0.45rem 0.7rem;
-  border: 2px solid #102a41;
-  border-radius: 8px;
-  color: #102a41;
-  background: #ffd83d;
-  font-size: 0.95rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
+.vehicle-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
 }
 .vehicle-name {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
+  gap: 2px;
 }
 .vehicle-name strong {
-  color: #173b5d;
-  font-size: 0.98rem;
-}
-.vehicle-name small {
-  color: #718197;
-  font-size: 0.78rem;
-}
-.vehicle-cta {
-  color: #0876c7;
-  font-size: 0.8rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-/* Formularios del garaje */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.2rem 1rem;
-}
-.form-field {
-  display: flex;
-  flex-direction: column;
-}
-.form-field.full {
-  grid-column: 1 / -1;
-}
-.form-field label,
-.field-label {
-  margin: 0.9rem 0 0.35rem;
-  color: #4f6477;
-  font-size: 0.74rem;
-  font-weight: 800;
-}
-.form-field input,
-.form-field select,
-.dialog input,
-.dialog select {
-  width: 100%;
-  padding: 0.68rem 0.8rem;
-  border: 1px solid #d3dce4;
-  border-radius: 10px;
-  color: #17324d;
-  background: #fff;
-  font: inherit;
-  font-size: 0.9rem;
-  outline: none;
-}
-.form-field input:focus,
-.form-field select:focus,
-.dialog input:focus,
-.dialog select:focus {
-  border-color: #0b78c9;
-  box-shadow: 0 0 0 3px rgba(11, 120, 201, 0.12);
-}
-.form-field input[aria-invalid='true'],
-.form-field select[aria-invalid='true'] {
-  border-color: #d92d20;
-}
-.form-field.low-confidence input,
-.form-field.low-confidence select {
-  border-color: #e0a100;
-  background: #fffbea;
-}
-.confidence-hint {
-  margin: 0.3rem 0 0;
-  color: #8a5a00;
-  font-size: 0.72rem;
+  font-family: var(--font-display);
+  font-size: 1.18rem;
   font-weight: 700;
 }
-.form-actions {
-  margin-top: 1.4rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  align-items: center;
+.vehicle-name small {
+  color: var(--muted);
+  font-size: 0.86rem;
 }
-.form-actions .primary-button {
-  margin-top: 0;
-}
-
-/* Agregar vehículo */
-.choice-grid {
+.vehicle-readouts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--line);
 }
-.choice-card {
-  padding: 1.4rem;
+.readout {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.5rem;
-  border: 1px solid #dce5ec;
-  border-radius: 16px;
-  background: #fff;
-  text-align: left;
-  font: inherit;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.readout-label {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.readout-value {
+  font-family: var(--font-mono);
+  font-size: 1.02rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.vehicle-cta {
+  margin-top: auto;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.detail-grid {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+}
+.detail-grid > div {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+@media (min-width: 960px) {
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+  .detail-grid > .panel {
+    position: sticky;
+    top: 84px;
+  }
+}
+
+/* Alta del vehículo */
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: var(--space-4);
+}
+.choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: var(--space-5);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-l);
   color: inherit;
+  background: var(--surface);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
+  transition:
+    transform var(--normal) var(--ease-out),
+    border-color var(--fast);
 }
-.choice-card:hover:not(:disabled) {
-  border-color: #9ccbec;
-}
-.choice-card:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
+.choice-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
 }
 .choice-card strong {
-  color: #173b5d;
-  font-size: 1rem;
-}
-.choice-card span {
-  color: #6d7e90;
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
 }
 .choice-icon {
   font-size: 1.6rem;
-}
-.provider-notice {
-  margin: 0 0 1rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: 12px;
-  color: #0d4f80;
-  background: #eef7fd;
-  font-size: 0.8rem;
-  line-height: 1.5;
+  line-height: 1;
 }
 .file-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.7rem;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
 }
 .file-actions label {
-  cursor: pointer;
-}
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-.warning-list {
-  margin: 0 0 1rem;
-  padding: 0.7rem 1rem 0.7rem 2rem;
-  border-radius: 12px;
-  color: #6b4a00;
-  background: #fff8e6;
-  font-size: 0.8rem;
-}
-
-/* Detalle */
-.detail-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 1.2rem;
-  align-items: start;
-}
-.detail-grid > .panel {
-  margin-top: 0;
-}
-.form-notice + .detail-grid {
-  margin-top: 1.2rem;
-}
-.data-list {
   margin: 0;
 }
-.data-list div {
-  display: grid;
-  grid-template-columns: 9rem 1fr;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #edf1f5;
-}
-.data-list div:last-child {
-  border-bottom: 0;
-}
-.data-list dt {
-  color: #718197;
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  color: var(--muted);
+  font-family: var(--font-mono);
   font-size: 0.8rem;
-}
-.data-list dd {
-  margin: 0;
-  color: #173b5d;
-  font-size: 0.85rem;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-.source-note {
-  color: #718197;
-  font-size: 0.76rem;
-}
-
-/* Diálogos (app-modal) */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  padding: 1rem;
-  display: grid;
-  place-items: center;
-  overflow-y: auto;
-  background: rgba(16, 42, 65, 0.45);
-}
-.dialog {
-  width: min(100%, 480px);
-  padding: 1.5rem;
-  border-radius: 18px;
-  color: #29465e;
-  background: #fff;
-  box-shadow: 0 24px 60px rgba(16, 42, 65, 0.25);
-  font-size: 0.85rem;
-  line-height: 1.5;
-  outline: none;
-}
-.dialog p {
-  margin: 0 0 0.6rem;
-}
-.dialog .primary-button {
-  margin-top: 0;
-}
-.dialog h2 {
-  margin: 0 0 0.6rem;
-  color: #102a41;
-  font-size: 1.15rem;
-}
-
-@media (max-width: 760px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .vehicle-card {
-    grid-template-columns: auto 1fr;
-  }
-  .form-grid,
-  .choice-grid,
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-  .data-list div {
-    grid-template-columns: 7.5rem 1fr;
-  }
-  .vehicle-cta {
-    grid-column: 1 / -1;
-  }
 }

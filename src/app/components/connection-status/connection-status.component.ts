@@ -14,10 +14,10 @@ const LABELS: Record<ConnectionState, string> = {
   selector: 'app-connection-status',
   template: `
     @if (label(); as text) {
-      <span class="connection-status {{ state() }}" role="status">
+      <output class="connection-status {{ state() }}">
         <span class="connection-dot" aria-hidden="true"></span>
         {{ text }}
-      </span>
+      </output>
     }
   `,
 })

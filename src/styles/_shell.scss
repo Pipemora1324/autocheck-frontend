@@ -1,0 +1,256 @@
+/* Estructura de la app: barra superior, contenido, pie y navegación inferior en móvil. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.topbar {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 60px;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.brand small {
+  margin-left: 2px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+.brand-mark {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  color: var(--accent);
+}
+.brand-mark svg {
+  width: 100%;
+  height: 100%;
+}
+
+.main-nav {
+  display: none;
+  gap: var(--space-1);
+}
+.main-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-m);
+  color: var(--text-soft);
+  font-size: 0.94rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.main-nav a:hover {
+  background: var(--surface-3);
+}
+.main-nav a.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-left: auto;
+}
+
+.system-status,
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+.system-status {
+  display: none;
+}
+.system-status i,
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.system-status.online i,
+.connection-status.connected .connection-dot {
+  color: var(--green);
+  background: var(--green);
+  box-shadow: var(--lit);
+}
+.system-status.offline i,
+.connection-status.connecting .connection-dot,
+.connection-status.reconnecting .connection-dot {
+  background: var(--amber);
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.user-info {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.86rem;
+}
+.user-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.user-text strong {
+  font-weight: 500;
+}
+.logout-button {
+  display: none;
+  min-height: 38px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.84rem;
+}
+
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--fast);
+}
+.theme-toggle:hover {
+  background: var(--surface-3);
+}
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+main {
+  flex: 1;
+  /* El pie no sube y baja mientras carga la ruta: evita un salto de contenido. */
+  min-height: calc(100dvh - 60px);
+  width: 100%;
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) calc(var(--bottom-nav) + var(--space-5));
+}
+main.anonymous {
+  padding-bottom: var(--space-6);
+}
+
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-4);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+footer.with-bottom-nav {
+  padding-bottom: calc(var(--bottom-nav) + var(--space-4));
+}
+footer a {
+  display: inline-block;
+  padding: var(--space-1) 0;
+}
+
+/* Navegación inferior: se alcanza con el pulgar. */
+.bottom-nav {
+  position: fixed;
+  z-index: 40;
+  inset: auto 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: calc(var(--bottom-nav) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.bottom-nav a,
+.bottom-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--touch);
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.bottom-nav svg {
+  width: 22px;
+  height: 22px;
+}
+.bottom-nav a.active {
+  color: var(--accent);
+}
+
+@media (min-width: 860px) {
+  .main-nav {
+    display: flex;
+    margin-right: auto;
+  }
+  .system-status,
+  .user-info {
+    display: inline-flex;
+  }
+  .logout-button {
+    display: inline-flex;
+  }
+  .bottom-nav {
+    display: none;
+  }
+  main {
+    padding: var(--space-6) var(--space-5);
+  }
+  footer.with-bottom-nav {
+    padding-bottom: var(--space-4);
+  }
+}

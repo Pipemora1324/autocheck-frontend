@@ -1,0 +1,221 @@
+/* Portada: el tablero que se enciende al poner el contacto. */
+:root[data-shell='app'] .shell-portada {
+  display: none;
+}
+.landing {
+  display: grid;
+  gap: var(--space-6);
+}
+.landing-hero {
+  display: grid;
+  gap: var(--space-5);
+  align-items: center;
+}
+.landing-hero h1 {
+  margin: var(--space-3) 0;
+  font-size: clamp(2.1rem, 1.3rem + 4vw, 3.6rem);
+  line-height: 1.03;
+}
+.landing-hero h1 em {
+  color: var(--accent);
+  font-style: normal;
+}
+.landing-lead {
+  max-width: 36rem;
+  color: var(--text-soft);
+  font-size: 1.08rem;
+}
+.landing-actions {
+  margin-top: var(--space-5);
+}
+.landing-actions a {
+  flex: 1 1 11rem;
+}
+
+.cluster {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: radial-gradient(70% 60% at 50% 40%, var(--bg-glow), transparent 75%), var(--surface);
+  box-shadow: var(--shadow), var(--bezel);
+}
+.speedometer-wrap {
+  position: relative;
+  /* La capa de la aguja gira: sus esquinas no deben ensanchar la página. */
+  overflow: hidden;
+  width: min(100%, 25rem);
+  margin: 0 auto;
+}
+.speedometer {
+  display: block;
+  width: 100%;
+}
+.speedometer-track {
+  fill: none;
+  stroke: var(--surface-3);
+  stroke-width: 10;
+}
+.speedometer-arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 26;
+}
+.speedometer-redline {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 10;
+}
+.speedometer-tick {
+  stroke: var(--muted);
+  stroke-width: 2;
+}
+.speedometer-tick.major {
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.speedometer-number {
+  fill: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+/* Una capa propia: al animar solo su transform, el navegador no repinta el tablero en cada cuadro. */
+.speedometer-needle {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* El centro del tacómetro: 160 de 320 y 160 de 300 en el viewBox. */
+  transform-origin: 50% 53.333%;
+  transform: rotate(62deg);
+  animation: needle-sweep 2.3s var(--ease-needle) 0.25s both;
+}
+/* Al poner el contacto, la aguja barre toda la escala y vuelve a su lectura. */
+@keyframes needle-sweep {
+  0% {
+    transform: rotate(-130deg);
+  }
+  48% {
+    transform: rotate(130deg);
+  }
+  100% {
+    transform: rotate(62deg);
+  }
+}
+.speedometer-cap {
+  transform: none;
+  animation: none;
+}
+.speedometer-hand {
+  fill: var(--needle);
+}
+.speedometer-hub {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+  stroke-width: 3;
+}
+.speedometer-unit {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-anchor: middle;
+}
+.speedometer-odometer {
+  fill: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+}
+
+/* Fila de testigos: se encienden uno por uno y luego se apagan los que no son graves. */
+.telltale-row {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.telltale-row .telltale-icon {
+  width: 44px;
+  height: 44px;
+  animation: lamp-on 900ms ease-out both;
+  animation-delay: calc(350ms + var(--i) * 130ms);
+}
+.telltale-row .rojo {
+  --tone: var(--red);
+}
+.telltale-row .amarillo {
+  --tone: var(--amber);
+}
+.telltale-row .verde {
+  --tone: var(--green);
+}
+.telltale-row .azul {
+  --tone: var(--info);
+}
+@keyframes lamp-on {
+  0% {
+    opacity: 0.18;
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+/* El brillo de los testigos cuesta pintarlo: en la fila animada no se usa. */
+.telltale-row .telltale-icon svg {
+  filter: none;
+}
+
+.landing-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.landing-steps li {
+  position: relative;
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  color: var(--text-soft);
+  background: var(--surface);
+}
+.landing-steps strong {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+.landing-note {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+@media (min-width: 860px) {
+  .landing-hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+  .landing-actions a {
+    flex: 0 0 auto;
+  }
+}

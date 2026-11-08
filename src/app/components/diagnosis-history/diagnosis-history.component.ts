@@ -6,19 +6,33 @@ import {
   DIAGNOSIS_DISCLAIMER,
   ordersStop,
   type Diagnosed,
+  type TelltaleSeverity,
   type DiagnosisHistoryItem,
 } from '../../models/diagnosis';
 import { RealtimeService } from '../../core/realtime/realtime.service';
 import { DiagnosisService } from '../../services/diagnosis.service';
 import { DiagnosisChatComponent } from '../diagnosis-chat/diagnosis-chat.component';
 import { DiagnosisResultComponent } from '../diagnosis-result/diagnosis-result.component';
+import { EmptyStateComponent } from '../empty-state/empty-state.component';
 import { ModalComponent } from '../modal/modal.component';
+import { SkeletonComponent } from '../skeleton/skeleton.component';
 import { SeverityBadgeComponent } from '../severity-badge/severity-badge.component';
+
+type HistoryFilter = 'todos' | TelltaleSeverity;
+
+const HISTORY_FILTERS: ReadonlyArray<{ value: HistoryFilter; label: string }> = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'rojo', label: 'Rojos' },
+  { value: 'amarillo', label: 'Amarillos' },
+  { value: 'informativo', label: 'Informativos' },
+];
 
 /** Historial del vehículo, con detalle y borrado. La explicación se pide al abrirla, sin crear otra entrada. */
 @Component({
   selector: 'app-diagnosis-history',
   imports: [
+    EmptyStateComponent,
+    SkeletonComponent,
     DiagnosisChatComponent,
     DiagnosisResultComponent,
     ModalComponent,
@@ -30,9 +44,7 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
 
       @switch (state()) {
         @case ('loading') {
-          <div class="state-box" role="status">
-            <span class="spinner" aria-hidden="true"></span> Cargando el historial…
-          </div>
+          <app-skeleton label="Cargando el historial…" [lines]="3" />
         }
         @case ('unverified') {
           <div class="state-box"><strong>Confirma tu correo para ver tu historial.</strong></div>
@@ -48,11 +60,33 @@ import { SeverityBadgeComponent } from '../severity-badge/severity-badge.compone
         }
         @case ('ready') {
           @if (items().length === 0) {
-            <p class="source-note">Aún no hay diagnósticos de este vehículo.</p>
+            <app-empty-state
+              illustration="history"
+              heading="Aún no hay diagnósticos de este vehículo."
+            >
+              <p>Cuando diagnostiques un testigo, aparecerá aquí con su fecha y su semáforo.</p>
+            </app-empty-state>
           } @else {
+            <div class="history-filters" role="group" aria-label="Filtrar por urgencia">
+              @for (option of filters; track option.value) {
+                <button
+                  class="history-filter"
+                  type="button"
+                  [attr.aria-pressed]="filter() === option.value"
+                  (click)="filter.set(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              }
+            </div>
+            @if (visibleItems().length === 0) {
+              <p class="source-note" role="status">
+                No hay diagnósticos de esa urgencia en esta página.
+              </p>
+            }
             <ul class="history-list">
-              @for (item of items(); track item.id) {
-                <li>
+              @for (item of visibleItems(); track item.id) {
+                <li class="{{ item.severidad }}">
                   <button type="button" class="history-item" (click)="open(item)">
                     <span class="history-main">
                       <strong>{{ name(item) }}</strong>
@@ -202,6 +236,14 @@ export class DiagnosisHistoryComponent {
   readonly deleteError = signal('');
 
   readonly isEmpty = computed(() => this.items().length === 0);
+  protected readonly filters = HISTORY_FILTERS;
+  readonly filter = signal<HistoryFilter>('todos');
+  readonly visibleItems = computed(() => {
+    const filter = this.filter();
+    return filter === 'todos'
+      ? this.items()
+      : this.items().filter((item) => item.severidad === filter);
+  });
 
   constructor() {
     effect(() => {

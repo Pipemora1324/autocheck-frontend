@@ -30,7 +30,7 @@ describe('ConnectionStatusComponent', () => {
   ] as const)('%s dice "%s", con texto y no solo con color', async (value, text) => {
     const box = (await render(value)).querySelector('.connection-status')!;
     expect(box.textContent).toContain(text);
-    expect(box.getAttribute('role')).toBe('status');
+    expect(box.tagName).toBe('OUTPUT');
     expect(box.classList).toContain(value);
   });
 });

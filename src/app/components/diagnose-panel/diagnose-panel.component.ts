@@ -187,8 +187,22 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
               Usa solo fotos del tablero de tu propio vehículo o de uno que estés autorizado a usar.
             </p>
 
-            <div class="file-actions">
-              <label class="primary-button link-button" for="dash-camera">Tomar foto</label>
+            <div class="capture-actions">
+              <label class="primary-button capture-button" for="dash-camera">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 8h4l2-3h6l2 3h4v12H3zM12 10a3.500 3.500 0 1 0 0 7 3.500 3.500 0 0 0 0-7z"
+                  />
+                </svg>
+                Fotografiar testigo
+              </label>
               <input
                 id="dash-camera"
                 class="visually-hidden"
@@ -197,15 +211,15 @@ export function diagnosisErrorView(error: unknown): DiagnosisErrorView {
                 capture="environment"
                 (change)="onFile($event)"
               />
-              <label class="secondary-button" for="dash-file">Subir imagen</label>
-              <input
-                id="dash-file"
-                class="visually-hidden"
-                type="file"
-                [accept]="imageAccept"
-                (change)="onFile($event)"
-              />
             </div>
+            <label class="secondary-button capture-secondary" for="dash-file">Subir imagen</label>
+            <input
+              id="dash-file"
+              class="visually-hidden"
+              type="file"
+              [accept]="imageAccept"
+              (change)="onFile($event)"
+            />
             <p class="field-hint">
               JPEG, PNG o WEBP, máximo 5 MB. Acércate al testigo, con el tablero encendido y sin
               reflejos.

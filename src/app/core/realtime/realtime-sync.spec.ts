@@ -62,6 +62,11 @@ describe('Sincronización en vivo', () => {
   });
   afterEach(() => {
     http
+      .match((request) => request.url.endsWith('/diagnoses') && request.method === 'GET')
+      .forEach((request) => {
+        request.flush({ items: [], page: 1, limit: 1, total: 0, totalPages: 0 });
+      });
+    http
       .match((request) => request.url.endsWith('/messages'))
       .forEach((request) => {
         request.flush(chatHistory());

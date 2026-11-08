@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TelltaleIconComponent } from '../../components/telltale-icon/telltale-icon.component';
 import {
   VehicleFormComponent,
   type VehicleFormField,
@@ -32,7 +33,7 @@ export function prefillFromScan(scan: CardScanResult): {
 
 @Component({
   selector: 'app-add-vehicle-page',
-  imports: [RouterLink, VehicleFormComponent],
+  imports: [RouterLink, TelltaleIconComponent, VehicleFormComponent],
   template: `
     <a class="back-link" routerLink="/">← Volver a mi garaje</a>
     <header class="page-header">
@@ -55,7 +56,7 @@ export function prefillFromScan(scan: CardScanResult): {
             (click)="step.set('photo')"
             [disabled]="!scanEnabled()"
           >
-            <span class="choice-icon" aria-hidden="true">📷</span>
+            <app-telltale-icon category="informativo" />
             <strong>Con foto de la tarjeta (opcional)</strong>
             @if (scanEnabled()) {
               <span>Tomamos los datos de la foto y tú los revisas antes de guardar.</span>
@@ -67,7 +68,7 @@ export function prefillFromScan(scan: CardScanResult): {
             }
           </button>
           <button type="button" class="choice-card" (click)="startManual()">
-            <span class="choice-icon" aria-hidden="true">✍️</span>
+            <app-telltale-icon category="motor_emisiones" />
             <strong>Llenar a mano</strong>
             <span>Escribe la placa, la marca, la línea y los demás datos que quieras.</span>
           </button>

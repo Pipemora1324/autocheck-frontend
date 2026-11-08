@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { DiagnosePanelComponent } from '../../components/diagnose-panel/diagnose-panel.component';
 import { DiagnosisHistoryComponent } from '../../components/diagnosis-history/diagnosis-history.component';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { SkeletonComponent } from '../../components/skeleton/skeleton.component';
 import {
   VehicleFormComponent,
   type VehicleFormValue,
@@ -35,15 +36,14 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
     ModalComponent,
     DiagnosePanelComponent,
     DiagnosisHistoryComponent,
+    SkeletonComponent,
   ],
   template: `
     <a class="back-link" routerLink="/">← Volver a mi garaje</a>
 
     @switch (state()) {
       @case ('loading') {
-        <div class="state-box" role="status">
-          <span class="spinner" aria-hidden="true"></span> Cargando el vehículo…
-        </div>
+        <app-skeleton label="Cargando el vehículo…" [lines]="2" [blocks]="true" />
       }
       @case ('not-found') {
         <div class="state-box">
@@ -65,7 +65,7 @@ const SOURCE_LABEL: Record<GarageVehicle['source'], string> = {
         @if (vehicle(); as v) {
           <header class="page-header">
             <div>
-              <span class="plate-tag">{{ v.plate }}</span>
+              <span class="plate-tag large">{{ v.plate }}</span>
               <h1>{{ v.brand }} {{ v.model }}</h1>
               <p class="source-note">
                 {{ v.kind === 'moto' ? 'Moto' : 'Carro' }} · datos {{ sourceLabel() }} · actualizado

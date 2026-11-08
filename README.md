@@ -135,6 +135,46 @@ Render se duerme sin tráfico y tarda 30–60 s en despertar. `serverStatusInter
 - **Cierre:** al cerrar sesión.
 - **Respaldo:** nada depende del socket. El progreso es solo un texto mejor mientras se espera la respuesta HTTP.
 
+## Diseño: el tablero de instrumentos
+
+Toda la app evoca el tablero de un carro moderno: paneles con la escala de un instrumento, lecturas en monoespaciada como un odómetro, testigos que se encienden y agujas reales para la urgencia.
+
+- **Tokens:** todo color, medida y curva sale de `src/styles/_tokens.scss`, como variables CSS. Tema oscuro por defecto (grafito), claro opcional, con un interruptor que se recuerda y respeta `prefers-color-scheme`. Un script en `index.html` aplica el tema antes de pintar, para que no parpadee.
+- **Semáforo:** rojo, ámbar y azul, siempre con texto y una forma (■ ▲ i), nunca solo color. `npm run check:contrast` verifica el contraste AA de 39 pares de color en cada tema, y corre en el CI.
+- **Tipografía:** Space Grotesk para títulos, DM Sans para el texto y JetBrains Mono para placas y cifras. Autoalojadas en `public/fonts` (licencia OFL), solo el subconjunto latino, con `font-display: optional`: el texto nunca salta cuando llega la fuente.
+- **Componentes propios:** tacómetro animado de la portada, medidor de urgencia con aguja, íconos SVG originales por categoría de testigo, placa colombiana particular (amarilla, sin logos), línea de tiempo con filtros, esqueletos de carga, estados vacíos ilustrados y chat con burbujas, indicador de escritura y efecto de escritura.
+- **Seguridad primero:** en un testigo rojo, las secciones "Qué NO hacer" y "Cuándo ir al mecánico" vienen abiertas, y el banner de detenerse va arriba de todo.
+- **Movimiento:** transiciones de ruta, aguja que barre la escala y números que cuentan. Todo se apaga con `prefers-reduced-motion`. Las animaciones usan solo `transform` y `opacity`, para no repintar.
+- **Móvil primero:** navegación inferior, botón "Fotografiar testigo" fijo y al alcance del pulgar, caja del chat fija abajo y áreas táctiles de 44 px o más. Sin desbordes horizontales, comprobado a 390 px.
+
+### Capturas
+
+Con datos ficticios (correo de `example.com` y placas inventadas). El diagnóstico es real, hecho con Gemini sobre una foto de prueba.
+
+| | Móvil, oscuro | Móvil, claro | Escritorio, oscuro | Escritorio, claro |
+| --- | --- | --- | --- | --- |
+| Portada | <img src="docs/capturas/portada-movil-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/portada-movil-claro.png" alt="" width="100%"> | <img src="docs/capturas/portada-escritorio-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/portada-escritorio-claro.png" alt="" width="100%"> |
+| Garaje | <img src="docs/capturas/garaje-movil-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/garaje-movil-claro.png" alt="" width="100%"> | <img src="docs/capturas/garaje-escritorio-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/garaje-escritorio-claro.png" alt="" width="100%"> |
+| Vehículo | <img src="docs/capturas/vehiculo-movil-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/vehiculo-movil-claro.png" alt="" width="100%"> | <img src="docs/capturas/vehiculo-escritorio-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/vehiculo-escritorio-claro.png" alt="" width="100%"> |
+| Diagnóstico | <img src="docs/capturas/diagnostico-movil-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/diagnostico-movil-claro.png" alt="" width="100%"> | <img src="docs/capturas/diagnostico-escritorio-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/diagnostico-escritorio-claro.png" alt="" width="100%"> |
+| Chat | <img src="docs/capturas/chat-movil-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/chat-movil-claro.png" alt="" width="100%"> | <img src="docs/capturas/chat-escritorio-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/chat-escritorio-claro.png" alt="" width="100%"> |
+| Historial | <img src="docs/capturas/historial-movil-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/historial-movil-claro.png" alt="" width="100%"> | <img src="docs/capturas/historial-escritorio-oscuro.png" alt="" width="100%"> | <img src="docs/capturas/historial-escritorio-claro.png" alt="" width="100%"> |
+
+### Lighthouse
+
+Medido en local sobre el build de producción, servido con gzip y con el `/api` real, en móvil con el throttling simulado de Lighthouse (su modo por defecto):
+
+| Página | Rendimiento | Accesibilidad | Buenas prácticas | CLS |
+| --- | --- | --- | --- | --- |
+| Portada | 83–89 | 100 | 100 | 0 |
+| Iniciar sesión | 86–88 | 100 | 100 | 0 |
+| Garaje (con sesión) | 75–80 | 100 | 100 | 0,002 |
+| Vehículo (con sesión) | 76–77 | 100 | 100 | 0,001 |
+
+**Rendimiento todavía no llega a 90.** Lo que pesa es el arranque de Angular, unos 88 kB comprimidos, y, con sesión, las peticiones que encadena la pantalla. Con el throttling real de DevTools los números salieron mucho más bajos y variables (40–68), porque la máquina de la medición tenía otras aplicaciones usando la mitad de la CPU. **No se ha medido en producción.**
+
+Para acercarse a 90, el siguiente paso sería prerenderizar la portada con `@angular/ssr`, que pinta el contenido sin esperar al JavaScript.
+
 ## Calidad
 
 ```bash

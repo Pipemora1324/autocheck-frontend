@@ -1,0 +1,118 @@
+/* Tokens de diseño: "el tablero de instrumentos". Todo color, medida y curva del proyecto sale de aquí. */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Grafito profundo: el tablero apagado. */
+  --bg: #0b0e11;
+  --bg-glow: rgb(39 224 211 / 9%);
+  --surface: #141a20;
+  --surface-2: #1b232b;
+  --surface-3: #242e37;
+  --line: #2b3640;
+  --line-strong: #5f7180;
+  --text: #eaf0f4;
+  --text-soft: #c2ced6;
+  --muted: #9aadba;
+
+  /* Acento eléctrico: la luz de las agujas. */
+  --accent: #27e0d3;
+  --accent-soft: rgb(39 224 211 / 14%);
+  --accent-ink: #00221f;
+  --needle: #ff6a5f;
+
+  /* Semáforo. "-ink" es el texto sobre el fondo "-solid". El color nunca va solo. */
+  --red: #ff7d73;
+  --red-solid: #c9281d;
+  --red-ink: #ffffff;
+  --red-soft: rgb(255 106 95 / 14%);
+  --amber: #ffc04d;
+  --amber-solid: #ffc04d;
+  --amber-ink: #2c1d00;
+  --amber-soft: rgb(255 192 77 / 13%);
+  --green: #4fdd8d;
+  --green-soft: rgb(79 221 141 / 13%);
+  --info: #79c9ff;
+  --info-solid: #0f6cae;
+  --info-ink: #ffffff;
+  --info-soft: rgb(121 201 255 / 13%);
+
+  /* Placa colombiana: es igual en los dos temas, porque es un objeto físico. */
+  --plate-bg: #ffd21f;
+  --plate-ink: #111111;
+  --plate-edge: #1a1a1a;
+
+  --shadow: 0 18px 40px -22px rgb(0 0 0 / 80%);
+  --bezel: inset 0 1px 0 rgb(255 255 255 / 5%);
+  --lit: 0 0 12px currentcolor;
+  --scale-color: rgb(154 173 186 / 34%);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #eaeff2;
+  --bg-glow: rgb(0 127 120 / 8%);
+  --surface: #ffffff;
+  --surface-2: #f3f6f8;
+  --surface-3: #e4eaee;
+  --line: #cbd6dc;
+  --line-strong: #7a8c98;
+  --text: #0f1f2a;
+  --text-soft: #2c404e;
+  --muted: #4c6070;
+
+  --accent: #006e68;
+  --accent-soft: rgb(0 110 104 / 10%);
+  --accent-ink: #ffffff;
+  --needle: #c9281d;
+
+  --red: #b3261e;
+  --red-solid: #b3261e;
+  --red-ink: #ffffff;
+  --red-soft: rgb(179 38 30 / 9%);
+  --amber: #7d5200;
+  --amber-solid: #ffc04d;
+  --amber-ink: #2c1d00;
+  --amber-soft: rgb(255 192 77 / 24%);
+  --green: #11703f;
+  --green-soft: rgb(17 112 63 / 10%);
+  --info: #0b5f96;
+  --info-solid: #0b5f96;
+  --info-ink: #ffffff;
+  --info-soft: rgb(11 95 150 / 9%);
+
+  --shadow: 0 16px 34px -24px rgb(15 31 42 / 45%);
+  --bezel: inset 0 1px 0 rgb(255 255 255 / 80%);
+  --lit: 0 0 0 transparent;
+  --scale-color: rgb(76 96 112 / 30%);
+}
+
+:root {
+  --font-display: 'Space Grotesk Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'DM Sans Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 18px;
+  --radius-full: 999px;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --touch: 44px;
+  --bottom-nav: 64px;
+  --content: 1120px;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* La aguja se pasa un poco y vuelve, como una de verdad. */
+  --ease-needle: cubic-bezier(0.3, 1.45, 0.45, 1);
+  --fast: 140ms;
+  --normal: 260ms;
+}

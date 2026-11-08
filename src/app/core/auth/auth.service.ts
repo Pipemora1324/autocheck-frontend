@@ -5,6 +5,31 @@ import { environment } from '../../../environments/environment';
 import { skipAuthRefresh } from './auth.context';
 import type { AuthStatus, AuthUser, MessageResponse, SessionResponse } from './auth.models';
 
+/**
+ * Solo una pista, no una credencial: dice si vale la pena intentar recuperar la sesión con la cookie.
+ * Un visitante sin sesión no espera una petición que siempre responde 401.
+ * index.html la lee para elegir qué pintar antes de que arranque Angular.
+ */
+export const SESSION_HINT_KEY = 'autocheck-session';
+
+function hadSession(): boolean {
+  try {
+    return localStorage.getItem(SESSION_HINT_KEY) === '1';
+  } catch {
+    // Sin almacenamiento no se puede saber: se intenta, como antes.
+    return true;
+  }
+}
+
+function rememberSession(active: boolean): void {
+  try {
+    if (active) localStorage.setItem(SESSION_HINT_KEY, '1');
+    else localStorage.removeItem(SESSION_HINT_KEY);
+  } catch {
+    // Sin almacenamiento, hadSession siempre intenta recuperarla.
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -113,6 +138,10 @@ export class AuthService {
 
   /** Intenta recuperar la sesión al cargar la app. Se ejecuta una sola vez y nunca falla. */
   restoreSession(): Observable<void> {
+    if (!this.restore$ && !hadSession()) {
+      this.statusState.set('anonymous');
+      this.restore$ = of(undefined);
+    }
     this.restore$ ??= this.refresh().pipe(
       map(() => undefined),
       catchError(() => of(undefined)),
@@ -153,12 +182,14 @@ export class AuthService {
   }
 
   clearSession(): void {
+    rememberSession(false);
     this.accessToken = null;
     this.userState.set(null);
     this.statusState.set('anonymous');
   }
 
   private setSession(session: SessionResponse): AuthUser {
+    rememberSession(true);
     this.accessToken = session.accessToken;
     this.userState.set(session.user);
     this.statusState.set('authenticated');
