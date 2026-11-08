@@ -43,6 +43,8 @@
 }
 .speedometer-wrap {
   position: relative;
+  /* La capa de la aguja gira: sus esquinas no deben ensanchar la página. */
+  overflow: hidden;
   width: min(100%, 25rem);
   margin: 0 auto;
 }

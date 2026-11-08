@@ -30,12 +30,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "node_modules/@fontsource-variable/space-grotesk/wght.css",
-              "node_modules/@fontsource-variable/dm-sans/wght.css",
-              "node_modules/@fontsource-variable/jetbrains-mono/wght.css",
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           },
           "configurations": {
             "production": {
@@ -57,7 +52,12 @@
                   "with": "src/environments/environment.prod.ts"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": { "minify": true, "inlineCritical": false },
+                "fonts": true
+              }
             },
             "development": {
               "optimization": false,

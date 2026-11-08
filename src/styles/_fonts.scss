@@ -1,0 +1,28 @@
+/*
+ * Fuentes autoalojadas (licencia OFL, ver public/fonts). Solo el subconjunto latino, que cubre el español.
+ * font-display: optional evita que el texto salte al llegar la fuente: si no llega a tiempo, esa visita
+ * usa la del sistema, y la siguiente ya la tiene en caché. Las dos principales se precargan en index.html.
+ */
+@font-face {
+  font-family: 'Space Grotesk Variable';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: optional;
+  src: url('/fonts/space-grotesk-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'DM Sans Variable';
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: optional;
+  src: url('/fonts/dm-sans-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono Variable';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: optional;
+  src: url('/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+}

@@ -48,7 +48,15 @@ describe('RealtimeService', () => {
   let http: HttpTestingController;
   let auth: AuthService;
 
+  /** Las tareas que esperan a que el navegador quede libre: la prueba decide cuándo correrlas. */
+  let idle: Array<() => void>;
+  const runIdle = () => {
+    for (const task of idle.splice(0)) task();
+  };
+
   beforeEach(() => {
+    idle = [];
+    vi.stubGlobal('requestIdleCallback', (task: () => void) => idle.push(task));
     socket = new FakeSocket();
     created = [];
     factoryResult = () => Promise.resolve(socket);
@@ -70,6 +78,7 @@ describe('RealtimeService', () => {
   });
   afterEach(() => {
     http.verify();
+    vi.unstubAllGlobals();
   });
 
   const start = async (emailVerified = true) => {
@@ -77,6 +86,7 @@ describe('RealtimeService', () => {
     auth.login('a@b.co', 'x').subscribe();
     http.expectOne(LOGIN).flush(session(emailVerified));
     TestBed.tick();
+    runIdle();
     await Promise.resolve();
     await Promise.resolve();
     return service;
@@ -87,6 +97,27 @@ describe('RealtimeService', () => {
     TestBed.tick();
     expect(created).toHaveLength(0);
     expect(service.state()).toBe('off');
+  });
+
+  it('no compite con el primer render: abre el socket cuando el navegador queda libre', () => {
+    TestBed.inject(RealtimeService);
+    auth.login('a@b.co', 'x').subscribe();
+    http.expectOne(LOGIN).flush(session(true));
+    TestBed.tick();
+    expect(created).toHaveLength(0);
+    runIdle();
+    expect(created).toHaveLength(1);
+  });
+
+  it('si la sesión se cierra antes de quedar libre, no abre nada', () => {
+    TestBed.inject(RealtimeService);
+    auth.login('a@b.co', 'x').subscribe();
+    http.expectOne(LOGIN).flush(session(true));
+    TestBed.tick();
+    auth.clearSession();
+    TestBed.tick();
+    runIdle();
+    expect(created).toHaveLength(0);
   });
 
   it('con el correo sin verificar tampoco conecta', async () => {
@@ -212,6 +243,7 @@ describe('RealtimeService', () => {
     auth.login('a@b.co', 'x').subscribe();
     http.expectOne(LOGIN).flush(session(true));
     TestBed.tick();
+    runIdle();
     auth.clearSession();
     TestBed.tick();
     finish(socket);

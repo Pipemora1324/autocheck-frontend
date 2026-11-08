@@ -29,6 +29,8 @@ const FORWARDED_EVENTS: ReadonlyArray<keyof RealtimeEvents> = [
 
 /** Tras estos intentos fallidos se muestra "sin conexión"; se sigue intentando igual. */
 const ATTEMPTS_BEFORE_OFFLINE = 6;
+/** Si el navegador nunca queda libre, se abre igual pasado este tiempo. */
+const IDLE_TIMEOUT_MS = 2_000;
 
 export interface RealtimeSocket {
   connect(): unknown;
@@ -84,7 +86,7 @@ export class RealtimeService {
 
   constructor() {
     effect(() => {
-      if (this.shouldConnect()) this.open();
+      if (this.shouldConnect()) this.openWhenIdle();
       else this.close();
     });
   }
@@ -94,6 +96,17 @@ export class RealtimeService {
       filter((event) => event.name === name),
       map((event) => event.payload as RealtimeEvents[E]),
     );
+  }
+
+  /** El cliente de socket no compite con el primer render: se descarga cuando el navegador queda libre. */
+  private openWhenIdle(): void {
+    const generation = this.generation;
+    const run = () => {
+      if (generation === this.generation && this.shouldConnect()) this.open();
+    };
+    if (typeof requestIdleCallback === 'function')
+      requestIdleCallback(run, { timeout: IDLE_TIMEOUT_MS });
+    else setTimeout(run, 0);
   }
 
   private open(): void {
