@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { apiErrorMessage } from '../../core/http/api-error';
 import { PublicConfigService } from '../../core/http/public-config.service';
+import { PasswordFieldComponent } from '../../components/password-field/password-field.component';
 import { AuthCardComponent } from './auth-card.component';
 import {
   fieldError,
@@ -15,7 +16,7 @@ import {
 
 @Component({
   selector: 'app-register-page',
-  imports: [ReactiveFormsModule, RouterLink, AuthCardComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuthCardComponent, PasswordFieldComponent],
   template: `
     <app-auth-card
       heading="Crea tu cuenta"
@@ -36,28 +37,32 @@ import {
         }
 
         <label class="field-label" for="register-password">Contraseña</label>
-        <input
-          id="register-password"
-          type="password"
-          formControlName="password"
-          autocomplete="new-password"
-          [attr.aria-invalid]="!!error('password')"
-          aria-describedby="register-password-hint"
-        />
+        <app-password-field>
+          <input
+            id="register-password"
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+            [attr.aria-invalid]="!!error('password')"
+            aria-describedby="register-password-hint"
+          />
+        </app-password-field>
         <p class="field-hint" id="register-password-hint">Mínimo {{ min }} caracteres.</p>
         @if (error('password'); as message) {
           <p class="field-error">{{ message }}</p>
         }
 
         <label class="field-label" for="register-confirm">Confirma la contraseña</label>
-        <input
-          id="register-confirm"
-          type="password"
-          formControlName="confirm"
-          autocomplete="new-password"
-          [attr.aria-invalid]="!!confirmError()"
-          aria-describedby="register-confirm-error"
-        />
+        <app-password-field>
+          <input
+            id="register-confirm"
+            type="password"
+            formControlName="confirm"
+            autocomplete="new-password"
+            [attr.aria-invalid]="!!confirmError()"
+            aria-describedby="register-confirm-error"
+          />
+        </app-password-field>
         @if (confirmError(); as message) {
           <p class="field-error" id="register-confirm-error">{{ message }}</p>
         }

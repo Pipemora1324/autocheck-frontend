@@ -4,12 +4,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/auth/auth.service';
 import { apiErrorMessage } from '../../core/http/api-error';
+import { PasswordFieldComponent } from '../../components/password-field/password-field.component';
 import { AuthCardComponent } from './auth-card.component';
 import { fieldError, PASSWORD_MAX, safeReturnUrl } from './auth-forms';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, RouterLink, AuthCardComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuthCardComponent, PasswordFieldComponent],
   template: `
     <app-auth-card
       heading="Inicia sesión"
@@ -33,14 +34,16 @@ import { fieldError, PASSWORD_MAX, safeReturnUrl } from './auth-forms';
         }
 
         <label class="field-label" for="login-password">Contraseña</label>
-        <input
-          id="login-password"
-          type="password"
-          formControlName="password"
-          autocomplete="current-password"
-          [attr.aria-invalid]="!!error('password')"
-          aria-describedby="login-password-error"
-        />
+        <app-password-field>
+          <input
+            id="login-password"
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            [attr.aria-invalid]="!!error('password')"
+            aria-describedby="login-password-error"
+          />
+        </app-password-field>
         @if (error('password'); as message) {
           <p class="field-error" id="login-password-error">{{ message }}</p>
         }
