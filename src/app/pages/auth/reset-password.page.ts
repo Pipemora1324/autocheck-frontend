@@ -3,12 +3,13 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { apiErrorMessage } from '../../core/http/api-error';
+import { PasswordFieldComponent } from '../../components/password-field/password-field.component';
 import { AuthCardComponent } from './auth-card.component';
 import { fieldError, PASSWORD_MAX, PASSWORD_MIN, passwordsMatch } from './auth-forms';
 
 @Component({
   selector: 'app-reset-password-page',
-  imports: [ReactiveFormsModule, RouterLink, AuthCardComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuthCardComponent, PasswordFieldComponent],
   template: `
     <app-auth-card
       heading="Crea una nueva contraseña"
@@ -24,28 +25,32 @@ import { fieldError, PASSWORD_MAX, PASSWORD_MIN, passwordsMatch } from './auth-f
       } @else {
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <label class="field-label" for="reset-password">Nueva contraseña</label>
-          <input
-            id="reset-password"
-            type="password"
-            formControlName="password"
-            autocomplete="new-password"
-            [attr.aria-invalid]="!!passwordError()"
-            aria-describedby="reset-password-hint"
-          />
+          <app-password-field>
+            <input
+              id="reset-password"
+              type="password"
+              formControlName="password"
+              autocomplete="new-password"
+              [attr.aria-invalid]="!!passwordError()"
+              aria-describedby="reset-password-hint"
+            />
+          </app-password-field>
           <p class="field-hint" id="reset-password-hint">Mínimo {{ min }} caracteres.</p>
           @if (passwordError(); as message) {
             <p class="field-error">{{ message }}</p>
           }
 
           <label class="field-label" for="reset-confirm">Confirma la contraseña</label>
-          <input
-            id="reset-confirm"
-            type="password"
-            formControlName="confirm"
-            autocomplete="new-password"
-            [attr.aria-invalid]="!!confirmError()"
-            aria-describedby="reset-confirm-error"
-          />
+          <app-password-field>
+            <input
+              id="reset-confirm"
+              type="password"
+              formControlName="confirm"
+              autocomplete="new-password"
+              [attr.aria-invalid]="!!confirmError()"
+              aria-describedby="reset-confirm-error"
+            />
+          </app-password-field>
           @if (confirmError(); as message) {
             <p class="field-error" id="reset-confirm-error">{{ message }}</p>
           }
