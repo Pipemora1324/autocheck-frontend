@@ -31,10 +31,11 @@ import {
       position: absolute;
       top: 0;
       right: 0;
+      bottom: 0;
       display: grid;
       place-items: center;
       width: var(--touch);
-      height: var(--touch);
+      min-height: var(--touch);
       padding: 0;
       border: 0;
       border-radius: var(--radius-m);
